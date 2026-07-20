@@ -1,0 +1,11 @@
+; OCaml extraction of the quadrivalent domain.
+;
+; The prelude quadrivalentextract.v is compiled (in dune's DuneExtraction
+; namespace) and `Separate Extraction` emits one .ml/.mli per module below.
+; (mode promote) copies the generated files back into this source directory,
+; so they sit next to any hand-written OCaml.
+(coq.extraction
+ (prelude quadrivalentextract)
+ (theories RocqBottom Stdlib)
+ (extracted_modules Datatypes Quadrivalent QuadrivalentLattice SvaQuadrivalent)
+ (mode promote))

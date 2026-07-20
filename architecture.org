@@ -1,0 +1,106 @@
+
+This file describes the (desired) file organization of Rocq bottom, a verified library of non-relational abstract domains with guaranteed precision.
+
+The library is structured into two strict layers to guarantee compilation parallelism, prevent circular dependencies, and ensure clean extraction (without Obj.magic) to OCaml:
+
+- =Abstraction= :: Defines and verifies properties about a single abstraction (e.g., =ZInterval= for integers, =Quadrivalent= for booleans), following our algebraic hierarchy. This includes combination of abstractions built using reduced products (e.g., =ZIntervalCongruence=).
+- =Transfer_function= :: defines and verifies properties about /operations/ combining one or several abstractions; e.g. =interval_eqb= takes two =ZInterval= and returns one =Quadrivalent=.
+
+Moreover, within each layer we separate computational content from mathematical one. In the latter, the header should contain a STATUS: line with the current state of the file.
+
+The STATUS line records, for every abstraction or operation defined in the file, *which precision properties have been proved*. We rank these properties from minimal to best:
+
+- *soundness* (over-approximation) :: the minimal guarantee. The abstract result over-approximates the concrete one; this is all that extraction safety requires, and it can be achieved with a deliberately non-optimal (imprecise) abstraction.
+- *best abstraction* :: the abstract result is the most precise abstract element over-approximating the concrete set (the =α= of that set).
+- *exactness* (γ-completeness / exactly-represents) :: the abstraction represents the concrete set exactly (no spurious concrete elements).
+- *α-completeness* :: the operation commits no abstraction error: applying it abstractly equals abstracting the concrete result (it computes the best abstraction of the collecting semantics).
+
+Exactness and α-completeness are the *best* properties to aim for; soundness is the *minimal* one. The STATUS line should make explicit, per item, how far up this ladder we got (e.g. =STATUS: add: sound + α-complete; rem: sound only=), so a reader can tell at a glance whether an abstraction is optimal or merely safe.
+
+We call a *single_value_abstraction* the bundling of several abstractions with transfer functions between these abstractions.
+
+* Foundations
+
+The foundational files =Abstraction.v= and =AbstractLattice.v= define our hierarchy of abstractions:
+
+- =abstraction= :: a carrier type with a concretization ($\gamma$).
+- =abstract_domain= ::  an =abstraction= with an abstract order $\sqsubseteq$.
+- =abstract_join_semilattice= :: an =abstract_domain= with a join operation.
+- =abstract_lattice= :: an =abstract_join_semilattice= with a meet operation.
+
+Along with core properties, notations, and lemmas (e.g. Galois connection & insertion).
+
+* Abstraction (=Abstraction=)
+
+Every abstraction follows a strict structure of two =.v= files plus an OCaml interface.
+
+** =*Comp.v= (Computational Layer)
+
+This file contains the executable core, destined to be extracted 1:1 to OCaml.
+- The raw carrier type of the abstract element;
+- Structural subset types (e.g., ={ i : interval | ~(i.low > i.high) }= ).
+- Computational lattice operations (=join=, =meet=, =leb=), structural helpers (=widen=, =is_singleton=) etc.
+- Extraction directives to OCaml. Extraction should not introduce Obj.magic.
+
+** =*Theory.v= (Mathematical/Logical Layer)
+
+This file imports =*Comp.v= and contains:
+- the concretization, abstract order, and semi-lattice (and possibly lattice) operations, following the algebraic hierarchy in =Abstraction.v= and =AbstractLattice.v=;
+- key optional properties (=JoinIsLUB=, =ExactOrder=, alpha-relations) also defined in those files;
+- domain-specific facts, helper lemmas and tactics (e.g., =i.low > i.high <->= empty concretization).
+
+** =*.mli=
+
+The OCaml interface for the computational layer (it carries no =Comp= suffix).
+
+* Transfer functions and single-value abstractions (=Transfer_function=)
+
+Files are grouped per single-value abstraction, one subdirectory per SVA named after its main domain (e.g. =Transfer_function/ZInterval/=, =Transfer_function/ZIntervalCongruence/=).
+
+** =*OpsComp.v= (Computational Layer)
+
+They contain the transfer functions between the abstract elements, which is purely computational code whose purpose is to be extracted 1:1 to OCaml.
+- If the version is initial and a safer version, or with extra invariant, is redefined with subset types, then the code should be suffixed with =_raw= (e.g., =interval_add_raw=).
+- If the file is large, it may eventually be decomposed by groups of operations (e.g., Bitwise, Arithmetics, Comparison), or (Backward/Forward)
+
+** =*[Op]Theory.v= (Operation Units)
+
+- For each major operation (e.g., =add=), or group of operations (e.g., =add/sub/opp=), this file contains:
+  1. The soundness/exactness/best/alpha-completeness proof (e.g., =add_sound=). The header STATUS line must state, per operation, which of these properties were proved (soundness being minimal, exactness and α-completeness being best — see the precision ladder above).
+  2. A possible "Safe Wrapper" (=add=), which lifts the raw operation to a subset type using the proof. Note that when an operation is proved best/α-complete, its result is already maximally reduced, so no extra reduction step is needed in the wrapper.
+
+This keeps the raw definition, soundness proof, and safe API bundled as one "mathematical unit". May compositionally import other proofs if operations depend on each other (e.g., =MulTheory= imports =OppTheory=).
+
+** =*API.v= (The Export Layer)
+
+This file contains a thin module that groups safe (or raw if already safe) transfer functions and types with soundness proofs only (not exactness), and extraction directives to OCaml.
+
+Note that the names change due to api standardization; e.g. =congruence_add= may become =iadd= to comply with the standard interface for integer additions.
+
+** =*API.mli= (Documented interface)
+
+This file describes the interface for generated code, as an OCaml interface implementing a =SINGLE_VALUE_ABSTRACTION= module type (planned; this module type does not exist in the Rocq sources yet). Note that Rocq does not have a real concept of interface file documenting an API.
+
+* Architectural Rationale
+
+** Break dependency cycles
+
+There is a directional invariant in the structure: the =Transfer_function= layer depends on the =Abstraction= layer, never the reverse. This ensures that there are no cross-dependencies between files and lemmas. Combinations of abstractions (reduced products such as =ZIntervalCongruence=) stay in the =Abstraction= layer; they are also the place where exchanging information between abstraction of the same concrete element is provided.
+
+** Computational vs Theory separation
+
+By putting computational code in standalone files, we:
+- make it easy to spot what will be executed;
+- ensure that the Rocq operations are type-safe and extract to safely typed OCaml interfaces, with no =Obj.magic=
+
+** Splitting function transfer proofs
+
+By splitting them in different files, we make proof recompilation/execution easier; in addition, the proof compilation can be made in parallel.
+
+** Subset type in Computational Code
+
+Even if a subset type in Rocq is essentially identical to the raw type (minus the erased proof), wrapping it in an abstract module signature ensures that users of the Rocq library cannot bypass the invariants. Upon extraction, OCaml respects these distinct type names, especially if the type is made abstract.
+
+** Directory names
+
+Directory names are singular and capitalized (=Abstraction=, =Transfer_function=), matching the Dune library =(name ...)=. With =(include_subdirs qualified)= the subdirectory becomes a component of both the Coq logical path and the extracted OCaml module path, so the qualified name reads as a kind qualifier: =Abstraction.ZInterval= ("the =ZInterval= abstraction").  Capitalization keeps the Coq =Require= path and the OCaml module path identical (Coq path components are the literal directory names, OCaml ones are always capitalized).

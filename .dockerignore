@@ -1,0 +1,34 @@
+# Keep the build context to the sources: everything below is either regenerated
+# inside the image by `make all`, or has no business in it.
+#
+# This matters most when you have already built locally: without it, a host
+# _build/ would be copied into the image, and dune could pick up .vo files
+# compiled against a different Rocq installation.
+
+# Version control.
+**/.git
+**/.gitignore
+
+# Build output.
+**/_build
+doc/
+**/*.vo
+**/*.vok
+**/*.vos
+**/*.glob
+**/*.ml
+**/*.mli
+**/.*.aux
+**/.*.cache
+TAGS
+
+# Archives and generated documents.
+*.tar.gz
+*.tgz
+*.pdf
+
+# Editor leftovers.
+*~
+.#*
+*.bak
+*.rej

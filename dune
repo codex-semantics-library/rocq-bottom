@@ -1,0 +1,18 @@
+; Parallel dune build of the RocqBottom theory.
+; Subdirectories are addressed qualified, e.g.
+;   Transfer_function.ZIntervalCongruence.OpsComp
+
+; Exclude the source copy in clean/, the publication/ subrepo, and ocaml/
+; (extraction driver + output; its own stanza, kept out of this theory).
+(dirs :standard \ clean publication ocaml)
+
+(include_subdirs qualified)
+
+(coq.theory
+ (name RocqBottom)
+ ; ssreflect / ZArith / Lia / Utf8 live in the installed Stdlib theory.
+ (theories Stdlib)
+ ; --utf8 so coqdoc renders the unicode notation (⊑ ⊔ ⊓ ≡ γ ℘) directly.
+ (coqdoc_flags (:standard --utf8))
+ ; test2 is a scratch file, not part of the build.
+ (modules :standard \ test2))

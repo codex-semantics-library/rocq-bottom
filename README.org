@@ -1,0 +1,399 @@
+#+LATEX_HEADER: \usepackage{tabularx}
+#+LATEX_HEADER: \usepackage[margin=2cm]{geometry}
+
+* Rocq bottom
+
+Rocq bottom is a formally verified abstract interpretation library in Rocq
+(Coq), providing composable abstract domains, lattice structures, and verified
+operations with extraction to OCaml. 
+
+This artifact corresponds to the status of the library as of the submission of
+the SAS'26 paper: Rocq Bottom: Beyond Soundness with Precise Reasoning about
+Analysis Precision, also submitted as an evaluated artifact; some changes
+corresponding to the camera-ready version of the paper, and taking into account
+the artifact evaluator's remarks, are documented in [[*Changes since Artifact Evaluation][Changes since Artifact
+Evaluation]] below.
+
+This artifact is distributed under the GNU Lesser General Public License,
+version 2.1 (see the =LICENSE= file).
+
+* Development status
+
+The proofs are complete: there are no =Admitted= lemmas, and the development relies
+on no axioms.
+
+A handful of =TODO= comments remain in the sources: they record possible
+refactorings, possible generalisations, alternative proof routes, and results that
+are conjectured but not yet verified. None of them indicates an unproven result or
+a soundness gap: they describe work that /could/ be done, not work that is missing.
+
+This can be checked mechanically:
+
+#+BEGIN_SRC sh
+make validate
+#+END_SRC
+
+which builds the library and runs the kernel proof-checker (=rocqchk=) over every
+compiled =.vo=, asserting that the whole closure depends on *no axioms* (it prints
+=* Axioms: <none>= and =OK: library is axiom-independent.= on success). It thereby
+also confirms the absence of any =Admitted= / =Assumed= results.
+
+* Changes since Artifact Evaluation
+
+The artifact evaluated for SAS 2026 has since been extended. The following
+results were added *after* Artifact Evaluation, and are the ones the
+camera-ready paper cites:
+
+- *Bitwise addition and subtraction* (=KnownBits.v=,
+  =Transfer_function/KnownBits/AddTheory.v=) — the abstract adder =kb_add= and
+  subtracter =kb_sub=, defined through their carry and borrow sequences, each
+  proved to be the /best/ abstraction of the corresponding concrete operation on
+  non-bottom known bits (=kb_add_best=, =kb_sub_best=, from which
+  =kb_add_sound= and =kb_sub_sound= follow); together with the negative results
+  =kb_add_not_exact= (addition is not γ-exact on known bits) and
+  =kb_add_not_alpha_complete=.
+- *α-completeness* (=Abstraction.v=, =AbstractLattice.v=, =BoundAbstraction.v=,
+  =Z_interval.v=) — the =IsAlpha= relation and its bridges to best abstraction, and
+  α-completeness of interval addition and multiplication.
+- *Interval×congruence reduced product* (=ZIntervalCongruence.v=,
+  =Transfer_function/ZIntervalCongruence/=) — the layered =zic= domain and its
+  =reduce=; addition, proved sound and best (=add_raw_alpha_complete_prod=) but
+  /not/ γ-exact, with ={0,3,8,11}= as the witness (=add_reduced_not_gamma_exact=);
+  and a partial remainder (sound everywhere, best on the constant-divisor cases).
+
+Beyond adding lemmas, three things changed in the artifact itself:
+
+- the *build* moved from =coq_makefile= to *dune*. The =make= targets are unchanged
+  (=make=, =make clean=, =make doc=, =make validate=), and the move also fixes the
+  =make clean= followed by =make= failure reported during evaluation;
+- the *new* transfer functions above live in a new =Transfer_function/= directory
+  (the existing ones — interval, congruence, known-bits and boolean operations —
+  remain in their domain files, unmoved); the dead files =set.v=, =autoreflectset.v=
+  and =integer_known_bits.v= were removed, and =quadrivalentextract.v= moved to
+  =ocaml/=;
+- some lemmas were *renamed*: the α-relation and its lemmas, previously called
+  =IsAdjoint= / =is_adjoint_*=, are now =IsAlpha= / =is_alpha_*=, matching the name
+  used in the paper; and the =cong_div_*_case_*= lemmas of =Congruence.v= were given
+  descriptive names (=cong_div_exact_divisor_zero_total= and friends).
+
+* Building
+
+This project targets *Rocq 9.0*. The build is driven by *dune*; the =Makefile= is
+a thin convenience wrapper that forwards to it.
+
+** Normal build
+
+#+BEGIN_SRC sh
+make          # Build all .v files (dune build) and run OCaml extraction
+make clean    # Remove build artifacts (dune clean)
+make doc      # Generate the HTML documentation into doc/
+make validate # Check that the proofs rely on no axioms (see above)
+#+END_SRC
+
+dune discovers =.v= files automatically (via =(include_subdirs qualified)=), so new
+files need no registration — just create them.
+
+*Requirements.* Besides =rocq= itself, this build needs the Rocq 9 /compatibility
+binaries/ =coqc= and =coqdep= to be on the =PATH= (and =coqdoc= for =make doc=), because
+dune invokes them under those names. Most opam switches install them next to
+=rocq=; a bare Rocq 9 installation, however, provides only the =rocq= driver, in
+which case the Docker build below is the simplest route — it supplies the three
+names as one-line shims onto the driver.
+
+The documentation is generated by calling =rocq doc= directly (rather than through
+dune's documentation alias), so that =make doc= also works where only the driver
+is available.
+
+Note that the build produces some warnings related to extraction, which is
+work-in-progress. They have no incidence on the proofs.
+
+** Build using Docker
+
+Alternatively, the artefact may be built using Docker:
+
+#+BEGIN_SRC sh
+docker build -t rocq-bottom .
+docker run --rm -it --network none rocq-bottom bash
+#+END_SRC
+
+Inside the container, =make=, =make clean=, =make doc= and =make validate= all behave as
+described above.
+
+Deactivating the network is deliberate: on some Docker configurations, commands
+executed inside the container become extremely slow (they appear to hang).
+Removing network access fixes the problem.
+
+The Dockerfile pins the =rocq/rocq-prover:9.0= base image *by digest*, so that the
+recipe keeps building the artifact exactly as archived. That image ships the Rocq
+9 driver (=rocq=, =rocqchk=) but none of the compatibility binaries named above, so
+the Dockerfile supplies =coqc=, =coqdep= and =coqdoc= as one-line shims onto the
+driver, using the same mapping (=rocq c=, =rocq dep=, =rocq doc=) that Rocq's own
+generated =Makefile.coq= uses.
+
+* LLM assistance
+
+Part of this development was carried out with LLM assistance, for proof and
+transfer-function synthesis (discussed in the paper, §5.6 and §5.7). The models
+used were various versions of *Claude Opus* (4.5 to 4.7) and *deepseek-v4-pro*,
+driven from the command line, and given the project's conventions and proof
+mechanics (ssreflect bookkeeping, the project-specific tactics, the naming
+conventions) as written instructions.
+
+This has no consequence on the trustworthiness of the results: the main
+framework definitions were written by hand, the concrete semantics is that of
+the Rocq's stdlib, every proof is checked by the Rocq kernel, and =make validate=
+(above) confirms that the whole development is free of =Admitted= results and
+depends on no axioms.
+
+* Files
+
+#+ATTR_LATEX: :environment tabularx :width \textwidth :align lX :font \small
+| File                                              | Description                                                                                       |
+|---------------------------------------------------+---------------------------------------------------------------------------------------------------|
+| =base.v=                                            | Foundational type classes and notations: =Equiv=, =SqSubsetEq=  =propset= , set membership              |
+| =Abstraction.v=                                     | Core abstraction hierarchy: =Concretization=, =abstract_domain= (adds order).                         |
+| =AbstractLattice.v=                                 | Extends abstract domains with lattice operations: join, meet, and lattice laws                    |
+| =autoreflect.v=                                     | =AutoReflect= type class for computational reflection — reflects =Prop= goals to =bool= computations    |
+| =Quadrivalent.v=                                    | Four-valued boolean abstraction (=QBottom=, =QTrue=, =QFalse=, =QTop=), isomorphic to P(bool)             |
+| =QuadrivalentLattice.v=                             | Lattice operations (join, meet, equiv, ordering) on quadrivalent, verified by =AutoReflect=         |
+| =SvaQuadrivalent.v=                                 | Boolean transfer functions (negation, conjunction, disjunction) on quadrivalent                   |
+| =ocaml/quadrivalentextract.v=                       | OCaml extraction directives for the quadrivalent domain (drives the extraction into =ocaml/=)       |
+| =Tactics.v=                                         | Proof tactics: =gamma_db= hint database, =decompose_hypothesis=                                       |
+| =AbstractionCombination.v=                          | Domain composition: =WithTop=, =Subset= (restricts elements), =Conjunction= (product domain)            |
+| =BoundAbstraction.v=                                | GLB abstraction: an element represents all larger elements, forming a Galois connection           |
+| =BoundLattice.v=                                    | =ConcreteLattice= record and construction of =abstract_join_semilattice_laws= from bound abstractions |
+| =Z_interval.v=                                      | Integer interval domain built on the bound/lattice infrastructure                                 |
+| =KnownBits.v=                                       | Known-bits abstraction for Z, bitwise operations, and addition/subtraction=.                      |
+| =Congruence.v=                                      | Congruence domain over Z: the pair (r, m) represents r + mZ                                       |
+| =ZIntervalCongruence.v=                             | Reduced product of integer intervals and congruences with cross-component reduction               |
+| =Transfer_function/ZIntervalCongruence/OpsComp.v=   | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
+| =Transfer_function/ZIntervalCongruence/AddTheory.v= | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=        |
+| =Transfer_function/ZIntervalCongruence/RemTheory.v= | Remainder on the product: soundness, the =gcd= congruence rule, and the constant-divisor best cases |
+| =Transfer_function/KnownBits/AddTheory.v=           | Bitwise addition on known bits: =kb_add_not_exact= and =kb_add_not_alpha_complete=                    |
+|---------------------------------------------------+---------------------------------------------------------------------------------------------------|
+
+* Extending the library
+
+Abstract domains are built bottom-up: carrier → =abstraction= → =abstract_domain=
+→ join-semilattice → lattice → (optional) module-type check. The notions
+below are developed in the accompanying paper (=Abstraction.v= and
+=AbstractLattice.v= for the definitions).
+
+Different files illustrate different parts of the story, so pick the closest
+example for what you are doing:
+- =Quadrivalent.v= / =SvaQuadrivalent.v= — a /finite/ domain that is exact by
+  computation: every operation =ExactlyRepresents= its concrete counterpart and
+  every proof is discharged by =solve_with_autoreflect=. Good model for small
+  enumerable domains, less representative of the general case.
+- =BoundAbstraction.v= — GLB/LUB abstractions and the α-relation machinery
+  (=is_lub= as a strong α-relation, =⊤= for unbounded sets). The reference for
+  setting up =IsAlpha= / =BestAbstraction=.
+- =Z_interval.v= — an /infinite/ domain assembled entirely from combinators,
+  with a join-semilattice and =ExactOrder= recovered on the non-empty part.
+- =Congruence.v= — an infinite domain with =ExactOrder= and non-trivial
+  abstract equivalence (=(r,m)= up to representative).
+- =ZIntervalCongruence.v= — a reduced product where =ExactOrder= does /not/ hold
+  out of the box: the reference for reductions and maximal reduction.
+
+** Precision notions and the proof recipe
+
+An abstract element =a= can be related to a concrete set =S : ℘ C= by several
+relations of increasing strength. We use the interval =[4,7]= as a running
+example. Four relations need only an =abstraction= (no abstract order):
+
+- =Overapproximates a S= — =S ⊆ γ a= (soundness). =[4,7]= overapproximates
+  ={4,6,7}=.
+- =Underapproximates a S= — =γ a ⊆ S=.
+- =ExactlyRepresents a S= — =γ a ≡ S= (over- /and/ under-approximates; also
+  called γ-completeness or exactness). =[4,7]= exactly represents ={4,5,6,7}=,
+  but /no/ interval exactly represents ={4,6,7}=.
+- =MostPrecise a S= — overapproximates =S= with the smallest concretization
+  among all overapproximations.
+
+Two more need an =abstract_domain= (an abstract order =⊑=):
+
+- =BestAbstraction a S= — overapproximates =S= and is =⊑=-below every other
+  overapproximation. =[4,7]= is the best abstraction of ={4,6,7}=.
+- =IsAlpha a S= (the α-relation, named as in the paper) — equivalent to
+  =BestAbstraction= since =γ= is monotone.
+
+Implications: =ExactlyRepresents= ⇒ =MostPrecise= ⇒ =Overapproximates=,
+=ExactlyRepresents= ⇒ =Underapproximates=, =BestAbstraction= ⇔ =IsAlpha= ⇒
+=MostPrecise=. The converse =MostPrecise= ⇒ =BestAbstraction= holds *only*
+under =ExactOrder= (the abstract and concrete orders coincide). The notions
+genuinely come apart without it: in the interval/congruence product,
+=[1,9] ∩ 2ℤ= /exactly represents/ (hence most-precisely represents) ={2,4,6,8}=,
+yet =[2,8] ∩ 2ℤ= is the /best/ abstraction.
+
+*The recipe*, for both transfer functions and the order proofs of a domain:
+first try to establish =ExactOrder= (corresponding to the notion of Galois
+insertion); then prove =ExactlyRepresents= when feasible, and =BestAbstraction=
+otherwise. =ExactOrder= is worth engineering for — it makes =ExactlyRepresents=
+the single strongest property and collapses =MostPrecise= and =BestAbstraction=
+into one. The combinators in =AbstractionCombination.v= exist largely to
+re-establish =ExactOrder= (e.g. by special-casing the multiple representations
+of the empty set).
+
+** Adding a transfer function
+
+A transfer function is an abstract operation =fA= paired with a proof that it
+correctly tracks a /concrete/ operation =f=. You never reason about =f=
+directly — you lift it to a *collecting semantics* and prove =fA= relates to
+that.
+
+*** Defining the transfer function
+
+The abstract function is a plain Rocq function on the *carrier* type(s) —
+=quadrivalent=, =itv=, … — not on the =abstraction= / =abstract_domain= via its
+coercion: extraction needs functions over the bare carrier.
+
+Then pick the collecting semantics of the concrete function (defined in
+=Abstraction.v= — you just name the right one). Forward lifts model expression
+evaluation; backward lifts model how a conditional refines the possible values
+of its sub-expressions.
+
+| concrete =f=      | forward                               | backward                                        |
+|-----------------+---------------------------------------+-------------------------------------------------|
+| unary =C1→C0=     | =collecting_forward f=                  | =collecting_backward f=                           |
+| binary =C2→C1→C0= | =collecting_binary_forward f=           | =collecting_binary_backward_left f= / =..._right f= |
+| partial binary  | =collecting_binary_forward_partial P f= | —                                               |
+
+Examples:
+- /unary forward/ — =interval_opp= against =collecting_forward Z.opp=;
+  =abs_negb= against =collecting_forward negb=.
+- /binary forward/ — =interval_add= against =collecting_binary_forward Z.add=;
+  =abs_andb= against =collecting_binary_forward andb=.
+- /backward/ — =backward_abs_negb= against =collecting_backward negb=;
+  =backward_abs_andb_left= / =_right= against =collecting_binary_backward_left= /
+  =_right=.
+- /partial/ — quotient: the guard rules out division by zero. =Z_interval.v=
+  uses a hand-written =collecting_quot S2 S1 = {c0 | ∃ c2 c1, c2 ∈ S2 ∧ c1 ∈ S1
+  ∧ c1 ≠ 0 ∧ Z.quot c2 c1 = c0}=, the concrete instance of the generic
+  =collecting_binary_forward_partial P f=. Without the guard the collecting
+  semantics would include divide-by-zero results and lose precision.
+
+Functions may be multi-sorted: e.g. =collecting_binary_forward Z.leb= takes
+integer abstractions and returns a boolean abstraction.
+
+*** What to prove
+
+State the spec with the strongest precision predicate you can establish,
+following the recipe above. =spec_n R= asserts the precision relation =R= holds
+between the abstract output and the collecting output, for all inputs.
+
+1. *Exact* — =unary_exact= / =binary_exact= / =ternary_exact=, i.e.
+   =γ(fA a…) ≡ f(γ a…)=. The goal whenever the domain has =ExactOrder=. E.g.
+   =interval_opp_exact : unary_exact itv itv interval_opp (collecting_forward
+   Z.opp)=; =nb_interval_add_exact= for addition on /non-bottom/ intervals.
+2. *Best* — =unary_best= / =binary_best=, optimality in the abstract order.
+   Requires every domain involved to be an =abstract_domain= with α-relations
+   set up (see =BoundAbstraction.v=). E.g. =interval_quot_full_best=, stating
+   =BestAbstraction (interval_quot_full i2 i1) (collecting_quot …)=.
+3. *Most precise* — =unary/binary_most_precise=. Only useful when there is no
+   abstract order (rare here), but other work states precision this way.
+4. *Sound* — =unary/binary_overapproximation=. State this when you only need
+   correctness for now. Even when aiming for optimality, prove soundness first:
+   it is easier, and the proof is reused later (e.g. for preservation of
+   non-emptiness). E.g. =interval_add_sound : binary_overapproximation itv itv
+   itv interval_add (collecting_binary_forward Z.add)=.
+
+Whether a transfer function is /exact/ is independent of how it is written: it
+is a statement about how well the *abstraction* characterises the concrete
+operation. It is worth recording the negative results too — they justify the
+domain design. =interval_add_not_exact= proves addition is /not/ exact on plain
+intervals (=4 ∈ [1,0] + [3,8]= even though =γ[1,0]= is empty), whereas
+=nb_interval_add_exact= shows it /is/ exact once bottom intervals are excluded.
+
+*** How to prove
+
+- /Finite domains/ (=Quadrivalent=): mechanical — =move=>= the abstract args,
+  unfold to set form (=to_set=, or =rewrite /ExactlyRepresents; unfold_set=),
+  =move:= the args back into the goal, then =solve_with_autoreflect= does
+  exhaustive boolean case analysis.
+- /Forward soundness/: the =overapproximation_proof= tactic introduces the
+  abstract and concrete elements and their membership hypotheses with proper
+  names for the unary/binary forward cases. =interval_add_sound= is then a
+  single case split on the bound shapes (=[|l] [|h]=) closed by =lia=.
+- /Infinite domains/ (=Z_interval=): the set reasoning is done by hand,
+  following the recipe — case-split on the bound shapes, =unfold_set= /
+  =to_set=, discharge arithmetic with =lia=. An =_exact= proof typically
+  splits into the soundness half and an =_gamma_complete= (underapproximation)
+  half, as in =nb_interval_add_exact=.
+
+*** Extraction and the backward-function interface
+
+The =_exact= / =_best= lemmas above use the /declarative/ backward function
+(all arguments present, result is the refined set). For execution, wrap it in
+the option-returning interface: =None= means "no refinement", =Some a'= means a
+strictly smaller element. Define =impl_backward_...= and prove it against the
+declarative backward function with =backward_unary_function_correct= /
+=backward_binary_function_correct=. See =impl_backward_abs_negb= and its
+correctness proof in =SvaQuadrivalent.v= (the local =symbolic_run= tactic
+discharges these by symbolic execution over every match branch).
+
+Finally, collect the forward/backward functions into named modules
+(=Boolean_Forward= / =Boolean_Backward= in =SvaQuadrivalent.v=) so consumers and
+extraction have a stable interface.
+
+** Adding a new domain
+
+1. *Carrier + concretization → =abstraction=.* Define the carrier type and
+   =gamma : car -> ℘ C=, then =BuildAbstraction gamma=. Add a =Hint Unfold= for
+   your gamma into =unfold_gamma= so the set tactics can see through it. If the
+   domain is finite, also provide the =AutoReflect= instance for membership —
+   that is what unlocks =solve_with_autoreflect= later. At this layer you can
+   already state all the concrete-precision notions and compare elements with
+   the /concrete order/ =⊑γ= (=γ a1 ⊆ γ a2=).
+
+2. *Abstract order → =abstract_domain=.* Define =sqsubseteq= (a =bool= test reflected
+   via =AutoReflect=, or a =Prop=) and prove =abstract_domain_laws gamma
+   sqsubseteq=, which requires exactly two things: =⊑= is a =PreOrder=, and =γ= is
+   =OrderPreserving= from =⊑= into =⊆= (this is /soundness of the abstract
+   order/). Then =BuildAbstractDomain gamma sqsubseteq mixin=. Aim for
+   =ExactOrder= (=⊑= ⇔ =⊑γ=) and you get γ-injectivity for free:
+   =qv_sqsubseteq_exact= shows the pattern for a finite domain, =Congruence.v=
+   and the non-empty part of =Z_interval.v= for infinite ones.
+
+3. *Optional structure — state only what holds.*
+   - /Join-semilattice/: add a join =⊔= and discharge the
+     =abstract_join_semilattice_laws= (=AbstractLattice.v=) — just that both
+     arguments are =⊑= the join. This already gives soundness (=join_sound=:
+     =γ a1 ∪ γ a2 ⊆ γ (a1 ⊔ a2)=). The key optional property is =JoinIsLUB=
+     (the join is the /least/ upper bound, not merely an upper bound); it
+     unlocks the connecting lemma and the fact that join distributes over
+     α-relations (=a1= adjoint to =S1=, =a2= adjoint to =S2= ⇒ =a1 ⊔ a2=
+     adjoint to =S1 ∪ S2=). Most domains here are join-semilattices but not
+     meet-semilattices — meet can produce the empty set, which domains like
+     =Congruence.v= cannot represent without a separate ⊥. For domains built
+     from a GLB/LUB structure, =BoundLattice.v= derives the semilattice laws
+     from a =ConcreteLattice= (see =Z_interval.v=).
+   - /Lattice/: add a meet =⊓= over-approximating intersection
+     (=γ a1 ∩ γ a2 ⊆ γ (a1 ⊓ a2)=) and discharge the =abstract_lattice= laws.
+   - /Galois insertion — get =ExactOrder=/: the goal of this step is to prove
+     =ExactOrder=, because it makes =ExactlyRepresents= the strongest spec and
+     collapses =MostPrecise= and =BestAbstraction= (see the recipe above). The
+     route to it goes through the α-relation machinery: define an =IsAlpha=
+     (α) relation for your domain, show every element is its own best
+     abstraction (=MaximallyReduced=), and you have a /Galois insertion/, which
+     implies =ExactOrder=. If a domain is /not/ a Galois insertion as defined
+     (e.g. a reduced product, where distinct elements share a concretization),
+     restore it with a =Reduction= function that maps each element to a
+     maximally-reduced one — or, more simply, by composing the combinators in
+     step 4, which are built to do exactly this. =BoundAbstraction.v= is the
+     worked example for the α-relations; =ZIntervalCongruence.v= for reductions.
+
+4. *Trim with combinators instead of hand-rolling.* =AbstractionCombination.v=
+   builds new domains from existing ones, and most exist specifically to
+   re-establish =ExactOrder= / a Galois insertion — prefer these over
+   redefining structure: =WithTop= / =WithBottom= (adjoin a fresh ⊤/⊥;
+   =WithTop.lift2= lifts a binary op through it), =Subset= / =NonEmpty= (restrict
+   to a sub-predicate of elements), =Conjunction= (reduced product),
+   =CollapsedBottom= / =CanonicalBottom= / =MaximallyReducedSubset= (normalise
+   redundant representations, e.g. the multiple empty-set
+   elements). =Z_interval.v= is assembled as a conjunection of =WithTop.ad glb=
+   and =WithTop.ad lub= rather than defined from scratch.
+
+5. *Verify the interface for extraction.* If the domain is meant to be
+   extracted, expose =t=, =concr=, =ad=, =is_included= and the =ad_car_ad_eq_t=
+   proof, then add a =Module XCheck <: ABSTRACT_DOMAIN= check (cf.
+   =quadrivalentextract.v=) so any interface drift becomes a build error.
