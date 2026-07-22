@@ -22,6 +22,89 @@ Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.
 
+(** * Unboundedness and zero-collapse of [Z.mul] product sets.
+
+    Stated over [collecting_binary_forward Z.mul], so they belong with the
+    multiplication transfer function rather than with the interval
+    abstraction; [interval_mul_opt_best] below is their only client. *)
+
+(** When one operand of [Z.mul] ranges over an [IsAlpha Top] (unbounded) set
+    and the other contains a strictly positive element, the product set is
+    itself unbounded above. Right-unbounded variant: the unbounded factor is
+    the right argument. *)
+Lemma IsAlpha_lubtop_top_product_r (S_pos S_unb : ℘ Z) :
+  IsAlpha (A:=lubtop) WithTop.Top S_unb ->
+  (exists c, c ∈ S_pos /\ 0 < c) ->
+  IsAlpha (A:=lubtop) WithTop.Top
+    (collecting_binary_forward Z.mul S_pos S_unb).
+Proof.
+  move=> Hunb [c2 [Hc2in Hc2pos]].
+  rewrite /IsAlpha => a; case: a => [|z] /=.
+  - by unfold_set; split.
+  - unfold_set; split; [|by []].
+    move=> Hsub.
+    apply: (is_alpha_lubtop_top_nn S_unb (Z.max z 0) Hunb) => [[c1 [Hc1in Hc1gt]]].
+    have Hle := Hsub (c2 * c1) ltac:(exists c2, c1; by repeat split).
+    unfold_set in Hle. nia.
+Qed.
+
+(** Left-unbounded variant. *)
+Lemma IsAlpha_lubtop_top_product_l (S_unb S_pos : ℘ Z) :
+  IsAlpha (A:=lubtop) WithTop.Top S_unb ->
+  (exists c, c ∈ S_pos /\ 0 < c) ->
+  IsAlpha (A:=lubtop) WithTop.Top
+    (collecting_binary_forward Z.mul S_unb S_pos).
+Proof.
+  move=> Hunb [c1 [Hc1in Hc1pos]].
+  rewrite /IsAlpha => a; case: a => [|z] /=.
+  - by unfold_set; split.
+  - unfold_set; split; [|by []].
+    move=> Hsub.
+    apply: (is_alpha_lubtop_top_nn S_unb (Z.max z 0) Hunb) => [[c2 [Hc2in Hc2gt]]].
+    have Hle := Hsub (c2 * c1) ltac:(exists c2, c1; by repeat split).
+    unfold_set in Hle. nia.
+Qed.
+
+(** When one operand of [Z.mul] is collapsed to the singleton [{0}], every
+    product is [0], so the LUB of the product set is [NotTop 0]. Left-zero
+    variant. *)
+Lemma zero_interval_product_lub_l (S_zero S_other : ℘ Z) :
+  (forall c, c ∈ S_zero -> c = 0) ->
+  (exists c, c ∈ S_zero) ->
+  (exists c, c ∈ S_other) ->
+  IsAlpha (A:=lubtop) (WithTop.NotTop 0)
+    (collecting_binary_forward Z.mul S_zero S_other).
+Proof.
+  move=> Hzero [c0 Hc0] [c1 Hc1].
+  have H0z : 0 ∈ S_zero by have E := Hzero c0 Hc0; rewrite -E.
+  apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
+  constructor.
+  - move=> z' [c2 [c1' [Hc2in [Hc1'in <-]]]].
+    have -> : c2 = 0 by apply Hzero.
+    unfold_set; simpl; lia.
+  - move=> z' Hz'; apply Hz'.
+    exists 0, c1; split; [exact H0z | split; [exact Hc1 | ring]].
+Qed.
+
+(** Right-zero variant. *)
+Lemma zero_interval_product_lub_r (S_other S_zero : ℘ Z) :
+  (forall c, c ∈ S_zero -> c = 0) ->
+  (exists c, c ∈ S_zero) ->
+  (exists c, c ∈ S_other) ->
+  IsAlpha (A:=lubtop) (WithTop.NotTop 0)
+    (collecting_binary_forward Z.mul S_other S_zero).
+Proof.
+  move=> Hzero [c0 Hc0] [c1 Hc1].
+  have H0z : 0 ∈ S_zero by have E := Hzero c0 Hc0; rewrite -E.
+  apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
+  constructor.
+  - move=> z' [c2 [c1' [Hc2in [Hc1'in <-]]]].
+    have -> : c1' = 0 by apply Hzero.
+    unfold_set; simpl; lia.
+  - move=> z' Hz'; apply Hz'.
+    exists c1, 0; split; [exact Hc1 | split; [exact H0z | ring]].
+Qed.
+
 Section Interval_mul.
 
   Definition bound_mul a b :=
