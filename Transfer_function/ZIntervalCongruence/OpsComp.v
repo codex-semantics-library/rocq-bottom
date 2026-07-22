@@ -9,7 +9,8 @@ Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
   Z_interval Congruence
-  ZIntervalCongruence.
+  ZIntervalCongruence
+  Transfer_function.Congruence.AddTheory.
 
 (** ** Z.add transfer function (raw).
 
