@@ -1,4 +1,4 @@
-(* KnownBits.v - Known-bits abstraction for Z using must0_must1 representation *)
+(* KnownBitsTheory.v - Known-bits abstraction for Z using must0_must1 representation *)
 
 (* STATUS: the known-bits domain (must0, must1).
    order : pointwise quadrivalent, exact   lattice : pointwise join/meet
