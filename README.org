@@ -173,6 +173,7 @@ depends on no axioms.
 | =Transfer_function/KnownBits/BitwiseTheory.v=       | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument         |
 | =Transfer_function/KnownBits/AddSubTheory.v=        | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete       |
 | =Congruence.v=                                      | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |
+| =Transfer_function/Congruence/OpsComp.v=            | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only   |
 | =Transfer_function/Congruence/AddTheory.v=          | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                     |
 | =Transfer_function/Congruence/MulTheory.v=          | Congruence multiplication: =cong_mul= is best but not γ-exact                                     |
 | =Transfer_function/Congruence/DivTheory.v=          | Congruence floor division =cong_div=: best, and γ-exact in cases A/B/D1                           |

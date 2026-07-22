@@ -1,6 +1,8 @@
 (* LeTheory.v - [Z.leb] transfer function for the Congruence single-value
    abstraction: [cong_le] takes two congruences (r, m) and returns a
-   [quadrivalent]. Split out of Congruence.v. *)
+   [quadrivalent]. Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: le (Z.leb): exact + best (cong_le_exact / cong_le_best). *)
 
@@ -13,23 +15,8 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
-
-(** * Less-or-equal abstraction [cong_le].
-
-    The result of [Z.leb a b] for [a ∈ γ(r1, m1)], [b ∈ γ(r2, m2)] is a
-    set of booleans, abstracted by [quadrivalent]. When both inputs are
-    constants ([m1 = 0 ∧ m2 = 0]), the comparison is exact: [Z.leb r1 r2].
-    Otherwise at least one of γ(r1,m1), γ(r2,m2) is unbounded above and
-    below, so both [true] and [false] are realised, giving [QTop] —
-    again exact. *)
-
-Definition cong_le (a1 a2 : Z * Z) : quadrivalent :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  if (m1 =? 0) && (m2 =? 0) then
-    if r1 <=? r2 then QTrue else QFalse
-  else QTop.
 
 Local Instance qv_exact_order : ExactOrder Quadrivalent.qv.
 Proof. move=> q1 q2. exact: qv_sqsubseteq_exact. Qed.

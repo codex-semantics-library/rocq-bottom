@@ -1,6 +1,8 @@
 (* QuotTheory.v - [Z.quot] (truncating division) transfer function for the
    Congruence single-value abstraction: [cong_quot] takes two congruences
-   (r, m) and returns a congruence. Split out of Congruence.v. *)
+   (r, m) and returns a congruence. Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: quot (Z.quot): sound + best (cong_quot_sound / cong_quot_best).
    Not γ-exact in general: the concrete quotient set of a progression is
@@ -19,6 +21,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
@@ -30,40 +33,6 @@ Generalizable All Variables.
     best abstraction depends on the GCD of quotients [|r1| div |c|] over
     divisor magnitudes [|c| ≤ |r1|] in γ(r2, m2). Computed by walking
     the two magnitude progressions of γ with an early exit at gcd = 1. *)
-
-(** Contribution of a single arithmetic progression [d, d+step, d+2*step, ...]
-    of divisor magnitudes (with [1 ≤ d], [1 ≤ step]) to the gcd of
-    [ar / d'] over its terms [d' ≤ ar]:
-
-    - if [d > ar]: no term in [[1, ar]], contribute [0] (gcd identity);
-    - if [d ≤ ar < d + step]: a single term [d], contribute [ar / d];
-    - if [d + step ≤ ar]: at least two terms; the gcd collapses to [1]
-      (some term lies in [(ar/2, ar]] with quotient [1]). *)
-Definition quot_gcd_progression (ar d step : Z) : Z :=
-  if ar <? d then 0
-  else if ar <? d + step then ar / d
-  else 1.
-
-(* Note: examples of interesting runs:
-   10/3+8Z = 10/{-13,-5,3,11}.. = {0,-3,2,0} : gcd = 1.
-   10/4+8Z = 10/{-12,-4,4,12}.. = {0,-2,2,0} : gcd = 2.
-   10/2+30Z = 10/{-28,2,32}.. = {0,5,0} : gcd = 5. *)
-
-(** GCD of all |r1|-div-|c| for nonzero c ∈ γ(r2, m2) with |c| ≤ |r1|.
-    Returns 0 when no such c exists (D2a case). *)
-Definition quot_gcd_compute (r1 r2 m2 : Z) : Z :=
-  let ar := Z.abs r1 in
-  let am := Z.abs m2 in
-  let rm := r2 mod am in
-  if rm =? 0 then
-    quot_gcd_progression ar am am
-  else
-    (** This could be replaced by a case split:
-        - Either one of the quot_gcd_progression is 0 (we take the other);
-        - Otherwise, it returns a value in {1;2;3}, and the end result is 2
-          only if both are 2. *)
-    Z.gcd (quot_gcd_progression ar rm am)
-          (quot_gcd_progression ar (am - rm) am).
 
 (** ** Helper lemmas about [quot_gcd_progression]. *)
 
@@ -324,19 +293,6 @@ Proof.
       { rewrite /c Z.abs_opp. rewrite /d. apply: Z.abs_eq. nia. }
       have := Hdiv_abs c Hc_in Hc_ne. rewrite Habs. done.
 Qed.
-
-Definition cong_quot (a1 a2 : Z * Z) : WithBottom.with_bottom (Z * Z) :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  if m2 =? 0 then
-    if r2 =? 0 then WithBottom.Bot                                   (* divisor_zero *)
-    else if (m1 =? 0) || ((m1 mod r2 =? 0) && (r1 mod r2 =? 0)) then
-           WithBottom.NotBot (Z.quot r1 r2, Z.quot m1 r2)            (* const_divides *)
-    else WithBottom.NotBot (0, 1)                                    (* top (const_pos/neg) *)
-  else
-    if m1 =? 0 then
-      WithBottom.NotBot (0, quot_gcd_compute r1 r2 m2)               (* D2a / gcd case *)
-    else WithBottom.NotBot (0, 1).                                   (* top (m1 ≠ 0) *)
 
 (** Identity used by [const_divides]: when [r2 ∣ m1] and ([m1 = 0] ∨ [r2 ∣ r1]),
     every dividend [r1 + k·m1] is a multiple of [r2], so [Z.quot] is exact. *)

@@ -23,6 +23,7 @@ Require Import
   Z_interval Congruence
   ZIntervalCongruence
   Transfer_function.ZInterval.AddTheory
+  Transfer_function.Congruence.OpsComp
   Transfer_function.Congruence.AddTheory
   Transfer_function.ZIntervalCongruence.OpsComp.
 

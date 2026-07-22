@@ -1,6 +1,8 @@
 (* MulTheory.v - [Z.mul] transfer function for the Congruence single-value
    abstraction: [cong_mul] takes two congruences (r, m) and returns a
-   congruence. Split out of Congruence.v. *)
+   congruence. Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: mul (Z.mul): sound + best, NOT γ-exact
    (cong_mul_sound / cong_mul_best / cong_mul_not_gamma_exact). *)
@@ -18,25 +20,11 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
 (** * Multiplication. *)
-
-(** Granger's rule: (m1·Z + r1) · (m2·Z + r2) ⊆ gcd(r1·m2, r2·m1, m1·m2)·Z + r1·r2.
-    Expanding c2·c1 − r1·r2 = r1·(c1−r2) + r2·(c2−r1) + (c2−r1)·(c1−r2)
-    shows each summand is divisible by r1·m2, r2·m1, m1·m2 respectively,
-    hence by their gcd.
-
-    Note: multiplication is the best (smallest) enclosing congruence but
-    is not γ-exact in general. E.g. γ(1,6)·γ(1,10) ⊊ γ(1,2) = odds,
-    since 3 ∉ {(6k+1)(10l+1)} (no integer factorization of 3 has that
-    form). So we prove soundness only. *)
-
-Definition cong_mul (a1 a2 : Z * Z) : Z * Z :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  (r1 * r2, Z.gcd (Z.gcd (r1 * m2) (r2 * m1)) (m1 * m2)).
 
 (** Counterexample to exactness. [cong_mul (1,6) (1,10) = (1,2)], whose
     concretization γ(1,2) is the odd integers; yet 3 — though odd — is

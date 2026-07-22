@@ -1,7 +1,9 @@
 (* AddTheory.v - [Z.add] / [Z.opp] / [Z.sub] transfer functions for the
    Congruence single-value abstraction. The three are filed together because
    they are interdependent: [cong_sub] is [cong_add] composed with [cong_opp].
-   Split out of Congruence.v. *)
+   Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: add (Z.add): sound + exact + α-complete
      (cong_add_sound / cong_add_exact / cong_add_alpha_complete);
@@ -21,19 +23,11 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
 (** * Addition operation. *)
-
-(** γ(r1, m1) + γ(r2, m2) = γ(r1 + r2, gcd(m1, m2)).
-    Sum of remainders gives the new remainder; gcd of moduli the new
-    modulus — by Bezout, gcd(m1,m2)·Z = m1·Z + m2·Z. *)
-
-Definition cong_add (a2 a1 : Z * Z) : Z * Z :=
-  let (r2, m2) := a2 in
-  let (r1, m1) := a1 in
-  (r2 + r1, Z.gcd m2 m1).
 
 Lemma cong_add_sound:
   binary_overapproximation cong_ad cong_ad cong_ad cong_add
@@ -123,10 +117,6 @@ Qed.
 
 (** * Negation. *)
 
-(** -γ(r, m) = γ(-r, m); negation is exact on congruences. *)
-Definition cong_opp (a : Z * Z) : Z * Z :=
-  let (r, m) := a in (-r, m).
-
 Lemma cong_opp_sound:
   unary_overapproximation cong_ad cong_ad cong_opp (collecting_forward Z.opp).
 Proof.
@@ -151,11 +141,6 @@ Proof.
 Qed.
 
 (** * Subtraction. *)
-
-(** Subtraction reduces to addition of the negation. *)
-Definition cong_sub (a1 a2 : Z * Z) : Z * Z :=
-  cong_add a1 (cong_opp a2).
-(* MAYBE: an optimized version. *)
 
 Lemma cong_sub_sound:
   binary_overapproximation cong_ad cong_ad cong_ad cong_sub

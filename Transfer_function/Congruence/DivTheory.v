@@ -1,6 +1,8 @@
 (* DivTheory.v - [Z.div] (floor division) transfer function for the Congruence
    single-value abstraction: [cong_div] takes two congruences (r, m) and
-   returns a congruence. Split out of Congruence.v. *)
+   returns a congruence. Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: div (Z.div): best (cong_div_best) — exact in cases A/B/D1.
    The carry/pigeonhole helpers it shares with [QuotTheory.v]
@@ -20,6 +22,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
@@ -39,20 +42,6 @@ Generalizable All Variables.
     Note: in the generic "r2 ∣ m1" case we no longer require r2 ∣ r1
     (Coq's [/] is [Z.div], which is defined even on non-multiples).
     Best-abstraction proofs below handle each case separately. *)
-
-(** [cong_div] now returns a [WithBottom]-wrapped result so that the case
-    where the divisor abstraction is exactly {0} (no valid divisor under
-    the partial semantics) can be represented as [Bot]. *)
-Definition cong_div (a1 a2 : Z * Z) : WithBottom.with_bottom (Z * Z) :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  if m2 =? 0 then
-    if r2 =? 0 then WithBottom.Bot                          (* divisor_zero *)
-    else if m1 mod r2 =? 0 then WithBottom.NotBot (r1 / r2, m1 / r2)  (* const_divides *)
-    else WithBottom.NotBot (0, 1)                           (* const_pos/neg (top) *)
-  else
-    if (m1 =? 0) && (r1 =? 0) then WithBottom.NotBot (0, 0) (* dividend_zero *)
-    else WithBottom.NotBot (0, 1).                          (* nonconstant_divisor (top) *)
 
 Lemma cong_div_sound:
   binary_overapproximation cong_ad cong_ad (WithBottom.ad cong_ad) cong_div

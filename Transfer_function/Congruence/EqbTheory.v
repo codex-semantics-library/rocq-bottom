@@ -1,6 +1,8 @@
 (* EqbTheory.v - [Z.eqb] transfer function for the Congruence single-value
    abstraction: [cong_eqb] takes two congruences (r, m) and returns a
-   [quadrivalent]. Split out of Congruence.v. *)
+   [quadrivalent]. Split out of Congruence.v.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 (* STATUS: eqb (Z.eqb): exact + best (cong_eqb_exact / cong_eqb_best). *)
 
@@ -13,31 +15,11 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Congruence.
+Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 
 Local Instance qv_exact_order : ExactOrder Quadrivalent.qv.
 Proof. move=> q1 q2. exact: qv_sqsubseteq_exact. Qed.
-
-(** * Equality abstraction [cong_eqb].
-
-    [Z.eqb] returns [true] for some pair [(c2, c1) ∈ γ(r1,m1) × γ(r2,m2)]
-    iff there exist k1, k2 with r1 + k1·m1 = r2 + k2·m2, equivalently
-    [gcd(m1, m2) | (r2 - r1)].  Returning [false] is possible whenever at
-    least one set has more than one element, i.e. unless both modulus are
-    zero (constants) and the two constants coincide.  In all four
-    combinations the result is exact. *)
-
-Definition may_be_true_eqb (r1 m1 r2 m2 : Z) : bool :=
-  let g := Z.gcd m1 m2 in
-  if g =? 0 then r1 =? r2 else (r2 - r1) mod g =? 0.
-
-Definition may_be_false_eqb (r1 m1 r2 m2 : Z) : bool :=
-  negb ((m1 =? 0) && (m2 =? 0) && (r1 =? r2)).
-
-Definition cong_eqb (a1 a2 : Z * Z) : quadrivalent :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  to_quadrivalent (may_be_true_eqb r1 m1 r2 m2) (may_be_false_eqb r1 m1 r2 m2).
 
 Lemma may_be_true_eqb_spec r1 m1 r2 m2 :
   may_be_true_eqb r1 m1 r2 m2 = true <->
