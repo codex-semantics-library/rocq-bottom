@@ -11,7 +11,7 @@ Require Import
   AbstractionCombination
   Z_interval
   ZIntervalCongruence
-  Transfer_function.ZInterval.AddTheory
+  Transfer_function.ZInterval.OpsComp
   Transfer_function.Congruence.OpsComp.
 
 Open Scope Z_scope.

@@ -12,7 +12,9 @@
 
    The extraction block at the end is provisional: per architecture.org the
    extraction directives belong in an export layer ([*API.v]), which does not
-   exist yet. *)
+   exist yet.
+
+   The operations themselves live in [OpsComp.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -26,16 +28,12 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.
 
 Section Interval_add.
-
-Definition interval_add (i2 i1: interval) : interval :=
-  let (l2,h2) := i2 in
-  let (l1,h1) := i1 in
-  (WithTop.lift2 Z.add l2 l1, WithTop.lift2 Z.add h2 h1).
 
 Lemma interval_add_sound:
   binary_overapproximation itv itv itv interval_add
@@ -150,20 +148,6 @@ End Interval_add.
 
 
 Section Interval_sub.
-
-  (** Direct definition for efficient extraction. Equivalent to
-      interval_add i1 (interval_opp i2), proved below. *)
-
-  Definition sub_bound (a b : WithTop.with_top Z) : WithTop.with_top Z :=
-    match a, b with
-    | WithTop.Top, _ | _, WithTop.Top => WithTop.Top
-    | WithTop.NotTop a, WithTop.NotTop b => WithTop.NotTop (a - b)
-    end.
-
-  Definition interval_sub (i1 i2 : interval) : interval :=
-    let (l1,h1) := i1 in
-    let (l2,h2) := i2 in
-    (sub_bound l1 h2, sub_bound h1 l2).
 
   (* This allows reusing the proofs of add + opp. *)
   Local Lemma interval_sub_eq_add_opp i1 i2:

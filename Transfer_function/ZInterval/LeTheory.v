@@ -2,7 +2,9 @@
    abstraction: [interval_leb] takes two intervals and returns a
    [quadrivalent]. Split out of Z_interval.v. *)
 
-(* STATUS: leb (Z.leb): exact (nbinterval_leb_exact). *)
+(* STATUS: leb (Z.leb): exact (nbinterval_leb_exact).
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -16,37 +18,13 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
 (** * Interval comparison: abstract Z.leb *)
 
 Section Interval_leb.
-
-(** Whether Z.leb c1 c2 = true is possible: need c1 ≤ c2,
-    i.e. the lower bound of i1 ≤ the upper bound of i2. *)
-Definition may_be_true_leb (l2 h1 : WithTop.with_top Z) : bool :=
-  match l2, h1 with
-  | WithTop.Top, _ => true
-  | _, WithTop.Top => true
-  | WithTop.NotTop l2', WithTop.NotTop h1' => Z.leb l2' h1'
-  end.
-
-(** Whether Z.leb c1 c2 = false is possible: need c2 < c1,
-    i.e. the upper bound of i1 > the lower bound of i2. *)
-Definition may_be_false_leb (h2 l1 : WithTop.with_top Z) : bool :=
-  match h2, l1 with
-  | WithTop.Top, _ => true
-  | _, WithTop.Top => true
-  | WithTop.NotTop h2', WithTop.NotTop l1' => negb (Z.leb h2' l1')
-  end.
-
-Definition interval_leb (i2 i1 : interval) : quadrivalent :=
-  let (l2, h2) := i2 in
-  let (l1, h1) := i1 in
-  to_quadrivalent (may_be_true_leb l2 h1) (may_be_false_leb h2 l1).
-
-Definition nbinterval_leb (i2 i1 : nb_interval) : quadrivalent := interval_leb (`i2) (`i1).
 
 
 Lemma nbinterval_leb_exact:

@@ -4,9 +4,11 @@
 
 (* STATUS: quot (Z.quot): best in all 9 sign cases
      (interval_quot_*_best, interval_quot_full_best).
-   Dispatches on [classify] / [classify_divisor] and uses the negation
-   transfer function ([neg_bound], [interval_opp]), all still in
-   Z_interval.v. *)
+   Dispatches on [classify] / [classify_divisor], still in Z_interval.v, and
+   uses the negation transfer function ([neg_bound], [interval_opp]), now in
+   [OpsComp.v].
+
+   The operations themselves live in [OpsComp.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -20,6 +22,7 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.
@@ -35,24 +38,6 @@ Section Interval_quot.
   
   Section Interval_quot_pos.
     
-    (** Division bound: a / b with Top handling.
-      Top / b = Top (unbounded dividend -> unbounded quotient)
-      a / Top = 0  (finite dividend / unbounded divisor -> 0) *)
-    Definition quot_bound (a b : WithTop.with_top Z) : WithTop.with_top Z :=
-      match a, b with
-      | _, WithTop.Top => WithTop.NotTop 0
-      | WithTop.Top, _ => WithTop.Top
-      | WithTop.NotTop a, WithTop.NotTop b => WithTop.NotTop (Z.quot a b)
-      end.
-
-    (** For positive dividend [l1,h1] and strictly positive divisor [l2,h2]:
-      result = [l1/h2, h1/l2]. *)
-    Definition interval_quot_pos (i1 i2 : interval) : interval :=
-      let (l1, h1) := i1 in
-      let (l2, h2) := i2 in
-      (quot_bound l1 h2, quot_bound h1 l2).
-
-
     (** Soundness for non-negative dividend / strictly positive divisor.
       The hypotheses constrain the abstract intervals, which rules out
       impossible bound configurations (e.g. Top lower bounds). *)
@@ -491,17 +476,6 @@ Section Interval_quot.
     unfold_set in Hc1; simpl in Hc1; lia.
   Qed.
 
-  (** Quarter functions: both dividend and divisor have definite sign. *)
-
-  Definition interval_quot_neg_pos (i2 i1 : interval) : interval :=
-    interval_opp (interval_quot_pos (interval_opp i2) i1).
-
-  Definition interval_quot_pos_neg (i2 i1 : interval) : interval :=
-    interval_opp (interval_quot_pos i2 (interval_opp i1)).
-
-  Definition interval_quot_neg_neg (i2 i1 : interval) : interval :=
-    interval_quot_pos (interval_opp i2) (interval_opp i1).
-
   (** ** Best abstraction for the other three quarter cases. *)
 
   (** Helper: the γ of interval_opp is {z | -z ∈ γ(i)}. *)
@@ -585,70 +559,6 @@ Section Interval_quot.
                   destruct l1,l2; unfold_set in *;
                   repeat split; (try rewrite Z.quot_opp_opp; try lia).
   Qed.
-
-  (** Across-dividend functions: dividend crosses zero, divisor has definite sign.
-      Split the dividend at 0. *)
-
-  Definition interval_quot_across_pos (i2 i1 : interval) : interval :=
-    join_itv
-      (interval_quot_neg_pos (fst i2, WithTop.NotTop 0) i1)
-      (interval_quot_pos (WithTop.NotTop 0, snd i2) i1).
-
-  Definition interval_quot_across_neg (i2 i1 : interval) : interval :=
-    join_itv
-      (interval_quot_neg_neg (fst i2, WithTop.NotTop 0) i1)
-      (interval_quot_pos_neg (WithTop.NotTop 0, snd i2) i1).
-
-  (** Across-divisor functions: divisor crosses zero.
-      Split the divisor into [l1, -1] and [1, h1], excluding 0. *)
-
-  Definition interval_quot_pos_across (i2 i1 : interval) : interval :=
-    let (l1, h1) := i1 in
-    join_itv
-      (interval_quot_pos_neg i2 (l1, WithTop.NotTop (-1)))
-      (interval_quot_pos i2 (WithTop.NotTop 1, h1)).
-
-  Definition interval_quot_neg_across (i2 i1 : interval) : interval :=
-    let (l1, h1) := i1 in
-    join_itv
-      (interval_quot_neg_neg i2 (l1, WithTop.NotTop (-1)))
-      (interval_quot_neg_pos i2 (WithTop.NotTop 1, h1)).
-
-  (** Optimized across-divisor functions (moved here so across_across can use them). *)
-  Definition interval_quot_pos_across_opt (i2 i1 : interval) : interval :=
-    let (_, h2) := i2 in (neg_bound h2, h2).
-
-  Definition interval_quot_neg_across_opt (i2 i1 : interval) : interval :=
-    let (l2, _) := i2 in (l2, neg_bound l2).
-
-  Definition interval_quot_across_across (i2 i1 : interval) : interval :=
-    let (l2, h2) := i2 in
-    join_itv
-      (interval_quot_neg_across_opt (l2, WithTop.NotTop 0) i1)
-      (interval_quot_pos_across_opt (WithTop.NotTop 0, h2) i1).
-
-  Definition interval_quot_full (i2 i1 : interval) : interval :=
-    match classify_divisor i1 with
-    | DivZero => bottom
-    | DivPos i1_san =>
-        match classify i2 with
-        | Pos    => interval_quot_pos i2 i1_san
-        | Neg    => interval_quot_neg_pos i2 i1_san
-        | Across => interval_quot_across_pos i2 i1_san
-        end
-    | DivNeg i1_san =>
-        match classify i2 with
-        | Pos    => interval_quot_pos_neg i2 i1_san
-        | Neg    => interval_quot_neg_neg i2 i1_san
-        | Across => interval_quot_across_neg i2 i1_san
-        end
-    | DivAcross =>
-        match classify i2 with
-        | Pos    => interval_quot_pos_across i2 i1
-        | Neg    => interval_quot_neg_across i2 i1
-        | Across => interval_quot_across_across i2 i1
-        end
-    end.
 
   (** Splitting the dividend (first arg) of [collecting_quot] at 0. *)
   Lemma collecting_quot_split_dividend

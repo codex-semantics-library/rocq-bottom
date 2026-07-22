@@ -5,7 +5,9 @@
 (* STATUS: eqb (Z.eqb): exact
      (nbinterval_eqb_unopt_exact, may_be_{true,false}_eqb_exact).
    Two variants are provided: the naive [interval_eqb_unopt] and the
-   optimized [interval_eqb_opt], proved equal. *)
+   optimized [interval_eqb_opt], proved equal.
+
+   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -19,25 +21,13 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
 (** * Interval equality: abstract Z.eqb *)
 
 Section Interval_eqb.
-
-(** Whether Z.eqb c2 c1 = true is possible: need c2 = c1,
-    i.e. the intervals [l1,h1] and [l2,h2] overlap.
-    Disjoint iff h1 < l2 or h2 < l1. *)
-Definition may_be_true_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
-  match l2, h1 with
-  | WithTop.NotTop l2', WithTop.NotTop h1' => Z.leb l2' h1'
-  | _, _ => true
-  end &&
-  match l1, h2 with
-  | WithTop.NotTop l1', WithTop.NotTop h2' => Z.leb l1' h2'
-  | _, _ => true
-  end.
 
 Lemma may_be_true_eqb_exact l1 h1 l2 h2:
   non_bottom (l1, h1) -> non_bottom (l2, h2) ->
@@ -71,12 +61,6 @@ Proof.
       rewrite /may_be_true_eqb in Hmb;
       simpl in *; unfold_set in *; lia.
 Qed.
-
-Definition may_be_false_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
-  match is_singleton l1 h1, is_singleton l2 h2 with
-  | Some x1, Some x2 => negb (Z.eqb x1 x2)
-  | _, _ => true
-  end. 
 
 Lemma may_be_false_eqb_exact l1 h1 l2 h2:
   non_bottom (l1, h1) -> non_bottom (l2, h2) ->
@@ -119,19 +103,6 @@ Proof.
     congruence.
 Qed.
 
-(** Naive [interval_eqb]: just combine [may_be_true_eqb] and
-    [may_be_false_eqb] via [to_quadrivalent]. Easy to prove correct,
-    but evaluates both sides even when the result is forced. A more
-    efficient [interval_eqb_opt] (decision tree with shortcuts) can
-    be defined separately and proved equivalent by case analysis. *)
-Definition interval_eqb_unopt (i2 i1 : interval) : quadrivalent :=
-  let (l2, h2) := i2 in
-  let (l1, h1) := i1 in
-  to_quadrivalent (may_be_true_eqb l1 h1 l2 h2) (may_be_false_eqb l1 h1 l2 h2).
-
-Definition nbinterval_eqb_unopt (i2 i1 : nb_interval) : quadrivalent :=
-  interval_eqb_unopt (`i2) (`i1).
-
 Lemma nbinterval_eqb_unopt_exact:
   binary_exact nbitv nbitv qv nbinterval_eqb_unopt
     (collecting_binary_forward Z.eqb).
@@ -148,18 +119,6 @@ Proof.
     rewrite (may_be_false_eqb_exact _ _ _ _ P1 P2).
     by split; move=> [c2 [c1 H]]; exists c2, c1; unfold_set in *.
 Qed.
-
-(** Optimized [interval_eqb]: skip the [may_be_false_eqb] machinery
-    (i.e. the singleton-equality test) when at least one side is not
-    a singleton — in that situation [may_be_false_eqb] is always
-    [true], so the result is fully determined by the overlap test. *)
-Definition interval_eqb_opt (i2 i1 : interval) : quadrivalent :=
-  let (l2, h2) := i2 in
-  let (l1, h1) := i1 in
-  match is_singleton l1 h1, is_singleton l2 h2 with
-  | Some x1, Some x2 => if Z.eqb x1 x2 then QTrue else QFalse
-  | _, _ => if may_be_true_eqb l1 h1 l2 h2 then QTop else QFalse
-  end.
 
 Lemma interval_eqb_opt_eq i2 i1 :
   interval_eqb_opt i2 i1 = interval_eqb_unopt i2 i1.

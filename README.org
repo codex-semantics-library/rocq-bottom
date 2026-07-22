@@ -163,6 +163,7 @@ depends on no axioms.
 | =BoundAbstraction.v=                                | GLB abstraction: an element represents all larger elements, forming a Galois connection           |
 | =BoundLattice.v=                                    | =ConcreteLattice= record and construction of =abstract_join_semilattice_laws= from bound abstractions |
 | =Z_interval.v=                                      | Integer interval domain built on the bound/lattice infrastructure (abstraction only)              |
+| =Transfer_function/ZInterval/OpsComp.v=             | Executable interval transfer functions: =interval_add=, =interval_mul_opt=, =interval_quot_full=  |
 | =Transfer_function/ZInterval/OppTheory.v=           | Interval negation =interval_opp=: exact; shared by the add, mul and quot proofs                   |
 | =Transfer_function/ZInterval/AddTheory.v=           | Interval addition and subtraction: =interval_add_alpha_complete=, =nb_interval_sub_exact=         |
 | =Transfer_function/ZInterval/MulTheory.v=           | Interval multiplication: =interval_mul_opt_best= and its α-completeness                           |

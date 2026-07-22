@@ -6,7 +6,9 @@
    "MulTheory imports OppTheory"). *)
 
 (* STATUS: opp (Z.opp): exact, even when the interval may be bottom
-     (interval_opp_sound, interval_opp_exact). *)
+     (interval_opp_sound, interval_opp_exact).
+
+   The operations themselves live in [OpsComp.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -20,6 +22,7 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.
 
@@ -27,12 +30,6 @@ Generalizable All Variables.
 Section Interval_opp.
 
   (** * Negation and best abstraction transfer. *)
-  Definition neg_bound (b : WithTop.with_top Z) : WithTop.with_top Z :=
-    match b with WithTop.Top => WithTop.Top | WithTop.NotTop z => WithTop.NotTop (-z) end.
-
-  Definition interval_opp (i : interval) : interval :=
-    let (l, h) := i in (neg_bound h, neg_bound l).
-
 
   (** Opp is exact, even when the interval is bottom. *)
   Lemma interval_opp_exact:

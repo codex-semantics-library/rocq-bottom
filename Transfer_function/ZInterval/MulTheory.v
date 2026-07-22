@@ -3,8 +3,11 @@
 
 (* STATUS: mul (Z.mul): sound + best (α-complete)
      (interval_mul_opt_best, interval_mul_opt_alpha_complete).
-   Uses the negation transfer function ([neg_bound], [interval_opp]) and the
-   split-at-zero α-machinery, both still in Z_interval.v. *)
+   Uses the negation transfer function ([neg_bound], [interval_opp]), now in
+   [OpsComp.v], and the split-at-zero α-machinery, still in Z_interval.v.
+
+   The extracted [bound_mul] and [interval_mul_opt] live in [OpsComp.v]; the
+   proof-only mirror [interval_mul_math] stays here. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -18,6 +21,7 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Z_interval.
+Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.
@@ -106,13 +110,6 @@ Proof.
 Qed.
 
 Section Interval_mul.
-
-  Definition bound_mul a b :=
-    match a, b with
-    | WithTop.NotTop 0, _ | _, WithTop.NotTop 0 => WithTop.NotTop 0
-    | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (x * y)
-    | _,_ => WithTop.Top
-    end.
 
   (** * Extended integers with signed infinity (used by _best lemmas). *)
 
@@ -738,23 +735,6 @@ Section Interval_mul.
       vocabulary as the per-quadrant [_best] lemmas — bridged by
       [interval_mul_math_eq]. Only [interval_mul_opt] is meant to be run
       / extracted; [interval_mul_math] never leaves the proofs. *)
-
-  Definition interval_mul_opt (i2 i1: interval) : interval :=
-    let (l1,h1) := i1 in
-    let (l2,h2) := i2 in
-    let m := bound_mul in
-    match classify i1, classify i2 with
-    | Pos, Pos => (m l1 l2, m h1 h2)
-    | Neg, Neg => (m h1 h2, m l1 l2)
-    | Pos, Neg => (m h1 l2, m l1 h2)
-    | Neg, Pos => (m l1 h2, m h1 l2)
-    | Pos, Across => (m h1 l2, m h1 h2)
-    | Across, Pos => (m l1 h2, m h1 h2)
-    | Neg, Across => (m l1 h2, m l1 l2)
-    | Across, Neg => (m h1 l2, m l1 l2)
-    | Across, Across =>
-        (min_opt (m l1 h2) (m h1 l2), max_opt (m l1 l2) (m h1 h2))
-    end.
 
   (** Extract Z value from a with_top bound, defaulting to 0 for Top. *)
   Definition extract_z (b : WithTop.with_top Z) : Z :=
