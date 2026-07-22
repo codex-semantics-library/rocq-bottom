@@ -4,7 +4,7 @@
 
 (* STATUS: quot (Z.quot): best in all 9 sign cases
      (interval_quot_*_best, interval_quot_full_best).
-   Dispatches on [classify] / [classify_divisor], still in Z_interval.v, and
+   Dispatches on [classify] / [classify_divisor], still in ZIntervalTheory.v, and
    uses the negation transfer function ([neg_bound], [interval_opp]), now in
    [OpsComp.v]. *)
 
@@ -19,7 +19,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
-Require Import Z_interval.
+Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.

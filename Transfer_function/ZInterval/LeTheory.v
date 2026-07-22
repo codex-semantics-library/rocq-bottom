@@ -15,7 +15,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
-Require Import Z_interval.
+Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.OpsComp.
 Open Scope Z_scope.
 Generalizable All Variables.

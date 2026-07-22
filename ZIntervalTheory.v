@@ -1,4 +1,4 @@
-(* Z_interval.v - Interval arithmetic for integers *)
+(* ZIntervalTheory.v - Interval arithmetic for integers *)
 (* Noth: there are intervals in mathcomp; we could reuse their notations. *)
 
 (* STATUS (ladder: sound < best < exact < α-complete).

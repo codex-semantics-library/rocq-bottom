@@ -356,7 +356,7 @@ Proof.
 Qed.
 
 (* TODO: generalise [exists_iff_opp] and hoist it here. It currently exists as a
-   Z-specific [Local Lemma] in Z_interval.v: "exists x" on the left corresponds to
+   Z-specific [Local Lemma] in ZIntervalTheory.v: "exists x" on the left corresponds to
    "exists -x" on the right, which is what aligns the witnesses when lifting
    positive operations to negative ones, in div and mult. The general form would be
    exists_iff modulo a (involutive?) transformation. *)

@@ -53,7 +53,7 @@ camera-ready paper cites:
   =kb_add_not_exact= (addition is not γ-exact on known bits) and
   =kb_add_not_alpha_complete=.
 - *α-completeness* (=Abstraction.v=, =AbstractLattice.v=, =BoundAbstraction.v=,
-  =Z_interval.v=) — the =IsAlpha= relation and its bridges to best abstraction, and
+  =ZIntervalTheory.v=) — the =IsAlpha= relation and its bridges to best abstraction, and
   α-completeness of interval addition and multiplication.
 - *Interval×congruence reduced product* (=ZIntervalCongruence.v=,
   =Transfer_function/ZIntervalCongruence/=) — the layered =zic= domain and its
@@ -162,7 +162,7 @@ depends on no axioms.
 | =AbstractionCombination.v=                          | Domain composition: =WithTop=, =Subset= (restricts elements), =Conjunction= (product domain)            |
 | =BoundAbstraction.v=                                | GLB abstraction: an element represents all larger elements, forming a Galois connection           |
 | =BoundLattice.v=                                    | =ConcreteLattice= record and construction of =abstract_join_semilattice_laws= from bound abstractions |
-| =Z_interval.v=                                      | Integer interval domain built on the bound/lattice infrastructure (abstraction only)              |
+| =ZIntervalTheory.v=                                 | Integer interval domain built on the bound/lattice infrastructure (abstraction only)              |
 | =Transfer_function/ZInterval/OpsComp.v=             | Executable interval transfer functions: =interval_add=, =interval_mul_opt=, =interval_quot_full=  |
 | =Transfer_function/ZInterval/OppTheory.v=           | Interval negation =interval_opp=: exact; shared by the add, mul and quot proofs                   |
 | =Transfer_function/ZInterval/AddTheory.v=           | Interval addition and subtraction: =interval_add_alpha_complete=, =nb_interval_sub_exact=         |
@@ -205,7 +205,7 @@ example for what you are doing:
 - =BoundAbstraction.v= — GLB/LUB abstractions and the α-relation machinery
   (=is_lub= as a strong α-relation, =⊤= for unbounded sets). The reference for
   setting up =IsAlpha= / =BestAbstraction=.
-- =Z_interval.v= — an /infinite/ domain assembled entirely from combinators,
+- =ZIntervalTheory.v= — an /infinite/ domain assembled entirely from combinators,
   with a join-semilattice and =ExactOrder= recovered on the non-empty part.
 - =Congruence.v= — an infinite domain with =ExactOrder= and non-trivial
   abstract equivalence (=(r,m)= up to representative).
@@ -283,7 +283,7 @@ Examples:
 - /backward/ — =backward_abs_negb= against =collecting_backward negb=;
   =backward_abs_andb_left= / =_right= against =collecting_binary_backward_left= /
   =_right=.
-- /partial/ — quotient: the guard rules out division by zero. =Z_interval.v=
+- /partial/ — quotient: the guard rules out division by zero. =ZIntervalTheory.v=
   uses a hand-written =collecting_quot S2 S1 = {c0 | ∃ c2 c1, c2 ∈ S2 ∧ c1 ∈ S1
   ∧ c1 ≠ 0 ∧ Z.quot c2 c1 = c0}=, the concrete instance of the generic
   =collecting_binary_forward_partial P f=. Without the guard the collecting
@@ -331,7 +331,7 @@ intervals (=4 ∈ [1,0] + [3,8]= even though =γ[1,0]= is empty), whereas
   abstract and concrete elements and their membership hypotheses with proper
   names for the unary/binary forward cases. =interval_add_sound= is then a
   single case split on the bound shapes (=[|l] [|h]=) closed by =lia=.
-- /Infinite domains/ (=Z_interval=): the set reasoning is done by hand,
+- /Infinite domains/ (=ZIntervalTheory=): the set reasoning is done by hand,
   following the recipe — case-split on the bound shapes, =unfold_set= /
   =to_set=, discharge arithmetic with =lia=. An =_exact= proof typically
   splits into the soundness half and an =_gamma_complete= (underapproximation)
@@ -369,7 +369,7 @@ extraction have a stable interface.
    order/). Then =BuildAbstractDomain gamma sqsubseteq mixin=. Aim for
    =ExactOrder= (=⊑= ⇔ =⊑γ=) and you get γ-injectivity for free:
    =qv_sqsubseteq_exact= shows the pattern for a finite domain, =Congruence.v=
-   and the non-empty part of =Z_interval.v= for infinite ones.
+   and the non-empty part of =ZIntervalTheory.v= for infinite ones.
 
 3. *Optional structure — state only what holds.*
    - /Join-semilattice/: add a join =⊔= and discharge the
@@ -383,7 +383,7 @@ extraction have a stable interface.
      meet-semilattices — meet can produce the empty set, which domains like
      =Congruence.v= cannot represent without a separate ⊥. For domains built
      from a GLB/LUB structure, =BoundLattice.v= derives the semilattice laws
-     from a =ConcreteLattice= (see =Z_interval.v=).
+     from a =ConcreteLattice= (see =ZIntervalTheory.v=).
    - /Lattice/: add a meet =⊓= over-approximating intersection
      (=γ a1 ∩ γ a2 ⊆ γ (a1 ⊓ a2)=) and discharge the =abstract_lattice= laws.
    - /Galois insertion — get =ExactOrder=/: the goal of this step is to prove
@@ -407,7 +407,7 @@ extraction have a stable interface.
    to a sub-predicate of elements), =Conjunction= (reduced product),
    =CollapsedBottom= / =CanonicalBottom= / =MaximallyReducedSubset= (normalise
    redundant representations, e.g. the multiple empty-set
-   elements). =Z_interval.v= is assembled as a conjunection of =WithTop.ad glb=
+   elements). =ZIntervalTheory.v= is assembled as a conjunection of =WithTop.ad glb=
    and =WithTop.ad lub= rather than defined from scratch.
 
 5. *Verify the interface for extraction.* If the domain is meant to be

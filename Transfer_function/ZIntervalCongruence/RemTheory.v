@@ -40,7 +40,7 @@ Require Import ssreflect ssrbool.
 Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
-  Z_interval Congruence
+  ZIntervalTheory Congruence
   ZIntervalCongruence
   Transfer_function.ZIntervalCongruence.OpsComp.
 
@@ -278,7 +278,7 @@ Qed.
     [S] with the singleton [{K}] (i.e. [S + {K}]). This is the abstract
     counterpart of [c ↦ c + K], and the engine behind the constant-divisor
     [rem] case below (with [K = -(n*q)]). Modelled on
-    [Z_interval.best_abstraction_opp]. *)
+    [ZIntervalTheory.best_abstraction_opp]. *)
 Lemma itv_add_const_best (K : Z) (i : interval) (S : ℘ Z) :
   BestAbstraction (A:=itv) i S ->
   BestAbstraction (A:=itv) (itv_add_const K i)

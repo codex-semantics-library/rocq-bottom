@@ -7,7 +7,7 @@
    sub (Z.sub): sound + exact on non-bottom intervals (nb_interval_sub_exact).
 
    The generic α-machinery these proofs rest on (attainment witnesses,
-   split-at-zero, [Z_interval_lift2_alpha_complete]) stays in Z_interval.v,
+   split-at-zero, [Z_interval_lift2_alpha_complete]) stays in ZIntervalTheory.v,
    since [MulTheory.v] needs it too.
 
    The extraction block at the end is provisional: per architecture.org the
@@ -25,7 +25,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
-Require Import Z_interval.
+Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
