@@ -9,7 +9,7 @@
 From Stdlib Require Import ZArith.
 Require Import
   Abstraction AbstractionCombination
-  Quadrivalent
+  QuadrivalentTheory
   ZIntervalComp.
 
 Open Scope Z_scope.

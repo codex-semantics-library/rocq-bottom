@@ -154,8 +154,8 @@ depends on no axioms.
 | =Abstraction.v=                                     | Core abstraction hierarchy: =Concretization=, =abstract_domain= (adds order).                         |
 | =AbstractLattice.v=                                 | Extends abstract domains with lattice operations: join, meet, and lattice laws                    |
 | =autoreflect.v=                                     | =AutoReflect= type class for computational reflection — reflects =Prop= goals to =bool= computations    |
-| =Quadrivalent.v=                                    | Four-valued boolean abstraction (=QBottom=, =QTrue=, =QFalse=, =QTop=), isomorphic to P(bool)             |
-| =QuadrivalentLattice.v=                             | Lattice operations (join, meet, equiv, ordering) on quadrivalent, verified by =AutoReflect=         |
+| =QuadrivalentComp.v=                                | Four-valued boolean carrier (=QBottom=, =QTrue=, =QFalse=, =QTop=), lattice and equality ops      |
+| =QuadrivalentTheory.v=                              | Quadrivalent concretization, order and lattice laws, verified by =AutoReflect=                    |
 | =SvaQuadrivalent.v=                                 | Boolean transfer functions (negation, conjunction, disjunction) on quadrivalent                   |
 | =ocaml/quadrivalentextract.v=                       | OCaml extraction directives for the quadrivalent domain (drives the extraction into =ocaml/=)       |
 | =Tactics.v=                                         | Proof tactics: =gamma_db= hint database, =decompose_hypothesis=                                       |
@@ -199,7 +199,7 @@ below are developed in the accompanying paper (=Abstraction.v= and
 
 Different files illustrate different parts of the story, so pick the closest
 example for what you are doing:
-- =Quadrivalent.v= / =SvaQuadrivalent.v= — a /finite/ domain that is exact by
+- =QuadrivalentTheory.v= / =SvaQuadrivalent.v= — a /finite/ domain that is exact by
   computation: every operation =ExactlyRepresents= its concrete counterpart and
   every proof is discharged by =solve_with_autoreflect=. Good model for small
   enumerable domains, less representative of the general case.
@@ -324,7 +324,7 @@ intervals (=4 ∈ [1,0] + [3,8]= even though =γ[1,0]= is empty), whereas
 
 *** How to prove
 
-- /Finite domains/ (=Quadrivalent=): mechanical — =move=>= the abstract args,
+- /Finite domains/ (=QuadrivalentTheory=): mechanical — =move=>= the abstract args,
   unfold to set form (=to_set=, or =rewrite /ExactlyRepresents; unfold_set=),
   =move:= the args back into the goal, then =solve_with_autoreflect= does
   exhaustive boolean case analysis.

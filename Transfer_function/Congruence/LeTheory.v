@@ -10,7 +10,7 @@ Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
 Require Import autoreflect.
 Require Import Stdlib.Bool.Bool.
-Require Import Quadrivalent.
+Require Import QuadrivalentTheory.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
@@ -18,11 +18,11 @@ Require Import Congruence.
 Require Import Transfer_function.Congruence.OpsComp.
 Open Scope Z_scope.
 
-Local Instance qv_exact_order : ExactOrder Quadrivalent.qv.
+Local Instance qv_exact_order : ExactOrder QuadrivalentTheory.qv.
 Proof. move=> q1 q2. exact: qv_sqsubseteq_exact. Qed.
 
 Lemma cong_le_exact r1 m1 r2 m2 :
-  ExactlyRepresents (A:=Quadrivalent.qv)
+  ExactlyRepresents (A:=QuadrivalentTheory.qv)
     (cong_le (r1, m1) (r2, m2))
     (collecting_binary_forward Z.leb (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2))).
 Proof.
@@ -109,7 +109,7 @@ Proof.
 Qed.
 
 Lemma cong_le_best r1 m1 r2 m2 :
-  BestAbstraction (A:=Quadrivalent.qv)
+  BestAbstraction (A:=QuadrivalentTheory.qv)
     (cong_le (r1, m1) (r2, m2))
     (collecting_binary_forward Z.leb (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2))).
 Proof.

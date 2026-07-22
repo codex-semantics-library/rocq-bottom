@@ -14,7 +14,7 @@
 
 Require Import Abstraction.
 Require Import autoreflect.
-Require Import Quadrivalent.
+Require Import QuadrivalentTheory.
 From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
@@ -317,13 +317,12 @@ Global Hint Unfold kb_ad kb_gamma : unfold_gamma.
 (** ** Lattice operations (pointwise quadrivalent) *)
 
 Require Import AbstractLattice.
-Require Import QuadrivalentLattice.
 
 Definition kb_equiv (kb1 kb2 : must0_must1) : Prop := kb1 = kb2.
 
 Lemma kb_testbit_join kb1 kb2 i :
   kb_testbit (kb_join kb1 kb2) i =
-  QuadrivalentLattice.join (kb_testbit kb1 i) (kb_testbit kb2 i).
+  QuadrivalentTheory.join (kb_testbit kb1 i) (kb_testbit kb2 i).
 Proof.
   rewrite /kb_testbit /kb_join /must0 /must1.
   rewrite testbit_lor testbit_land.
@@ -332,7 +331,7 @@ Qed.
 
 Lemma kb_testbit_meet kb1 kb2 i :
   kb_testbit (kb_meet kb1 kb2) i =
-  QuadrivalentLattice.meet (kb_testbit kb1 i) (kb_testbit kb2 i).
+  QuadrivalentTheory.meet (kb_testbit kb1 i) (kb_testbit kb2 i).
 Proof.
   rewrite /kb_testbit /kb_meet /must0 /must1.
   rewrite testbit_land testbit_lor.

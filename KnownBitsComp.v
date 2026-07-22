@@ -4,7 +4,7 @@
    executable core, destined to be extracted 1:1 to OCaml. Its proofs are in
    [KnownBitsTheory.v]. *)
 
-Require Import Quadrivalent.
+Require Import QuadrivalentComp.
 Require Import Stdlib.ZArith.ZArith.
 Open Scope Z_scope.
 

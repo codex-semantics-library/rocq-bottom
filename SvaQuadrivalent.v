@@ -1,9 +1,9 @@
 Require Import Abstraction.
 Require Import ssrbool ssreflect.
 Require Import autoreflect.
-Require Import QuadrivalentLattice.
+Require Import QuadrivalentTheory.
 Require Import Extraction.
-Include QuadrivalentLattice.
+Include QuadrivalentTheory.
 
 (** Svaquadrivalent: extends a boolean lattice with boolean
     operations. All the operations are verified computationally,
@@ -161,7 +161,7 @@ Tactic Notation "symbolic_run" :=
       try done
     ).
 
-Local Instance Equiv_eq : Equiv Quadrivalent.t := (=).
+Local Instance Equiv_eq : Equiv QuadrivalentTheory.t := (=).
 
 Lemma impl_backward_abs_negb_correct: backward_unary_function_correct impl_backward_abs_negb backward_abs_negb.
 Proof.
@@ -219,9 +219,9 @@ Proof.
   move=> a2 a1 a0. to_set. move: a2 a1 a0. solve_with_autoreflect.
 Qed.    
 
-Definition refine_bottom a := if QuadrivalentLattice.eqb a QBottom then None else Some QBottom.
-Definition refine_true a := if QuadrivalentLattice.eqb a QTrue then None else Some QTrue.
-Definition refine_false a := if QuadrivalentLattice.eqb a QFalse then None else Some QFalse. 
+Definition refine_bottom a := if QuadrivalentTheory.eqb a QBottom then None else Some QBottom.
+Definition refine_true a := if QuadrivalentTheory.eqb a QTrue then None else Some QTrue.
+Definition refine_false a := if QuadrivalentTheory.eqb a QFalse then None else Some QFalse. 
 
 Definition impl_backward_abs_andb (a2 a1 a0: qv): option qv * option qv :=
   match a2, a1, a0 with

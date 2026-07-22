@@ -19,16 +19,15 @@ Extraction Inline ssrbool.is_left.
 
 Module Concrete := Datatypes.
 
-Require Import Quadrivalent.
-Module QuadrivalentCheck <: ABSTRACT_DOMAIN := Quadrivalent.
-(* Separate Extraction Quadrivalent.t. *)
-Separate Extraction Quadrivalent.t.
+Require Import QuadrivalentComp.
+Module QuadrivalentCheck <: ABSTRACT_DOMAIN := QuadrivalentTheory.
+(* Separate Extraction QuadrivalentTheory.t. *)
+Separate Extraction QuadrivalentTheory.t.
 
-Require Import QuadrivalentLattice.
-Extraction Inline QuadrivalentLattice.dec.
-Module QuadrivalentLatticeCheck <: ABSTRACT_LATTICE := QuadrivalentLattice.
-Separate Extraction QuadrivalentLattice.join QuadrivalentLattice.meet
-  QuadrivalentLattice.equal QuadrivalentLattice.is_included. 
+Extraction Inline QuadrivalentTheory.dec.
+Module QuadrivalentLatticeCheck <: ABSTRACT_LATTICE := QuadrivalentTheory.
+Separate Extraction QuadrivalentTheory.join QuadrivalentTheory.meet
+  QuadrivalentTheory.equal QuadrivalentTheory.is_included. 
 
 Require Import SvaQuadrivalent.
 Separate Extraction SvaQuadrivalent.Boolean_Forward SvaQuadrivalent.Boolean_Backward.
