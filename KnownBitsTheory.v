@@ -6,8 +6,8 @@
    α-characterization.
 
    All transfer functions now live in Transfer_function/KnownBits/; what is
-   left here is the abstraction itself plus the [testbit] / [setbit] toolkit
-   and the [bitwise_to_boolean] hint database they share.
+   left here is the abstraction itself plus the lemmas of the [testbit] /
+   [setbit] toolkit and the [bitwise_to_boolean] hint database they share.
    lor, land, lxor : sound + exact       BitwiseTheory.v
    add, sub        : sound + best        AddSubTheory.v
      (add is NOT γ-exact and NOT α-complete; same file) *)
@@ -18,6 +18,7 @@ Require Import Quadrivalent.
 From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
+Require Import KnownBitsComp.
 Open Scope Z_scope.
 
 (** * Known-bits abstraction
@@ -76,19 +77,12 @@ Open Scope Z_scope.
     structure"; we make that similarity literal via a shared per-bit
     chain framework ([Section BitChain] below). *)
 
-Record must0_must1 := {
-  must0 : Z;
-  must1 : Z
-}.
-
 (** ** Per-bit quadrivalent extraction *)
 
 (** Usual testbit is defined on Z, which requires carrying the side
 condition that the index is positive. We don't need that if the index
 is a nat. We port all useful lemmas about testbit here. *)
 Section Testbit.
-  Definition testbit v (i : nat) : bool := Z.testbit v (Z.of_nat i).
-
   Lemma testbit_0 (i:nat): testbit 0 i = false.
   Proof. apply Z.bits_0. Qed.
   
@@ -112,12 +106,6 @@ End Testbit.
 
 
 Section Setbit.
-  (* Not [Local]: [Transfer_function/KnownBits/AddSubTheory.v] builds its
-     bit-realization witnesses with it. *)
-  Definition setbit_to (v : Z) (i : nat) (b : bool) : Z :=
-    if b then Z.setbit v (Z.of_nat i)
-    else Z.clearbit v (Z.of_nat i).
-
   (* Read over write axioms applied to bitvector. *)
   Lemma testbit_over_setbit_same v i b :
     testbit (setbit_to v i b) i = b.
@@ -160,14 +148,6 @@ End Setbit.
 Create HintDb bitwise_to_boolean discriminated.
 Hint Rewrite @testbit_lor @testbit_land @testbit_lxor @testbit_lnot
   : bitwise_to_boolean.
-
-Definition kb_testbit (kb : must0_must1) (i : nat) : quadrivalent :=
-  match testbit (must0 kb) i, testbit (must1 kb) i with
-  | false, false => QFalse
-  | true,  true  => QTrue
-  | false, true  => QBottom
-  | true,  false => QTop
-  end.
 
 (** [case_testbits i z1 .. zn] case-splits on [testbit] of the given Z
     expressions at position [i].  Supports 1–4 arguments via overloading. *)
@@ -291,9 +271,6 @@ Qed.
 
 (** ** Top and bottom elements *)
 
-Definition kb_top : must0_must1 := {| must0 := -1; must1 := 0 |}.
-Definition kb_bottom : must0_must1 := {| must0 := 0; must1 := -1 |}.
-
 Lemma kb_top_full (v : Z) : v ∈ γ[kb_abs] kb_top.
 Proof.
   unfold_set. unfold_gamma. move=> i.
@@ -342,14 +319,6 @@ Global Hint Unfold kb_ad kb_gamma : unfold_gamma.
 Require Import AbstractLattice.
 Require Import QuadrivalentLattice.
 
-Definition kb_join (kb1 kb2 : must0_must1) : must0_must1 :=
-  {| must0 := Z.lor (must0 kb1) (must0 kb2);
-     must1 := Z.land (must1 kb1) (must1 kb2) |}.
-
-Definition kb_meet (kb1 kb2 : must0_must1) : must0_must1 :=
-  {| must0 := Z.land (must0 kb1) (must0 kb2);
-     must1 := Z.lor (must1 kb1) (must1 kb2) |}.
-
 Definition kb_equiv (kb1 kb2 : must0_must1) : Prop := kb1 = kb2.
 
 Lemma kb_testbit_join kb1 kb2 i :
@@ -393,9 +362,6 @@ Qed.
 
 (** ** Non-bottom known-bits *)
 
-Definition kb_non_bottom (kb : must0_must1) : Prop :=
-  forall i : nat, kb_testbit kb i <> QBottom.
-
 (** Non-bottom means must1 ⊆_bw must0: if must1 bit is 1, must0 bit is 1. *)
 Lemma non_bottom_must1_must0 (kb : must0_must1) (i : nat) :
   kb_non_bottom kb ->
@@ -437,11 +403,6 @@ Qed.
 
 (** ** Unknown bits. *)
 
-(** When the argument is non-bottom, then we can now the unknown bits
-    by a xor of both arguments.  *)
-Definition unknown_bits (kb : must0_must1) : Z :=
-  Z.lxor (must0 kb) (must1 kb).
-
 Lemma kb_unknown (kb: must0_must1) (i: nat) :
   kb_non_bottom kb ->
   testbit (unknown_bits kb) i = true <-> kb_testbit kb i = QTop.
@@ -456,7 +417,6 @@ Qed.
 
 Require Import AbstractionCombination.
 
-Definition nb_must0_must1 : Type := { kb : must0_must1 | kb_non_bottom kb }.
 Definition nbkb : abstract_domain Z := NonEmpty.ad kb_ad kb_non_bottom.
 
 
