@@ -560,33 +560,6 @@ Proof.
   case=> j Hj. exists j; lia.
 Qed.
 
-(** AP unboundedness: for any [a], there's an AP point below [a]. *)
-Lemma cong_unbounded_below (r m' a : Z) :
-  0 < m' -> exists z, z ∈ γ[cong_ajsl] (r, m') /\ z < a.
-Proof.
-  move=> Hm'.
-  set k := Z.abs (a - r) + 1.
-  have Hk1 : 1 <= k by lia.
-  exists (r - k * m'). split.
-  - simpl. unfold_set. by exists (- k); lia.
-  - have Hkm : k <= k * m' by nia.
-    have Hra : r - a <= Z.abs (a - r) by lia.
-    lia.
-Qed.
-
-Lemma cong_unbounded_above (r m' a : Z) :
-  0 < m' -> exists z, z ∈ γ[cong_ajsl] (r, m') /\ a < z.
-Proof.
-  move=> Hm'.
-  set k := Z.abs (a - r) + 1.
-  have Hk1 : 1 <= k by lia.
-  exists (r + k * m'). split.
-  - simpl. unfold_set. by exists k; lia.
-  - have Hkm : k <= k * m' by nia.
-    have Hra : a - r <= Z.abs (a - r) by lia.
-    lia.
-Qed.
-
 (** Bridges from γ-membership to ⊑ in the bound domains. *)
 Lemma gamma_lubtop_le (c : Z) (b : WithTop.with_top Z) :
   c ∈ γ[lubtop] b -> WithTop.NotTop c ⊑[lubtop] b.
@@ -788,7 +761,7 @@ Lemma RS_interval_glbtop_le l h r m ai ac :
     (γ[collapsed_ad] ((l, h), (r, m))) ->
   l ⊑[glbtop] (fst ai).
 Proof.
-  move=> Hm Hl Hh Hlh Ha.
+  move=> Hm Hl Hh Hlh Ha. have Hm0 : m <> 0 by lia.
   case: l Hl Hlh Ha => [|l'z] Hl Hlh Ha; last first.
   { simpl in Hl.
     have Hl'z_in : l'z ∈ γ[collapsed_ad]
@@ -804,12 +777,12 @@ Proof.
   have [z [Hz_in Hzlt]] :
     exists z, z ∈ γ[collapsed_ad] ((WithTop.Top, h), (r, m)) /\ z < za.
   { case: h Hh Hlh Ha => [|hz] Hh Hlh Ha.
-    - have [z [Hz Hlt]] := cong_unbounded_below r m za Hm.
-      exists z. split; last exact Hlt.
+    - have [z [Hz Hlt]] := cong_unbounded_below r m (za - 1) Hm0.
+      exists z. split; last by lia.
       split; first by simpl; unfold_set.
       exact Hz.
     - simpl in Hh.
-      have [z [Hz Hlt]] := cong_unbounded_below r m (Z.min za (hz - 1)) Hm.
+      have [z [Hz Hlt]] := cong_unbounded_below r m (Z.min za (hz - 1) - 1) Hm0.
       exists z. split; last by lia.
       split; last exact Hz.
       simpl. unfold_set. simpl. lia. }
@@ -824,7 +797,7 @@ Lemma RS_interval_lubtop_le l h r m ai ac :
     (γ[collapsed_ad] ((l, h), (r, m))) ->
   h ⊑[lubtop] (snd ai).
 Proof.
-  move=> Hm Hl Hh Hlh Ha.
+  move=> Hm Hl Hh Hlh Ha. have Hm0 : m <> 0 by lia.
   case: h Hh Hlh Ha => [|h'z] Hh Hlh Ha; last first.
   { simpl in Hh.
     have Hh'z_in : h'z ∈ γ[collapsed_ad]
@@ -840,12 +813,12 @@ Proof.
   have [z [Hz_in Hzgt]] :
     exists z, z ∈ γ[collapsed_ad] ((l, WithTop.Top), (r, m)) /\ za < z.
   { case: l Hl Hlh Ha => [|lz] Hl Hlh Ha.
-    - have [z [Hz Hgt]] := cong_unbounded_above r m za Hm.
-      exists z. split; last exact Hgt.
+    - have [z [Hz Hgt]] := cong_unbounded_above r m (za + 1) Hm0.
+      exists z. split; last by lia.
       split; first by simpl; unfold_set.
       exact Hz.
     - simpl in Hl.
-      have [z [Hz Hgt]] := cong_unbounded_above r m (Z.max za (lz + 1)) Hm.
+      have [z [Hz Hgt]] := cong_unbounded_above r m (Z.max za (lz + 1) + 1) Hm0.
       exists z. split; last by lia.
       split; last exact Hz.
       simpl. unfold_set. simpl. lia. }
