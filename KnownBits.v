@@ -15,7 +15,6 @@
 Require Import Abstraction.
 Require Import autoreflect.
 Require Import Quadrivalent.
-Require Import SvaQuadrivalent.
 From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
