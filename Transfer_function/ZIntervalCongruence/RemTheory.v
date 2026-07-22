@@ -2,6 +2,9 @@
    (interval + congruence); interval best on three detected cases;
    congruence sound everywhere via the gcd rule.
 
+   [rem_final] and the definitions it calls live in the computational
+   layer ([OpsComp.v]).
+
    [rem_final : non_bottom_zic -> non_bottom_zic -> zic] follows the
    transfer-function convention (non-bottom args, bottom-carrying result).
    It is sound ([rem_final_sound]) for all inputs and *exact* on the
@@ -38,7 +41,8 @@ Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
   Z_interval Congruence
-  ZIntervalCongruence.
+  ZIntervalCongruence
+  Transfer_function.ZIntervalCongruence.OpsComp.
 
 Open Scope Z_scope.
 
@@ -228,20 +232,6 @@ Proof.
     rewrite (Z_rem_quot_eq c2 n) (Hblock c2 Hc2). lia.
 Qed.
 
-(** *** Adding a constant to an interval.
-
-    [itv_add_const K i] adds [K] to both bounds of [i] ([Top] bounds stay
-    [Top]). It is the abstract counterpart of [c ↦ c + K]. *)
-
-Definition add_const_bound (K : Z) (b : WithTop.with_top Z) : WithTop.with_top Z :=
-  match b with
-  | WithTop.Top => WithTop.Top
-  | WithTop.NotTop z => WithTop.NotTop (z + K)
-  end.
-
-Definition itv_add_const (K : Z) (i : interval) : interval :=
-  (add_const_bound K (fst i), add_const_bound K (snd i)).
-
 Lemma Zleb_add_l (a b K : Z) : (a + K <=? b) = (a <=? b - K).
 Proof. apply/idP/idP => /Z.leb_le ?; apply/Z.leb_le; lia. Qed.
 
@@ -391,25 +381,6 @@ Lemma gamma_fst_itv (a : collapsed_ad) (c : Z) :
   c ∈ γ[collapsed_ad] a -> c ∈ γ[itv] (fst a).
 Proof. case: a => [ia ca] [Hi _]. exact: Hi. Qed.
 
-(** *** Constant-divisor / single-block detection.
-
-    [const_block a2 a1 = Some (n, q)] when the divisor [a1] is a nonzero
-    constant [n] ([is_singleton]) and the dividend's interval [fst a2] lies
-    within a single [Z.quot _ n] block (both endpoints have quotient [q]).
-    In that case [Z.rem _ n] is the affine map [c2 ↦ c2 - n*q] over
-    [γ a2], whose best interval is [fst a2] shifted by [-(n*q)]. *)
-Definition const_block (a2 a1 : collapsed_ad) : option (Z * Z) :=
-  match is_singleton a1 with
-  | Some n =>
-      if n =? 0 then None
-      else match fst a2 with
-           | (WithTop.NotTop l2, WithTop.NotTop h2) =>
-               if Z.quot l2 n =? Z.quot h2 n then Some (n, Z.quot l2 n) else None
-           | _ => None
-           end
-  | None => None
-  end.
-
 (** When [const_block] fires it certifies the three facts feeding
     [rem_collecting_const_block] / [rem_itv_const_block_best]: a nonzero
     constant divisor, and a constant dividend quotient [q]. *)
@@ -449,17 +420,6 @@ Qed.
     envelope; it complements [const_block], which covers the same
     situation only for singleton divisors. *)
 
-(** Magnitude lower bound of a single-signed interval: [Some B] guarantees
-    [0 < B <= Z.abs c] for every [c] in the interval. *)
-Definition itv_abs_min (i : interval) : option Z :=
-  match i with
-  | (WithTop.NotTop l, WithTop.NotTop h) =>
-      if 0 <? l then Some l else if h <? 0 then Some (- h) else None
-  | (WithTop.NotTop l, WithTop.Top) => if 0 <? l then Some l else None
-  | (WithTop.Top, WithTop.NotTop h) => if h <? 0 then Some (- h) else None
-  | (WithTop.Top, WithTop.Top) => None
-  end.
-
 Lemma itv_abs_min_spec (i : interval) (B : Z) :
   itv_abs_min i = Some B ->
   0 < B /\ (forall c, c ∈ γ[itv] i -> B <= Z.abs c).
@@ -482,13 +442,6 @@ Proof.
       split; first lia.
       move=> c [_ Hhi]. have : c <= h by exact: Hhi. lia.
 Qed.
-
-Definition narrow_divb (a2 a1 : collapsed_ad) : bool :=
-  match fst a2, itv_abs_min (fst a1) with
-  | (WithTop.NotTop l2, WithTop.NotTop h2), Some B =>
-      (Z.abs l2 <? B) && (Z.abs h2 <? B)
-  | _, _ => false
-  end.
 
 (** A dividend in [[-5, 5]] is untouched by a divisor in [[10, 20]]:
     the envelope returns the dividend's interval. *)
@@ -534,18 +487,6 @@ Qed.
     [rho = -((-r2) mod |n|)] (nonpositive dividend). Flagship example:
     [[0,100] ∩ (3 + 10ℤ)] rem [{10}] yields the point interval [[3,3]]. *)
 
-Definition itv_nonnegb (i : interval) : bool :=
-  match fst i with
-  | WithTop.NotTop l => 0 <=? l
-  | WithTop.Top => false
-  end.
-
-Definition itv_nonposb (i : interval) : bool :=
-  match snd i with
-  | WithTop.NotTop h => h <=? 0
-  | WithTop.Top => false
-  end.
-
 Lemma itv_nonnegb_spec (i : interval) (c : Z) :
   itv_nonnegb i -> c ∈ γ[itv] i -> 0 <= c.
 Proof.
@@ -561,16 +502,6 @@ Proof.
   move=> /Z.leb_le Hh [_ Hhi].
   have : c <= h by exact: Hhi. lia.
 Qed.
-
-Definition const_residue (a2 a1 : collapsed_ad) : option Z :=
-  match is_singleton a1 with
-  | Some n =>
-      if (n =? 0) || negb (snd (snd a2) mod Z.abs n =? 0) then None
-      else if itv_nonnegb (fst a2) then Some (fst (snd a2) mod Z.abs n)
-      else if itv_nonposb (fst a2) then Some (- ((- fst (snd a2)) mod Z.abs n))
-      else None
-  | None => None
-  end.
 
 (** What [const_residue] certifies: a nonzero constant divisor [n], and
     a *constant* remainder [rho] across the dividend's concretization. *)
@@ -664,16 +595,6 @@ Proof.
       have Hh : rho <= hb by exact: Hhi.
       by apply/andP; split; apply/Z.leb_le.
 Qed.
-
-Definition rem_itv_envelope (a2 a1 : collapsed_ad) : interval :=
-  match const_block a2 a1 with
-  | Some (n, q) => itv_add_const (- (n * q)) (fst a2)
-  | None => if narrow_divb a2 a1 then fst a2
-            else match const_residue a2 a1 with
-                 | Some rho => (WithTop.NotTop rho, WithTop.NotTop rho)
-                 | None => (WithTop.Top, WithTop.Top)
-                 end
-  end.
 
 (** Soundness of the envelope for *all* inputs. On the [const_block]
     branch it is the precise shifted interval; on the [narrow_divb] branch
@@ -846,14 +767,6 @@ Qed.
     the congruence is still the placeholder [(0,1)] (= ℤ). Remaining
     precision work: the general interval envelope, and a real [rem_cong]. *)
 
-(** Divisor-trivial test for non-bottom arguments: no [is_bottomb] case
-    (the argument is structurally non-empty). *)
-Definition divisor_trivialb_nb (a1 : prod_ajsl) : bool :=
-  match fst a1 with
-  | (WithTop.NotTop l, WithTop.NotTop h) => (l =? 0) && (h =? 0)
-  | _ => false
-  end.
-
 Lemma divisor_trivial_nb_empty (a1 : prod_ajsl) :
   divisor_trivialb_nb a1 -> forall c1, c1 ∈ γ[prod_ajsl] a1 -> c1 = 0.
 Proof.
@@ -865,12 +778,6 @@ Proof.
   rewrite /itv_gammab /glb_gammab /lub_gammab => /andP [Hle Hge].
   move: Hle Hge => /Z.leb_le ? /Z.leb_le ?. lia.
 Qed.
-
-(** Projection of a [non_bottom_zic] element to its raw [prod_ajsl]
-    carrier (through the two [Subset] layers). The pattern match forces
-    the [abs_car]/[ad_car] reductions a bare backtick leaves stuck. *)
-Definition rd_car (a : non_bottom_zic) : prod_ajsl :=
-  match a with exist _ (exist _ a0 _) _ => a0 end.
 
 (** γ passes through the two [Subset] layers unchanged: the concretization
     of a [non_bottom_zic] is that of its raw carrier. (Holds by reduction
@@ -893,11 +800,6 @@ Proof. by case: a => [[a0 p0] p]. Qed.
     even need [c1 <> 0]), replacing the old placeholder [(0,1)]. When
     [gcd m2 (gcd r1 m1) = 1] the result congruence is all of ℤ — which is
     then genuinely the most precise congruence, not a loss. *)
-
-Definition rem_cong (g2 g1 : Z * Z) : Z * Z :=
-  let '(r2, m2) := g2 in
-  let '(r1, m1) := g1 in
-  (r2, Z.gcd m2 (Z.gcd r1 m1)).
 
 (** The flagship dividend [≡ 3 (mod 10)] with divisor the constant [10]
     (as a congruence, [(10, 0)]): the result congruence is [≡ 3 (mod 10)],
@@ -941,18 +843,6 @@ Proof.
   unfold_set in Hc2. unfold_set in Hc1. unfold_set.
   exact: rem_cong_divide.
 Qed.
-
-(** Raw (unreduced) result. The interval is [rem_itv_envelope] — best on
-    the constant-divisor single-block, narrow-dividend, and
-    congruence-pinned-residue cases, the top interval otherwise. The
-    congruence is [rem_cong] — sound on all inputs. *)
-Definition rem_raw (a2 a1 : prod_ajsl) : prod_ajsl :=
-  (rem_itv_envelope a2 a1, rem_cong (snd a2) (snd a1)).
-
-Definition rem_final (x y : non_bottom_zic) : zic :=
-  if divisor_trivialb_nb (rd_car y)
-  then bottom_final
-  else reduce_final (rem_raw (rd_car x) (rd_car y)).
 
 (** With non-bottom arguments, the collecting [Z.rem] set is empty
     exactly when the divisor is trivial. *)
