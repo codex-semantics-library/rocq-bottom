@@ -45,7 +45,7 @@ results were added *after* Artifact Evaluation, and are the ones the
 camera-ready paper cites:
 
 - *Bitwise addition and subtraction* (=KnownBits.v=,
-  =Transfer_function/KnownBits/AddTheory.v=) — the abstract adder =kb_add= and
+  =Transfer_function/KnownBits/AddSubTheory.v=) — the abstract adder =kb_add= and
   subtracter =kb_sub=, defined through their carry and borrow sequences, each
   proved to be the /best/ abstraction of the corresponding concrete operation on
   non-bottom known bits (=kb_add_best=, =kb_sub_best=, from which
@@ -169,7 +169,9 @@ depends on no axioms.
 | =Transfer_function/ZInterval/QuotTheory.v=          | Interval truncating division: best in all nine sign cases (=interval_quot_full_best=)             |
 | =Transfer_function/ZInterval/LeTheory.v=            | Interval =Z.leb= into quadrivalent: =nbinterval_leb_exact=                                        |
 | =Transfer_function/ZInterval/EqbTheory.v=           | Interval =Z.eqb= into quadrivalent: naive and optimized variants, both exact                      |
-| =KnownBits.v=                                       | Known-bits abstraction for Z, bitwise operations, and addition/subtraction=.                      |
+| =KnownBits.v=                                       | Known-bits abstraction for Z: the (must0, must1) pair and testbit toolkit (abstraction only)      |
+| =Transfer_function/KnownBits/BitwiseTheory.v=       | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument         |
+| =Transfer_function/KnownBits/AddSubTheory.v=        | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete       |
 | =Congruence.v=                                      | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |
 | =Transfer_function/Congruence/AddTheory.v=          | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                     |
 | =Transfer_function/Congruence/MulTheory.v=          | Congruence multiplication: =cong_mul= is best but not γ-exact                                     |
@@ -181,7 +183,6 @@ depends on no axioms.
 | =Transfer_function/ZIntervalCongruence/OpsComp.v=   | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
 | =Transfer_function/ZIntervalCongruence/AddTheory.v= | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=        |
 | =Transfer_function/ZIntervalCongruence/RemTheory.v= | Remainder on the product: soundness, the =gcd= congruence rule, and the constant-divisor best cases |
-| =Transfer_function/KnownBits/AddTheory.v=           | Bitwise addition on known bits: =kb_add_not_exact= and =kb_add_not_alpha_complete=                    |
 |---------------------------------------------------+---------------------------------------------------------------------------------------------------|
 
 * Extending the library
