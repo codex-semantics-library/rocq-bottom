@@ -6,9 +6,7 @@
      (interval_quot_*_best, interval_quot_full_best).
    Dispatches on [classify] / [classify_divisor], still in Z_interval.v, and
    uses the negation transfer function ([neg_bound], [interval_opp]), now in
-   [OpsComp.v].
-
-   The operations themselves live in [OpsComp.v]. *)
+   [OpsComp.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

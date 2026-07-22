@@ -171,6 +171,7 @@ depends on no axioms.
 | =Transfer_function/ZInterval/LeTheory.v=            | Interval =Z.leb= into quadrivalent: =nbinterval_leb_exact=                                        |
 | =Transfer_function/ZInterval/EqbTheory.v=           | Interval =Z.eqb= into quadrivalent: naive and optimized variants, both exact                      |
 | =KnownBits.v=                                       | Known-bits abstraction for Z: the (must0, must1) pair and testbit toolkit (abstraction only)      |
+| =Transfer_function/KnownBits/OpsComp.v=             | Executable known-bits transfer functions: =kb_lor=, =kb_land=, =kb_lxor=, =kb_add=, =kb_sub=      |
 | =Transfer_function/KnownBits/BitwiseTheory.v=       | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument         |
 | =Transfer_function/KnownBits/AddSubTheory.v=        | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete       |
 | =Congruence.v=                                      | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |

@@ -6,9 +6,7 @@
    "MulTheory imports OppTheory"). *)
 
 (* STATUS: opp (Z.opp): exact, even when the interval may be bottom
-     (interval_opp_sound, interval_opp_exact).
-
-   The operations themselves live in [OpsComp.v]. *)
+     (interval_opp_sound, interval_opp_exact). *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

@@ -12,9 +12,7 @@
 
    The extraction block at the end is provisional: per architecture.org the
    extraction directives belong in an export layer ([*API.v]), which does not
-   exist yet.
-
-   The operations themselves live in [OpsComp.v]. *)
+   exist yet. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

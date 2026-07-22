@@ -5,9 +5,7 @@
 (* STATUS: eqb (Z.eqb): exact
      (nbinterval_eqb_unopt_exact, may_be_{true,false}_eqb_exact).
    Two variants are provided: the naive [interval_eqb_unopt] and the
-   optimized [interval_eqb_opt], proved equal.
-
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+   optimized [interval_eqb_opt], proved equal. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

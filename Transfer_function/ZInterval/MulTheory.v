@@ -4,10 +4,7 @@
 (* STATUS: mul (Z.mul): sound + best (α-complete)
      (interval_mul_opt_best, interval_mul_opt_alpha_complete).
    Uses the negation transfer function ([neg_bound], [interval_opp]), now in
-   [OpsComp.v], and the split-at-zero α-machinery, still in Z_interval.v.
-
-   The extracted [bound_mul] and [interval_mul_opt] live in [OpsComp.v]; the
-   proof-only mirror [interval_mul_math] stays here. *)
+   [OpsComp.v], and the split-at-zero α-machinery, still in Z_interval.v. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

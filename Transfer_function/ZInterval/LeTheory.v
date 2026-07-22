@@ -2,9 +2,7 @@
    abstraction: [interval_leb] takes two intervals and returns a
    [quadrivalent]. Split out of Z_interval.v. *)
 
-(* STATUS: leb (Z.leb): exact (nbinterval_leb_exact).
-
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+(* STATUS: leb (Z.leb): exact (nbinterval_leb_exact). *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.

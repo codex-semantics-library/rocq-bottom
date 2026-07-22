@@ -13,28 +13,12 @@ From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import base Abstraction AbstractionCombination Quadrivalent KnownBits.
+Require Import Transfer_function.KnownBits.OpsComp.
 Open Scope Z_scope.
 
 (** ** Bitwise transfer functions *)
 
 Require Import SvaQuadrivalent.
-
-(** *** Definitions *)
-
-Definition kb_lor (kb1 kb2 : must0_must1) : must0_must1 :=
-  {| must0 := Z.lor (must0 kb1) (must0 kb2);
-     must1 := Z.lor (must1 kb1) (must1 kb2) |}.
-
-Definition kb_land (kb1 kb2 : must0_must1) : must0_must1 :=
-  {| must0 := Z.land (must0 kb1) (must0 kb2);
-     must1 := Z.land (must1 kb1) (must1 kb2) |}.
-
-Definition kb_lxor (kb1 kb2 : must0_must1) : must0_must1 :=
-  let xor00 := Z.lxor (must0 kb1) (must0 kb2) in
-  let xor11 := Z.lxor (must1 kb1) (must1 kb2) in
-  let unknown := Z.lxor (must0 kb1) (must1 kb1) in
-  {| must0 := Z.lor (Z.lor xor00 xor11) unknown;
-     must1 := Z.land xor00 xor11 |}.
 
 (** *** Per-bit correspondence with quadrivalent operations (non-bottom) *)
 

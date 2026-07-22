@@ -27,6 +27,7 @@ Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import base Abstraction AbstractionCombination autoreflect.
 Require Import Quadrivalent SvaQuadrivalent KnownBits.
+Require Import Transfer_function.KnownBits.OpsComp.
 Open Scope Z_scope.
 
 (** *** Non-exactness of integer addition
@@ -203,26 +204,6 @@ Proof.
     have := Z.add_lor_land (must1 kb) (Z.land p (unknown_bits kb)).
     by rewrite Hor Hand; lia.
 Qed.
-
-(** *** Closed-form [kb_add] — Vishwanathan et al., Listing 1, p.258.
-
-    The kernel's [tnum_add] in σ-decomposed form: combine value sums
-    and mask sums into a single carry expression, and read off the
-    result tnum. The variable naming (sv, sm, sigma, chi, eta, rv)
-    matches the paper exactly. *)
-Definition kb_add (kb1 kb2 : must0_must1) : must0_must1 :=
-  let v1    := must1 kb1 in
-  let m1    := unknown_bits kb1 in
-  let v2    := must1 kb2 in
-  let m2    := unknown_bits kb2 in
-  let sv    := (v1 + v2)%Z in
-  let sm    := (m1 + m2)%Z in
-  let sigma := (sv + sm)%Z in
-  let chi   := Z.lxor sigma sv in
-  let eta   := Z.lor chi (Z.lor m1 m2) in
-  let rv    := Z.land sv (Z.lnot eta) in
-  {| must1 := rv;
-     must0 := Z.lor rv eta |}.
 
 (** *** Generic per-bit chain framework
 
@@ -1210,30 +1191,6 @@ Proof.
            kb2 kb1 p q Hp Hq (borrow_seq p q)
            (testbit_borrow_seq_0 p q) (testbit_borrow_seq_succ p q) i).
 Qed.
-
-(** *** Closed-form [kb_sub] — Vishwanathan et al., §III-B sketch.
-
-    The closed form follows the same σ-decomposition pattern as [kb_add]:
-    [dv = must1 kb1 - must0 kb2] (minimum of γ subtraction),
-    [dm = unknown_bits kb1 + unknown_bits kb2] (unknown-bit contributions),
-    [σ = dv + dm], then [χ = σ ⊕ dv], [η = χ | m1 | m2], and the
-    result [must1 = dv & ~η], [must0 = rv | η].
-
-    The paper's [tnum_sub] is in the extended technical report; the
-    body here matches the same σ/χ/η template as [tnum_add] (Listing 1)
-    with [sv] replaced by [dv] (min of γ subtraction). *)
-
-Definition kb_sub (kb1 kb2 : must0_must1) : must0_must1 :=
-  let v1    := must1 kb1 in let m1 := unknown_bits kb1 in
-  let v2    := must1 kb2 in let m2 := unknown_bits kb2 in
-  let dv    := (v1 - must0 kb2)%Z in
-  let dm    := (m1 + m2)%Z in
-  let sigma := (dv + dm)%Z in
-  let chi   := Z.lxor sigma dv in
-  let eta   := Z.lor chi (Z.lor m1 m2) in
-  let rv    := Z.land dv (Z.lnot eta) in
-  {| must1 := rv;
-     must0 := Z.lor rv eta |}.
 
 (** Sigma decomposition for subtraction:
     [dv + dm = must0 kb1 - must1 kb2].
