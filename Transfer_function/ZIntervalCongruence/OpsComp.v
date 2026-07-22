@@ -10,6 +10,7 @@ Require Import
   AbstractionCombination
   Z_interval Congruence
   ZIntervalCongruence
+  Transfer_function.ZInterval.AddTheory
   Transfer_function.Congruence.AddTheory.
 
 (** ** Z.add transfer function (raw).
