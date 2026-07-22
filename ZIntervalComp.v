@@ -9,7 +9,8 @@
    record (and its proof fields) into this file. The two forms are
    definitionally equal, so [ZIntervalTheory.v] needs no bridging lemmas. *)
 
-Require Import AbstractionCombination Bool ssreflect Stdlib.ZArith.ZArith.
+Require Import AbstractionCombination.
+From Stdlib Require Import Bool ZArith.
 
 Open Scope Z_scope.
 
@@ -110,8 +111,8 @@ Definition classify (i:interval) :=
 (** Classify the divisor, and returns an interval where 0 has been
 removed from the bounds. *)
 Inductive divisor_classification :=
-  | DivPos of interval
-  | DivNeg of interval
+  | DivPos : interval -> divisor_classification
+  | DivNeg : interval -> divisor_classification
   | DivZero
   | DivAcross.
 
