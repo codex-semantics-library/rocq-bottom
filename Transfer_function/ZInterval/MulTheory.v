@@ -17,6 +17,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
+Require Import ZIntervalComp.
 Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.
@@ -515,14 +516,14 @@ Section Interval_mul.
     0 <= c -> 0 ∈ γ[glbtop] X -> min_opt X (WithTop.NotTop c) = X.
   Proof.
     move=> Hc; case: X => [|x]; first by rewrite min_opt_TopL.
-    unfold_set => /= Hx; rewrite min_opt_NotTop; f_equal; lia.
+    unfold_set => /= Hx; rewrite ?min_opt_NotTop; f_equal; lia.
   Qed.
 
   Lemma max_opt_absorb_l (c : Z) (Y : WithTop.with_top Z) :
     c <= 0 -> 0 ∈ γ[lubtop] Y -> max_opt (WithTop.NotTop c) Y = Y.
   Proof.
     move=> Hc; case: Y => [|y]; first by rewrite max_opt_TopR.
-    unfold_set => /= Hy; rewrite max_opt_NotTop; f_equal; lia.
+    unfold_set => /= Hy; rewrite ?max_opt_NotTop; f_equal; lia.
   Qed.
 
   (** Absorption equality: the join of the two quadrant transfers (with

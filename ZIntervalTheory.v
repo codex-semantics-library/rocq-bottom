@@ -27,6 +27,7 @@ Require Import autoreflect.
 Require Import Tactics.
 Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
+Require Import ZIntervalComp.
 (* From Hammer Require Import Hammer. *)
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
@@ -87,7 +88,6 @@ End AD.
    careful to use functions from/to intervals/nb_intervals for
    functions to be extracted (and not the coercion from itv/nb_itv);
    otherwise, the extraction is messy. *)
-Definition interval := prod (WithTop.with_top Z) (WithTop.with_top Z).
 Definition itv : abstract_lattice Z := IntervalUnbounded.al Z_CL.
 
 (** Intervals are convex: [γ[itv] (l,h)] contains every point lying between
@@ -96,14 +96,6 @@ Lemma itv_convex (l h : WithTop.with_top Z) (a b x : Z) :
   a ∈ γ[itv] (l, h) -> b ∈ γ[itv] (l, h) -> a <= x -> x <= b ->
   x ∈ γ[itv] (l, h).
 Proof. exact: IntervalUnbounded.convex. Qed.
-
-Definition non_bottom := IntervalUnbounded.non_bottom Z_CL.
-
-Definition nb_interval: Type := { i: interval | non_bottom i }.
-
-(** A specific γ-empty interval, [(NotTop 1, NotTop 0)], representing
-    the empty set of integers. Used as a result in division-by-zero. *)
-Definition bottom := (WithTop.NotTop 1, WithTop.NotTop 0).
 
 Definition nbitv : abstract_domain Z := NonEmpty.ad itv non_bottom.
 
@@ -157,38 +149,18 @@ Qed.
 Global Instance z_leP (z2 z1:Z): (AutoReflect(z2 <= z1)(Z.leb z2 z1)).
 Proof. apply Z.leb_spec0. Qed.
 
-Definition glbtop_is_includedb a2 a1 := 
-  match a1 with
-      | WithTop.Top => true
-      | WithTop.NotTop a1 =>
-          match a2 with
-          | WithTop.Top => false
-          | WithTop.NotTop a2 => Z.leb a1 a2
-          end
-  end.
 Global Instance glbtop_is_includedP a2 a1 :
   AutoReflect(a2 ⊑[glbtop] a1)(glbtop_is_includedb a2 a1).
 Proof.
   { apply WithTop.is_includedP. apply _. }
 Qed.
 
-Definition lubtop_is_includedb a2 a1 := 
-  match a1 with
-      | WithTop.Top => true
-      | WithTop.NotTop a1 =>
-          match a2 with
-          | WithTop.Top => false
-          | WithTop.NotTop a2 => Z.leb a2 a1
-          end
-  end.
 Global Instance lubtop_is_includedP a2 a1 :
   AutoReflect(a2 ⊑[lubtop] a1)(lubtop_is_includedb a2 a1).
 Proof.
 { apply WithTop.is_includedP. apply _. }
 Qed.
 
-Definition itv_is_includedb (a2 a1: interval) := 
-  let (l2,h2) := a2 in let (l1,h1) := a1 in glbtop_is_includedb l2 l1 && lubtop_is_includedb h2 h1.
 Global Instance is_includedP a2 a1:
   (AutoReflect(a2 ⊑[itv] a1)(itv_is_includedb a2 a1)).
 Proof.
@@ -406,17 +378,6 @@ Proof.
 Qed.
 
 
-(** Interval join and meet are the Conjunction join/meet of the
-    GLBUnbounded and LUBUnbounded lattices. *)
-Definition join_itv : interval -> interval -> interval :=
-  Conjunction.join (GLBUnbounded.al Z_CL) (LUBUnbounded.al Z_CL).
-
-Definition min_opt : WithTop.with_top Z -> WithTop.with_top Z -> WithTop.with_top Z :=
-  (⊔[GLBUnbounded.al Z_CL]).
-
-Definition max_opt : WithTop.with_top Z -> WithTop.with_top Z -> WithTop.with_top Z :=
-  (⊔[LUBUnbounded.al Z_CL]).
-
 Global Instance itv_join_is_lub : JoinIsLUB itv :=
   IntervalUnbounded.IntervalUnbounded_JoinIsLUB Z_CL.
 
@@ -444,14 +405,6 @@ Proof. exact (IntervalUnbounded.non_bottom_non_empty Z_CL 0). Qed.
     a smart constructor, a decidable equality with [bottom], and a
     subset type): here, bottom-testing is done by [non_bottomb], which
     is O(1) on the bounds. *)
-
-(** Boolean form of [non_bottom], for decidability of γ-emptiness. *)
-Definition non_bottomb (i : interval) : bool :=
-  match i with
-  | (WithTop.Top, _) => true
-  | (_, WithTop.Top) => true
-  | (WithTop.NotTop l, WithTop.NotTop h) => Z.leb l h
-  end.
 
 Lemma non_bottombP i : reflect (non_bottom i) (non_bottomb i).
 Proof.
@@ -584,19 +537,6 @@ Proof.
   rewrite !gamma_nbitv_gamma_itv in Hc2, Hc1.
   by exists c2, c1.
 Qed.
-
-(** ** Singleton detection.
-
-    [is_singleton l h = Some x] exactly when the interval [[l,h]]
-    concretizes to the single value [x]. Generic over interval bounds,
-    so it serves any "constant operand" transfer-function case; the
-    [prod_ajsl] wrapper in [ZIntervalCongruence] delegates to it. *)
-Definition is_singleton (l h : WithTop.with_top Z) : option Z :=
-  match l, h with
-  | WithTop.NotTop l', WithTop.NotTop h' =>
-      if Z.eqb l' h' then Some l' else None
-  | _, _ => None
-  end.
 
 Lemma is_singleton_spec l h x :
   is_singleton l h = Some x <-> (forall z, z ∈ γ[itv] (l, h) <-> z = x).
@@ -957,22 +897,6 @@ Qed.
 
 
 
-Inductive classification := Pos | Neg | Across.
-
-Definition classify (i:interval) :=
-  let (l,h) := i in
-  match l,h with
-  | WithTop.NotTop z, _ =>
-      if z >=? 0 then Pos
-      else match h with
-           | WithTop.NotTop z' => if z' <=? 0 then Neg else Across
-           | WithTop.Top => Across
-           end
-  | WithTop.Top, WithTop.NotTop z =>
-      if z <=? 0 then Neg else Across
-  | WithTop.Top, WithTop.Top => Across
-  end.
-
 Lemma classify_Pos_inv l h : classify (l, h) = Pos ->
   exists l', l = WithTop.NotTop l' /\ 0 <= l'.
 Proof.
@@ -1011,40 +935,4 @@ Proof.
     split; [unfold_set => /=; move/geb0_false: E1; lia
            | unfold_set => /=; move/Z.leb_gt: E2; lia].
 Qed.
-
-(** Classify the divisor, and returns an interval where 0 has been
-removed from the bounds. *)
-Inductive divisor_classification :=
-  | DivPos of interval
-  | DivNeg of interval
-  | DivZero
-  | DivAcross.
-
-Definition classify_divisor (i:interval) :=
-  let (l,h) := i in
-  match l with
-  | WithTop.NotTop l' =>
-      if l' >? 0 then DivPos i
-      else match h with
-           | WithTop.NotTop h' =>
-               if h' <? 0 then DivNeg i
-               else if Z.eqb l' 0 then
-                      if  Z.eqb h' 0 then DivZero
-                      else DivPos (WithTop.NotTop 1, h)
-                    else if Z.eqb h' 0 then DivNeg (l, WithTop.NotTop (-1))
-               else DivAcross
-           | WithTop.Top =>
-               if Z.eqb l' 0
-               then DivPos (WithTop.NotTop 1, h)
-               else DivAcross
-           end
-  | WithTop.Top =>
-      match h with
-       | WithTop.NotTop h' =>
-           if h' <? 0 then DivNeg i
-           else if Z.eqb h' 0 then DivNeg (l, WithTop.NotTop (-1))
-           else DivAcross
-       | WithTop.Top => DivAcross
-      end
-  end.
 
