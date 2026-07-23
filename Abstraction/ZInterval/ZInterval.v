@@ -3,11 +3,12 @@
    and the sign classifiers. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZIntervalTheory.v].
 
-   [non_bottom], [min_opt], [max_opt] and [join_itv] are written here as
-   direct matches on the bounds rather than as instances of the generic
-   BoundLattice constructions, which would drag the [Z_CL] concrete-lattice
-   record (and its proof fields) into this file. The two forms are
-   definitionally equal, so [ZIntervalTheory.v] needs no bridging lemmas. *)
+   [non_bottom], [min_opt], [max_opt], [join_itv] and the [*_gammab]
+   membership tests are written here as direct matches on the bounds rather
+   than as instances of the generic BoundLattice constructions, which would
+   drag the [Z_CL] concrete-lattice record (and its proof fields) into this
+   file. The two forms are definitionally equal, so [ZIntervalTheory.v] needs
+   no bridging lemmas. *)
 
 Require Import AbstractionCombination.
 From Stdlib Require Import Bool ZArith.
@@ -78,6 +79,24 @@ Definition non_bottomb (i : interval) : bool :=
   | (_, WithTop.Top) => true
   | (WithTop.NotTop l, WithTop.NotTop h) => Z.leb l h
   end.
+
+(** Boolean membership tests: [itv_gammab i z] decides [z ∈ γ i]. The
+    bounds are annotated [Z] rather than [glb] / [lub], which are the
+    [Z_CL]-derived lattices; the reflection instances are in
+    [ZIntervalTheory.v]. *)
+Definition glb_gammab (l : Z) z := Z.leb l z.
+Definition lub_gammab (l : Z) z := Z.leb z l.
+
+Definition itv_gammab (i:interval) z :=
+  (let (a, b) := i in
+   match a with
+   | WithTop.Top => true
+   | WithTop.NotTop a0 => lub_gammab z a0
+   end &&
+     match b with
+     | WithTop.Top => true
+     | WithTop.NotTop a0 => glb_gammab z a0
+     end).
 
 (** ** Singleton detection.
 

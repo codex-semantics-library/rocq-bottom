@@ -106,25 +106,13 @@ Qed.
 
 
 
-Definition glb_gammab (l:glb) z := Z.leb l z.
 Instance glb_gammaP: forall l z, AutoReflect(z ∈ γ[glb] l)(glb_gammab l z).
 Proof. apply/Z.leb_spec0. Qed.
 
-Definition lub_gammab (l:lub) z := Z.leb z l.
 Instance lub_gammaP: forall l z, AutoReflect(z ∈ γ[lub] l)(lub_gammab l z).
 Proof. move => l z. apply/Z.leb_spec0. Qed.
 
 
-Definition itv_gammab (i:interval) z :=
-  (let (a, b) := i in
-   match a with
-   | WithTop.Top => true
-   | WithTop.NotTop a0 => lub_gammab z a0
-   end &&
-     match b with
-     | WithTop.Top => true
-     | WithTop.NotTop a0 => glb_gammab z a0
-     end).
 
 Instance itv_gammaP i z: AutoReflect(z ∈ γ[itv] i)(itv_gammab i z).
 Proof.
