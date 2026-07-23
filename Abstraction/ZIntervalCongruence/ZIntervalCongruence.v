@@ -90,6 +90,6 @@ Definition reduce (p : zintervalcongruence) : zintervalcongruence :=
       if itv_gammab (l, h) r then singleton r else bottom
   | None =>
       let (r, m) := c in
-      let m' := Z.abs m in
+      let m' := Z.abs m in (* Note: could be removed if congruence guaranteed m >= 0. *)
       build_snapped (snap_low l r m') (snap_high h r m') r m'
   end.
