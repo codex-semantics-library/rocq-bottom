@@ -12,7 +12,7 @@ Require Import
   ZIntervalComp ZIntervalTheory
   ZIntervalCongruence
   Transfer_function.ZInterval.OpsComp
-  Transfer_function.Congruence.OpsComp.
+  Transfer_function.ZCongruence.OpsComp.
 
 Open Scope Z_scope.
 

@@ -37,7 +37,7 @@
 From Stdlib Require Import ZArith Lia.
 Require Import ssreflect ssrbool.
 Require Import base Abstraction AbstractLattice
-  AbstractionCombination ZIntervalComp ZIntervalTheory Congruence.
+  AbstractionCombination ZIntervalComp ZIntervalTheory ZCongruenceTheory.
 
 Open Scope Z_scope.
 

@@ -20,12 +20,12 @@ Require Import ssreflect ssrbool.
 Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
-  ZIntervalComp ZIntervalTheory Congruence
+  ZIntervalComp ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruence
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZInterval.AddTheory
-  Transfer_function.Congruence.OpsComp
-  Transfer_function.Congruence.AddTheory
+  Transfer_function.ZCongruence.OpsComp
+  Transfer_function.ZCongruence.AddTheory
   Transfer_function.ZIntervalCongruence.OpsComp.
 
 Open Scope Z_scope.

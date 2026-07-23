@@ -73,7 +73,7 @@ Beyond adding lemmas, three things changed in the artifact itself:
   =ocaml/=;
 - some lemmas were *renamed*: the α-relation and its lemmas, previously called
   =IsAdjoint= / =is_adjoint_*=, are now =IsAlpha= / =is_alpha_*=, matching the name
-  used in the paper; and the =cong_div_*_case_*= lemmas of =Congruence.v= were given
+  used in the paper; and the =cong_div_*_case_*= lemmas of =ZCongruenceTheory.v= were given
   descriptive names (=cong_div_exact_divisor_zero_total= and friends).
 
 * Building
@@ -178,14 +178,14 @@ depends on no axioms.
 | =Transfer_function/KnownBits/OpsComp.v=             | Executable known-bits transfer functions: =kb_lor=, =kb_land=, =kb_lxor=, =kb_add=, =kb_sub=      |
 | =Transfer_function/KnownBits/BitwiseTheory.v=       | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument         |
 | =Transfer_function/KnownBits/AddSubTheory.v=        | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete       |
-| =Congruence.v=                                      | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |
-| =Transfer_function/Congruence/OpsComp.v=            | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only   |
-| =Transfer_function/Congruence/AddTheory.v=          | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                     |
-| =Transfer_function/Congruence/MulTheory.v=          | Congruence multiplication: =cong_mul= is best but not γ-exact                                     |
-| =Transfer_function/Congruence/DivTheory.v=          | Congruence floor division =cong_div=: best, and γ-exact in cases A/B/D1                           |
-| =Transfer_function/Congruence/QuotTheory.v=         | Congruence truncating division =cong_quot=: best, via the gcd-of-quotients walk                   |
-| =Transfer_function/Congruence/LeTheory.v=           | Congruence =Z.leb= into quadrivalent: =cong_le= is exact (hence best)                             |
-| =Transfer_function/Congruence/EqbTheory.v=          | Congruence =Z.eqb= into quadrivalent: =cong_eqb= is exact (hence best)                            |
+| =ZCongruenceTheory.v=                               | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |
+| =Transfer_function/ZCongruence/OpsComp.v=           | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only   |
+| =Transfer_function/ZCongruence/AddTheory.v=         | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                     |
+| =Transfer_function/ZCongruence/MulTheory.v=         | Congruence multiplication: =cong_mul= is best but not γ-exact                                     |
+| =Transfer_function/ZCongruence/DivTheory.v=         | Congruence floor division =cong_div=: best, and γ-exact in cases A/B/D1                           |
+| =Transfer_function/ZCongruence/QuotTheory.v=        | Congruence truncating division =cong_quot=: best, via the gcd-of-quotients walk                   |
+| =Transfer_function/ZCongruence/LeTheory.v=          | Congruence =Z.leb= into quadrivalent: =cong_le= is exact (hence best)                             |
+| =Transfer_function/ZCongruence/EqbTheory.v=         | Congruence =Z.eqb= into quadrivalent: =cong_eqb= is exact (hence best)                            |
 | =ZIntervalCongruence.v=                             | Reduced product of integer intervals and congruences with cross-component reduction               |
 | =Transfer_function/ZIntervalCongruence/OpsComp.v=   | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
 | =Transfer_function/ZIntervalCongruence/AddTheory.v= | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=        |
@@ -210,7 +210,7 @@ example for what you are doing:
   setting up =IsAlpha= / =BestAbstraction=.
 - =ZIntervalTheory.v= — an /infinite/ domain assembled entirely from combinators,
   with a join-semilattice and =ExactOrder= recovered on the non-empty part.
-- =Congruence.v= — an infinite domain with =ExactOrder= and non-trivial
+- =ZCongruenceTheory.v= — an infinite domain with =ExactOrder= and non-trivial
   abstract equivalence (=(r,m)= up to representative).
 - =ZIntervalCongruence.v= — a reduced product where =ExactOrder= does /not/ hold
   out of the box: the reference for reductions and maximal reduction.
@@ -371,7 +371,7 @@ extraction have a stable interface.
    =OrderPreserving= from =⊑= into =⊆= (this is /soundness of the abstract
    order/). Then =BuildAbstractDomain gamma sqsubseteq mixin=. Aim for
    =ExactOrder= (=⊑= ⇔ =⊑γ=) and you get γ-injectivity for free:
-   =qv_sqsubseteq_exact= shows the pattern for a finite domain, =Congruence.v=
+   =qv_sqsubseteq_exact= shows the pattern for a finite domain, =ZCongruenceTheory.v=
    and the non-empty part of =ZIntervalTheory.v= for infinite ones.
 
 3. *Optional structure — state only what holds.*
@@ -384,7 +384,7 @@ extraction have a stable interface.
      α-relations (=a1= adjoint to =S1=, =a2= adjoint to =S2= ⇒ =a1 ⊔ a2=
      adjoint to =S1 ∪ S2=). Most domains here are join-semilattices but not
      meet-semilattices — meet can produce the empty set, which domains like
-     =Congruence.v= cannot represent without a separate ⊥. For domains built
+     =ZCongruenceTheory.v= cannot represent without a separate ⊥. For domains built
      from a GLB/LUB structure, =BoundLattice.v= derives the semilattice laws
      from a =ConcreteLattice= (see =ZIntervalTheory.v=).
    - /Lattice/: add a meet =⊓= over-approximating intersection

@@ -14,8 +14,8 @@ Require Import QuadrivalentTheory.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
-Require Import Congruence.
-Require Import Transfer_function.Congruence.OpsComp.
+Require Import ZCongruenceTheory.
+Require Import Transfer_function.ZCongruence.OpsComp.
 Open Scope Z_scope.
 
 Local Instance qv_exact_order : ExactOrder QuadrivalentTheory.qv.

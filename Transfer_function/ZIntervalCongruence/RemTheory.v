@@ -40,7 +40,7 @@ Require Import ssreflect ssrbool.
 Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
-  ZIntervalComp ZIntervalTheory Congruence
+  ZIntervalComp ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruence
   Transfer_function.ZIntervalCongruence.OpsComp.
 
