@@ -37,7 +37,8 @@
 From Stdlib Require Import ZArith Lia.
 Require Import ssreflect ssrbool.
 Require Import base Abstraction AbstractLattice
-  AbstractionCombination ZInterval ZIntervalTheory ZCongruenceTheory.
+  AbstractionCombination ZInterval ZIntervalTheory ZCongruence ZCongruenceTheory
+  ZIntervalCongruence.
 
 Open Scope Z_scope.
 
@@ -57,12 +58,6 @@ Qed.
 Definition collapsed_ad : abstract_domain Z :=
   CollapsedBottom.ad prod_ajsl.
 
-(** Canonical bottom. The interval component is γ-empty
-    ([1 > 0]); the congruence component is [(0, 0)]. The conjunction
-    is γ-empty regardless, so (via [CollapsedBottom]) it is [⊑] every
-    element. *)
-Definition bottom : collapsed_ad :=
-  ((WithTop.NotTop 1, WithTop.NotTop 0), (0, 0)).
 
 Lemma bottom_gamma_empty : γ[collapsed_ad] bottom ⊆⊇ ∅.
 Proof.
@@ -103,8 +98,6 @@ Qed.
 Definition is_bottom (p : collapsed_ad) : Prop :=
   let '(i, _) := p in ~ non_bottom i.
 
-Definition is_bottomb (p : collapsed_ad) : bool :=
-  let '(i, _) := p in negb (non_bottomb i).
 
 Lemma is_bottombP p : reflect (is_bottom p) (is_bottomb p).
 Proof.
@@ -129,14 +122,6 @@ Proof.
   exact: Hnot_nb Hnb.
 Qed.
 
-(** ** Snap helpers.
-
-    For [m' > 0], the smallest [k ≥ lz] with [k ≡ r (mod m')] is
-    [lz + (r - lz) mod m']; the largest [k ≤ hz] with [k ≡ r (mod m')]
-    is [hz - (hz - r) mod m']. *)
-
-Definition snap_low_z (lz r m' : Z) : Z := lz + (r - lz) mod m'.
-Definition snap_high_z (hz r m' : Z) : Z := hz - (hz - r) mod m'.
 
 Lemma snap_low_z_ge lz r m' : 0 < m' -> lz <= snap_low_z lz r m'.
 Proof.
@@ -194,56 +179,7 @@ Proof.
   nia.
 Qed.
 
-(** ** WithTop-lifted snap. *)
 
-Definition snap_low (l : WithTop.with_top Z) (r m' : Z) : WithTop.with_top Z :=
-  match l with
-  | WithTop.Top => WithTop.Top
-  | WithTop.NotTop lz => WithTop.NotTop (snap_low_z lz r m')
-  end.
-
-Definition snap_high (h : WithTop.with_top Z) (r m' : Z) : WithTop.with_top Z :=
-  match h with
-  | WithTop.Top => WithTop.Top
-  | WithTop.NotTop hz => WithTop.NotTop (snap_high_z hz r m')
-  end.
-
-(** ** Reduction.
-
-    Given a non-bottom interval [(l, h)] and a congruence [(r, m)]:
-    - if [m = 0], the cong is the singleton [{r}]; produce the
-      singleton interval (or bottom if [r ∉ [l, h]]);
-    - otherwise, snap each finite endpoint to the nearest element of
-      [r + |m|Z], then return either bottom (if the snapped interval
-      is empty), the singleton (if it collapsed to one point), or
-      the snapped pair otherwise. *)
-
-(** Build a non-empty result from snapped bounds. If both are
-    [NotTop] and equal, lift the singleton into the congruence. *)
-Definition build_snapped (l h : WithTop.with_top Z) (r m' : Z) : collapsed_ad :=
-  match l, h with
-  | WithTop.NotTop lz, WithTop.NotTop hz =>
-      if Z.ltb hz lz then bottom
-      else if Z.eqb lz hz
-        then ((l, h), (lz, 0))
-        else ((l, h), (r, m'))
-  | _, _ => ((l, h), (r, m'))
-  end.
-
-Definition reduce (p : collapsed_ad) : collapsed_ad :=
-  let (i, c) := p in
-  let (r, m) := c in
-  if non_bottomb i then
-    let l := fst i in
-    let h := snd i in
-    if Z.eqb m 0 then
-      if itv_gammab (l, h) r then
-        ((WithTop.NotTop r, WithTop.NotTop r), (r, 0))
-      else bottom
-    else
-      let m' := Z.abs m in
-      build_snapped (snap_low l r m') (snap_high h r m') r m'
-  else bottom.
 
 (** ** Main proof obligation.
 
@@ -463,7 +399,7 @@ Qed.
 Lemma reduce_preserves_gamma (p : collapsed_ad) :
   γ[collapsed_ad] (reduce p) ⊆⊇ γ[collapsed_ad] p.
 Proof.
-  case: p => i [r m].
+  case: (p : zintervalcongruence) => i [r m].
   rewrite /reduce.
   case_eq (non_bottomb i) => Hnb.
   - case_eq (Z.eqb m 0) => Hm0.
@@ -853,7 +789,7 @@ Qed.
 Lemma reduce_reduced_shape (p : collapsed_ad) :
   reduced_shape (reduce p).
 Proof.
-  case: p => i [r m].
+  case: (p : zintervalcongruence) => i [r m].
   rewrite /reduce.
   case_eq (non_bottomb i) => Hnb; last first.
   { exact: (RS_bottom bottom is_bottom_bottom). }
@@ -1274,18 +1210,6 @@ Proof.
     exfalso. case: Hne => c Hc. exact: (proj1 Hemp c Hc).
 Qed.
 
-(** ** Singleton detection.
-
-    [is_singleton a = Some n] when the interval component of [a] is the
-    point interval [[n,n]], which forces [γ a ⊆ {n}] — every concrete
-    value is [n]. (It does *not* assert [n ∈ γ a]: the congruence
-    component may still rule [n] out, leaving [γ a] empty. Soundness as a
-    "γ refines to at most {n}" certificate is all that is needed.) The
-    test only inspects the interval, so it is computable and cheap; it is
-    the building block for "constant operand" transfer-function cases
-    (e.g. a constant divisor in [Z.rem]). *)
-Definition is_singleton (a : prod_ajsl) : option Z :=
-  let (l, h) := fst a in ZInterval.is_singleton l h.
 
 Lemma is_singleton_sound (a : prod_ajsl) (n : Z) :
   is_singleton a = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.

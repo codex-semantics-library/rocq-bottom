@@ -10,7 +10,7 @@ Require Import
   Abstraction AbstractLattice
   AbstractionCombination
   ZInterval ZIntervalTheory
-  ZIntervalCongruenceTheory
+  ZIntervalCongruence ZIntervalCongruenceTheory
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZCongruence.OpsComp.
 

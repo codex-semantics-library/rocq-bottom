@@ -187,6 +187,7 @@ depends on no axioms.
 | =Transfer_function/ZCongruence/QuotTheory.v=                  | Congruence truncating division =cong_quot=: best, via the gcd-of-quotients walk                       |
 | =Transfer_function/ZCongruence/LeTheory.v=                    | Congruence =Z.leb= into quadrivalent: =cong_le= is exact (hence best)                                 |
 | =Transfer_function/ZCongruence/EqbTheory.v=                   | Congruence =Z.eqb= into quadrivalent: =cong_eqb= is exact (hence best)                                |
+| =Abstraction/ZIntervalCongruence/ZIntervalCongruence.v=       | Interval×congruence computational core: the =zintervalcongruence= carrier, snap helpers, =reduce=     |
 | =Abstraction/ZIntervalCongruence/ZIntervalCongruenceTheory.v= | Reduced product of integer intervals and congruences with cross-component reduction                   |
 | =Transfer_function/ZIntervalCongruence/OpsComp.v=             | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
 | =Transfer_function/ZIntervalCongruence/AddTheory.v=           | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=          |
