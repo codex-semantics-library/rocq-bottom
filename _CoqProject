@@ -1,1 +1,7 @@
+# _CoqProject, for Proof General / rocqide.
+#
+# Mirrors dune's  (coq.theory (name RocqBottom))  with
+# (include_subdirs qualified): the whole source tree lives under the
+# RocqBottom.* logical prefix (e.g. RocqBottom.Transfer_function.ZIntervalCongruence.OpsComp).
+
 -R _build/default RocqBottom
