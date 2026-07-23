@@ -77,7 +77,7 @@ Definition build_snapped (l h : WithTop.with_top Z) (r m' : Z) : zintervalcongru
   | WithTop.NotTop lz, WithTop.NotTop hz =>
       if Z.ltb hz lz then bottom
       else if Z.eqb lz hz
-        then ((l, h), (lz, 0))
+        then singleton lz
         else ((l, h), (r, m'))
   | _, _ => ((l, h), (r, m'))
   end.
