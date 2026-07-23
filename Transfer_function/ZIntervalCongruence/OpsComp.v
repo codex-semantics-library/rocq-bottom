@@ -109,7 +109,7 @@ Definition rem_itv_envelope (a2 a1 : zintervalcongruence) : interval :=
   | Some (n, q) => itv_add_const (- (n * q)) (fst a2)
   | None => if narrow_divb a2 a1 then fst a2
             else match const_residue a2 a1 with
-                 | Some rho => (WithTop.NotTop rho, WithTop.NotTop rho)
+                 | Some rho => ZInterval.singleton rho
                  | None => (WithTop.Top, WithTop.Top)
                  end
   end.

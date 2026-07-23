@@ -13,6 +13,10 @@ Definition zcongruence := (Z * Z)%type.
 (** Short name, for qualified use from other modules. *)
 Definition t := zcongruence.
 
+(** [singleton k] is the congruence class concretizing to exactly [{k}]
+    (modulus 0). *)
+Definition singleton (k : Z) : zcongruence := (k, 0).
+
 (** The join of two congruence classes γ(r1,m1) and γ(r2,m2) is the
     smallest congruence class containing both: (r1, gcd(gcd(m1,m2), r1-r2)).
     The modulus is the gcd of both moduli and the difference of remainders,

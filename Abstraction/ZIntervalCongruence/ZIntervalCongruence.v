@@ -27,10 +27,15 @@ Definition t := zintervalcongruence.
     is γ-empty regardless, so (via [CollapsedBottom]) it is [⊑] every
     element. *)
 Definition bottom : zintervalcongruence :=
-  (ZInterval.bottom, (0, 0)).
+  (ZInterval.bottom, ZCongruence.singleton 0).
 
 Definition is_bottomb (p : zintervalcongruence) : bool :=
   let '(i, _) := p in negb (non_bottomb i).
+
+(** [singleton k] is the product element concretizing to exactly [{k}],
+    built from the component singletons. Already reduced. *)
+Definition singleton (k : Z) : zintervalcongruence :=
+  (ZInterval.singleton k, ZCongruence.singleton k).
 
 (** ** Snap helpers.
 
@@ -85,7 +90,7 @@ Definition reduce (p : zintervalcongruence) : zintervalcongruence :=
     let h := snd i in
     if Z.eqb m 0 then
       if itv_gammab (l, h) r then
-        ((WithTop.NotTop r, WithTop.NotTop r), (r, 0))
+        singleton r
       else bottom
     else
       let m' := Z.abs m in

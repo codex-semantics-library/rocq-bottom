@@ -98,6 +98,10 @@ Definition itv_gammab (i:interval) z :=
      | WithTop.NotTop a0 => glb_gammab z a0
      end).
 
+(** [singleton k] is the interval concretizing to exactly [{k}] — the
+    constructor companion of [is_singleton]. *)
+Definition singleton (k : Z) : interval := (WithTop.NotTop k, WithTop.NotTop k).
+
 (** ** Singleton detection.
 
     [is_singleton i = Some x] exactly when the interval [i]
