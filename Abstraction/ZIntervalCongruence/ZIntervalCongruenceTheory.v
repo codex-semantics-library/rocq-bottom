@@ -252,18 +252,6 @@ Qed.
 
 (** ** Helpers for γ-emptiness in the input. *)
 
-(** When the underlying interval is not [non_bottom], the conjunction
-    is γ-empty. *)
-Lemma gamma_pair_empty_of_non_bottomb (i : interval) (c : Z * Z) :
-  non_bottomb i = false -> γ[collapsed_ad] (i, c) ⊆⊇ ∅.
-Proof.
-  move=> Hnb. split=> z Hz; last by [].
-  have [Hzi _] := Hz.
-  have Hne : exists w, w ∈ γ[itv] i by exists z.
-  move/non_bottom_non_empty: Hne => /non_bottombP.
-  by rewrite Hnb.
-Qed.
-
 (** When [m = 0] and [r ∉ γ_itv i], the conjunction is γ-empty. *)
 Lemma gamma_pair_empty_of_singleton_miss (i : interval) (r : Z) :
   ~ (r ∈ γ[itv] i) -> γ[collapsed_ad] (i, (r, 0)) ⊆⊇ ∅.
