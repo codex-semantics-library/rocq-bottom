@@ -2,6 +2,7 @@ Require Import Abstraction.
 Require Import ssrbool ssreflect.
 Require Import autoreflect.
 Require Import QuadrivalentTheory.
+Require Import Transfer_function.Quadrivalent.OpsComp.
 Require Import Extraction.
 Include QuadrivalentTheory.
 
@@ -9,15 +10,6 @@ Include QuadrivalentTheory.
     operations. All the operations are verified computationally,
     using boolean reflection of the Prop-predicates. *)
 Module Concrete := Datatypes.
-
-(* Abstract negation function *)
-Definition abs_negb (x:quadrivalent) : quadrivalent :=
-  match x with
-  | QBottom => QBottom
-  | QFalse => QTrue
-  | QTrue => QFalse
-  | QTop => QTop
-  end.
 
 Lemma AutoReflect_unfold_set S P' b (c:bool) :
   AutoReflect (c ∈ S) b -> UnfoldSet (c ∈ S) P' -> AutoReflect P' b.
@@ -113,17 +105,6 @@ Proof.
 Qed.
 
 
-Definition backward_abs_negb (a1:quadrivalent) (a0:quadrivalent) : quadrivalent :=
-  match a1,a0 with
-  | _, QBottom => QBottom
-  | a, QTop => a    
-  | QBottom, _ => QBottom        (* Nothing to learn. *)
-  | QTop, _ => abs_negb a0
-  | QTrue, QFalse => QTrue
-  | QFalse, QTrue => QFalse
-  | _, _ => QBottom
-  end.
-
 Lemma backward_abs_negb_exact: binary_exact qv qv qv backward_abs_negb
                                  (collecting_backward Concrete.negb).
 Proof.
@@ -133,16 +114,6 @@ Proof.
   solve_with_autoreflect.
 Qed.
 
-
-Definition impl_backward_abs_negb (a1:qv) (a0:qv) : option qv :=
-  match a1,a0 with
-  | QBottom, _ => None
-  | _, QTop => None
-  | QTop, _ => Some (abs_negb a0)
-  | QTrue, QFalse => None
-  | QFalse, QTrue => None
-  | _, _ => Some QBottom
-  end.
 
 (* Proof by "symbolic execution" on every path. *)
 Tactic Notation "symbolic_run" :=
@@ -163,7 +134,7 @@ Tactic Notation "symbolic_run" :=
 
 Local Instance Equiv_eq : Equiv QuadrivalentTheory.t := (=).
 
-Lemma impl_backward_abs_negb_correct: backward_unary_function_correct impl_backward_abs_negb backward_abs_negb.
+Lemma impl_backward_abs_negb_correct: backward_unary_function_correct (A1:=qv) (A0:=qv) impl_backward_abs_negb backward_abs_negb.
 Proof.
   (* (assert (H: bool_decide(backward_unary_function_correct impl_backward_abs_negb backward_abs_negb) = true)). *)
   intros a1 a0.
@@ -173,34 +144,11 @@ Qed.
 
 (** Abstract and. *)
 
-(* Abstract AND function *)
-Definition abs_andb (x y:qv) : qv :=
-  match x,y with
-  | QBottom, _ | _, QBottom => QBottom
-  | QFalse, _ | _, QFalse => QFalse
-  | QTrue, a | a, QTrue => a
-  | QTop, QTop => QTop
-  end.
-
 Lemma abs_andb_exact: binary_exact qv qv qv abs_andb
                         (collecting_binary_forward Concrete.andb).
 Proof.
   move => a2 a1. to_set. move: a2 a1. solve_with_autoreflect.
 Qed.
-
-Definition backward_abs_andb_left (a2 a1 a0:quadrivalent) : quadrivalent :=
-  match a2, a1, a0 with
-  | QBottom, _ , _ => QBottom
-  | QFalse, _, QTrue => QBottom
-  | QTrue, QTrue, QFalse => QBottom
-  | QTrue, QFalse, QTrue => QBottom
-  | _, QBottom, _ => QBottom                                                                       
-  | _, _ , QBottom => QBottom
-  | QTop, QFalse, QTrue => QBottom
-  | QTop, QTrue, QFalse => QFalse
-  | QTop, _, QTrue => QTrue
-  | _, _, _ => a2
-  end.
 
 Lemma backward_abs_andb_left_exact:
   ternary_exact qv qv qv qv backward_abs_andb_left
@@ -210,8 +158,6 @@ Proof.
   solve_with_autoreflect.
 Qed.
 
-Definition backward_abs_andb_right a2 a1 a0 := backward_abs_andb_left a1 a2 a0.
-
 Lemma backward_abs_andb_right_exact:
   ternary_exact qv qv qv qv backward_abs_andb_right
     (collecting_binary_backward_right andb).
@@ -219,28 +165,7 @@ Proof.
   move=> a2 a1 a0. to_set. move: a2 a1 a0. solve_with_autoreflect.
 Qed.    
 
-Definition refine_bottom a := if QuadrivalentTheory.eqb a QBottom then None else Some QBottom.
-Definition refine_true a := if QuadrivalentTheory.eqb a QTrue then None else Some QTrue.
-Definition refine_false a := if QuadrivalentTheory.eqb a QFalse then None else Some QFalse. 
-
-Definition impl_backward_abs_andb (a2 a1 a0: qv): option qv * option qv :=
-  match a2, a1, a0 with
-  (** Detect impossible cases. *)
-  | QBottom, _ , _ => (None, refine_bottom a1)
-  | _, QBottom, _ => (Some QBottom, None)                                                                       
-  | _, _ , QBottom => (Some QBottom, Some QBottom)
-  | QFalse, _, QTrue => (Some QBottom, Some QBottom)
-  | _, QFalse, QTrue => (Some QBottom, Some QBottom)                         
-  | QTrue, QTrue, QFalse => (Some QBottom, Some QBottom)
-  (** If result is true, both must be true. *)
-  | _, _, QTrue => (refine_true a2, refine_true a1)
-  (** Sometimes we learn that we have to be false. *)
-  | QTop, QTrue, QFalse => (Some QFalse, None)
-  | QTrue, QTop, QFalse => (None, Some QFalse)                            
-  | _, _, _ => (None, None)
-  end.
-
-Lemma impl_backward_abs_andb_correct: backward_binary_function_correct impl_backward_abs_andb backward_abs_andb_left backward_abs_andb_right.
+Lemma impl_backward_abs_andb_correct: backward_binary_function_correct (A2:=qv) (A1:=qv) (A0:=qv) impl_backward_abs_andb backward_abs_andb_left backward_abs_andb_right.
 Proof.
   intros a2 a1 a0.
   destruct a2 eqn:Ha2, a1 eqn:Ha1, a0 eqn:Ha0; symbolic_run; unfold refine_bottom in *; symbolic_run; solve_with_autoreflect.
@@ -254,34 +179,11 @@ Qed.
 
 
 
-(* Abstract OR function *)
-Definition abs_orb (x y:quadrivalent) : quadrivalent :=
-  match x,y with
-  | QBottom, _ | _, QBottom => QBottom
-  | QTrue, _ | _, QTrue => QTrue
-  | QFalse, a | a, QFalse => a
-  | QTop, QTop => QTop
-  end.
-
 Lemma abs_orb_exact: binary_exact qv qv qv abs_orb
                        (collecting_binary_forward Concrete.orb).
 Proof.
   move => a2 a1. to_set. move: a2 a1. solve_with_autoreflect.
 Qed.
-
-Definition backward_abs_orb_left (a2 a1 a0:quadrivalent) : quadrivalent :=
-  match a2, a1, a0 with
-  | QBottom, _ , _ => QBottom
-  | QTrue, _, QFalse => QBottom
-  | QFalse, QTrue, QFalse => QBottom
-  | QFalse, QFalse, QTrue => QBottom
-  | _, QBottom, _ => QBottom                                                                       
-  | _, _ , QBottom => QBottom
-  | QTop, QTrue, QFalse => QBottom
-  | QTop, QFalse, QTrue => QTrue
-  | QTop, _, QFalse => QFalse
-  | _, _, _ => a2
-  end.
 
 Lemma backward_abs_orb_left_exact:
   ternary_exact qv qv qv qv backward_abs_orb_left
@@ -289,8 +191,6 @@ Lemma backward_abs_orb_left_exact:
 Proof.
   move=> a2 a1 a0. to_set. move: a2 a1 a0. solve_with_autoreflect.
 Qed.    
-
-Definition backward_abs_orb_right a2 a1 a0 := backward_abs_orb_left a1 a2 a0.
 
 Lemma backward_abs_orb_right_exact:
   ternary_exact qv qv qv qv backward_abs_orb_right
@@ -301,37 +201,11 @@ Qed.
 
 
 
-Definition impl_backward_abs_orb (a2 a1 a0: qv): option qv * option qv :=
-  match a2, a1, a0 with
-  (** Detect impossible cases. *)
-  | QBottom, _ , _ => (None, refine_bottom a1)
-  | _, QBottom, _ => (Some QBottom, None)                                                                       
-  | _, _ , QBottom => (Some QBottom, Some QBottom)
-  | QTrue, _, QFalse => (Some QBottom, Some QBottom)
-  | _, QTrue, QFalse => (Some QBottom, Some QBottom)                         
-  | QFalse, QFalse, QTrue => (Some QBottom, Some QBottom)
-  (** If result is false, both must be false. *)
-  | _, _, QFalse => (refine_false a2, refine_false a1)
-  (** Sometimes we learn that we have to be true. *)
-  | QTop, QFalse, QTrue => (Some QTrue, None)
-  | QFalse, QTop, QTrue => (None, Some QTrue)                            
-  | _, _, _ => (None, None)
-  end.
-
-Lemma impl_backward_abs_orb_correct: backward_binary_function_correct impl_backward_abs_orb backward_abs_orb_left backward_abs_orb_right.
+Lemma impl_backward_abs_orb_correct: backward_binary_function_correct (A2:=qv) (A1:=qv) (A0:=qv) impl_backward_abs_orb backward_abs_orb_left backward_abs_orb_right.
 Proof.
   intros a2 a1 a0.
   destruct a2 eqn:Ha2, a1 eqn:Ha1, a0 eqn:Ha0; symbolic_run; unfold refine_bottom in *; symbolic_run.
 Qed.
-
-(* Abstract XOR function *)
-Definition abs_xorb (x y:quadrivalent) : quadrivalent :=
-  match x,y with
-  | QBottom, _ | _, QBottom => QBottom
-  | QFalse, a | a, QFalse => a
-  | QTrue, a | a, QTrue => abs_negb a
-  | QTop, QTop => QTop
-  end.
 
 Lemma abs_xorb_exact: binary_exact qv qv qv abs_xorb
                         (collecting_binary_forward Concrete.xorb).
@@ -340,30 +214,12 @@ Proof.
 Qed.
 
 
-Definition backward_abs_xorb_left (a2 a1 a0:quadrivalent) : quadrivalent :=
-  match a2, a1, a0 with
-  | QBottom, _ , _ => a2
-  | QTrue, QTrue, QTrue => QBottom
-  | QTrue, QFalse, QFalse => QBottom                            
-  | QFalse, QTrue, QFalse => QBottom
-  | QFalse, QFalse, QTrue => QBottom                               
-  | _, QBottom, _ => QBottom
-  | _, _ , QBottom => QBottom
-  | QTop, QTrue, QTrue => QFalse
-  | QTop, QTrue, QFalse => QTrue
-  | QTop, QFalse, QTrue => QTrue
-  | QTop, QFalse, QFalse => QFalse
-  | _, _, _ => a2
-  end.
-
 Lemma backward_abs_xorb_left_exact:
   ternary_exact qv qv qv qv backward_abs_xorb_left
     (collecting_binary_backward_left xorb).
 Proof.
     move=> a2 a1 a0. to_set. move: a2 a1 a0. solve_with_autoreflect.
 Qed.    
-
-Definition backward_abs_xorb_right a2 a1 a0 := backward_abs_xorb_left a1 a2 a0.
 
 Lemma backward_abs_xorb_right_exact:
   ternary_exact qv qv qv qv backward_abs_xorb_right
@@ -373,43 +229,9 @@ Proof.
 Qed.    
 
 
-Definition impl_backward_abs_xorb (a2 a1 a0:qv) :=
-  match a2, a1, a0 with
-  | QBottom, _ , _ => (None, refine_bottom a1)
-  | _, QBottom, _ => (Some QBottom, None)                                                                       
-  | _, _ , QBottom => (Some QBottom, Some QBottom)
-  | QTrue, QTrue, QTrue => (Some QBottom, Some QBottom) 
-  | QTrue, QFalse, QFalse => (Some QBottom, Some QBottom)
-  | QFalse, QTrue, QFalse => (Some QBottom, Some QBottom)
-  | QFalse, QFalse, QTrue => (Some QBottom, Some QBottom)
-  | QTop, QTrue, QTrue => (Some QFalse, None)
-  | QTop, QTrue, QFalse => (Some QTrue, None)
-  | QTop, QFalse, QTrue => (Some QTrue, None)
-  | QTop, QFalse, QFalse => (Some QFalse, None)
-  | QTrue, QTop, QTrue => (None, Some QFalse)
-  | QTrue, QTop, QFalse => (None, Some QTrue)
-  | QFalse,QTop, QTrue => (None, Some QTrue)
-  | QFalse,QTop, QFalse => (None, Some QFalse) 
-  | _, _, _ => (None, None)
-  end.
-
-Lemma impl_backward_abs_xorb_correct: backward_binary_function_correct impl_backward_abs_xorb backward_abs_xorb_left backward_abs_xorb_right.
+Lemma impl_backward_abs_xorb_correct: backward_binary_function_correct (A2:=qv) (A1:=qv) (A0:=qv) impl_backward_abs_xorb backward_abs_xorb_left backward_abs_xorb_right.
 Proof.
   intros a2 a1 a0.
   destruct a2 eqn:Ha2, a1 eqn:Ha1, a0 eqn:Ha0; symbolic_run; unfold refine_bottom in *; symbolic_run.
 Qed.
 
-Module Boolean_Forward.
-  Definition andb := abs_andb.
-  Definition orb := abs_orb.
-  Definition negb := abs_negb.
-  Definition xorb := abs_xorb.      
-End Boolean_Forward.
-
-
-Module Boolean_Backward.
-  Definition negb := impl_backward_abs_negb.  
-  Definition andb := impl_backward_abs_andb.
-  Definition orb := impl_backward_abs_orb.
-  Definition xorb := impl_backward_abs_xorb.  
-End Boolean_Backward.

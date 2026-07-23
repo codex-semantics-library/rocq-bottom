@@ -156,7 +156,9 @@ depends on no axioms.
 | =autoreflect.v=                                     | =AutoReflect= type class for computational reflection — reflects =Prop= goals to =bool= computations    |
 | =QuadrivalentComp.v=                                | Four-valued boolean carrier (=QBottom=, =QTrue=, =QFalse=, =QTop=), lattice and equality ops      |
 | =QuadrivalentTheory.v=                              | Quadrivalent concretization, order and lattice laws, verified by =AutoReflect=                    |
-| =SvaQuadrivalent.v=                                 | Boolean transfer functions (negation, conjunction, disjunction) on quadrivalent                   |
+| =QuadrivalentAPI.v=                                 | Export layer: ABSTRACT_DOMAIN / ABSTRACT_LATTICE conformance for quadrivalent                     |
+| =Transfer_function/Quadrivalent/OpsComp.v=          | Executable boolean transfer functions: forward and backward =negb=, =andb=, =orb=, =xorb=         |
+| =Transfer_function/Quadrivalent/OpsTheory.v=        | Boolean transfer functions on quadrivalent: exactness, and backward-refinement correctness        |
 | =ocaml/quadrivalentextract.v=                       | OCaml extraction directives for the quadrivalent domain (drives the extraction into =ocaml/=)       |
 | =Tactics.v=                                         | Proof tactics: =gamma_db= hint database, =decompose_hypothesis=                                       |
 | =AbstractionCombination.v=                          | Domain composition: =WithTop=, =Subset= (restricts elements), =Conjunction= (product domain)            |
@@ -199,7 +201,7 @@ below are developed in the accompanying paper (=Abstraction.v= and
 
 Different files illustrate different parts of the story, so pick the closest
 example for what you are doing:
-- =QuadrivalentTheory.v= / =SvaQuadrivalent.v= — a /finite/ domain that is exact by
+- =QuadrivalentTheory.v= / =Transfer_function/Quadrivalent/OpsTheory.v= — a /finite/ domain that is exact by
   computation: every operation =ExactlyRepresents= its concrete counterpart and
   every proof is discharged by =solve_with_autoreflect=. Good model for small
   enumerable domains, less representative of the general case.
@@ -346,11 +348,11 @@ the option-returning interface: =None= means "no refinement", =Some a'= means a
 strictly smaller element. Define =impl_backward_...= and prove it against the
 declarative backward function with =backward_unary_function_correct= /
 =backward_binary_function_correct=. See =impl_backward_abs_negb= and its
-correctness proof in =SvaQuadrivalent.v= (the local =symbolic_run= tactic
+correctness proof in =Transfer_function/Quadrivalent/OpsTheory.v= (the local =symbolic_run= tactic
 discharges these by symbolic execution over every match branch).
 
 Finally, collect the forward/backward functions into named modules
-(=Boolean_Forward= / =Boolean_Backward= in =SvaQuadrivalent.v=) so consumers and
+(=Boolean_Forward= / =Boolean_Backward= in =Transfer_function/Quadrivalent/OpsComp.v=) so consumers and
 extraction have a stable interface.
 
 ** Adding a new domain

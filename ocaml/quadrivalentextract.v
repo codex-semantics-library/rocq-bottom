@@ -19,18 +19,16 @@ Extraction Inline ssrbool.is_left.
 
 Module Concrete := Datatypes.
 
-Require Import QuadrivalentComp.
-Module QuadrivalentCheck <: ABSTRACT_DOMAIN := QuadrivalentTheory.
-(* Separate Extraction QuadrivalentTheory.t. *)
-Separate Extraction QuadrivalentTheory.t.
+Require Import QuadrivalentComp QuadrivalentTheory QuadrivalentAPI.
+Require Import Transfer_function.Quadrivalent.OpsComp.
 
+(* The signature conformance checks are in QuadrivalentAPI.v. *)
 Extraction Inline QuadrivalentTheory.dec.
-Module QuadrivalentLatticeCheck <: ABSTRACT_LATTICE := QuadrivalentTheory.
-Separate Extraction QuadrivalentTheory.join QuadrivalentTheory.meet
-  QuadrivalentTheory.equal QuadrivalentTheory.is_included. 
 
-Require Import SvaQuadrivalent.
-Separate Extraction SvaQuadrivalent.Boolean_Forward SvaQuadrivalent.Boolean_Backward.
+Separate Extraction QuadrivalentTheory.t.
+Separate Extraction QuadrivalentTheory.join QuadrivalentTheory.meet
+  QuadrivalentTheory.equal QuadrivalentTheory.is_included.
+Separate Extraction OpsComp.Boolean_Forward OpsComp.Boolean_Backward.
 
 (* From QuickChick Require Import QuickChick. *)
 (* Import QcDefaultNotation. *)

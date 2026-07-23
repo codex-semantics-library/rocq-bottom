@@ -18,7 +18,7 @@ Open Scope Z_scope.
 
 (** ** Bitwise transfer functions *)
 
-Require Import SvaQuadrivalent.
+Require Import Transfer_function.Quadrivalent.OpsComp Transfer_function.Quadrivalent.OpsTheory.
 
 (** *** Per-bit correspondence with quadrivalent operations (non-bottom) *)
 

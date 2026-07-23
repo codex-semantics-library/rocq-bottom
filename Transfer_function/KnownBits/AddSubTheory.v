@@ -26,7 +26,7 @@ From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import base Abstraction AbstractionCombination autoreflect.
-Require Import QuadrivalentComp SvaQuadrivalent KnownBitsComp KnownBitsTheory.
+Require Import QuadrivalentComp Transfer_function.Quadrivalent.OpsComp Transfer_function.Quadrivalent.OpsTheory KnownBitsComp KnownBitsTheory.
 Require Import Transfer_function.KnownBits.OpsComp.
 Open Scope Z_scope.
 
