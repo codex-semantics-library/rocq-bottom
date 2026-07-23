@@ -399,56 +399,47 @@ Qed.
 Lemma reduce_preserves_gamma (p : collapsed_ad) :
   γ[collapsed_ad] (reduce p) ⊆⊇ γ[collapsed_ad] p.
 Proof.
-  case: (p : zintervalcongruence) => i [r m].
+  case: (p : zintervalcongruence) => [[l h] [r m]].
   rewrite /reduce /ZCongruence.is_singleton.
-  case_eq (non_bottomb i) => Hnb.
-  - case_eq (Z.eqb m 0) => Hm0.
-    + case_eq (itv_gammab (fst i, snd i) r) => Hmem.
-      * (* B2: singleton {r} in [l,h]. *)
-        move/Z.eqb_eq: Hm0 => ?; subst m.
-        have Hin : r ∈ γ[itv] (fst i, snd i)
-          by apply/itv_gammaP; rewrite Hmem.
-        clear Hmem.
-        have Hin' : r ∈ γ[itv] i by case: i Hnb Hin => [ii1 ii2] _ /=.
-        clear Hin.
-        transitivity ({[ x | x = r ]} : propset Z).
+  case_eq (Z.eqb m 0) => Hm0.
+  - case_eq (itv_gammab (l, h) r) => Hmem.
+    + (* B2: singleton {r} in [l,h]. *)
+      move/Z.eqb_eq: Hm0 => ?; subst m.
+      have Hin : r ∈ γ[itv] (l, h) by apply/itv_gammaP; rewrite Hmem.
+      clear Hmem.
+      transitivity ({[ x | x = r ]} : propset Z).
+      * exact: singleton_gamma_eq.
+      * symmetry. exact: gamma_pair_singleton_hit.
+    + (* B3: γ p = ∅, γ bottom = ∅. *)
+      move/Z.eqb_eq: Hm0 => ?; subst m.
+      have Hmem' : ~ r ∈ γ[itv] (l, h) by apply/itv_gammaP; rewrite Hmem.
+      clear Hmem.
+      have Hgp : γ[collapsed_ad] ((l, h), (r, 0)) ⊆⊇ ∅
+        by apply: gamma_pair_empty_of_singleton_miss.
+      exact: bottom_gamma_of_empty Hgp.
+  - set m' := Z.abs m.
+    move/Z.eqb_neq: Hm0 => Hmne.
+    rewrite /build_snapped.
+    case_eq (snap_low l r m') => [|l'z] El';
+    case_eq (snap_high h r m') => [|h'z] Eh';
+      (* B4d-1/2/3: at least one [Top] bound; [build_snapped] returns
+         the snapped pair directly. *)
+      try exact: gamma_pair_build_snapped_eq (l, h) r m _ _ Hmne El' Eh'.
+    (* Both bounds finite: split on the snapped range. *)
+    case_eq (Z.ltb h'z l'z) => Hlt.
+    + (* B4a: snapped bounds cross — empty. *)
+      move/Z.ltb_lt: Hlt => Hlt'.
+      have Hgp := gamma_pair_empty_of_snap_disjoint
+                    (l, h) r m l'z h'z Hmne El' Eh' Hlt'.
+      exact: bottom_gamma_of_empty Hgp.
+    + case_eq (Z.eqb l'z h'z) => Heq.
+      * (* B4b: snap collapses to {l'z}. *)
+        move/Z.eqb_eq: Heq => ?; subst h'z.
+        transitivity ({[ x | x = l'z ]} : propset Z).
         -- exact: singleton_gamma_eq.
-        -- symmetry. exact: gamma_pair_singleton_hit.
-      * (* B3: γ p = ∅, γ bottom = ∅. *)
-        move/Z.eqb_eq: Hm0 => ?; subst m.
-        have Hmem' : ~ r ∈ γ[itv] (fst i, snd i) by apply/itv_gammaP; rewrite Hmem.
-        clear Hmem.
-        have Hgp : γ[collapsed_ad] (i, (r, 0)) ⊆⊇ ∅.
-        { apply: gamma_pair_empty_of_singleton_miss.
-          case: i Hnb Hmem' => [ii1 ii2] _ /= Hmem' Hin.
-          exact: Hmem' Hin. }
-        exact: bottom_gamma_of_empty Hgp.
-    + set m' := Z.abs m.
-      move/Z.eqb_neq: Hm0 => Hmne.
-      rewrite /build_snapped.
-      case_eq (snap_low (fst i) r m') => [|l'z] El';
-      case_eq (snap_high (snd i) r m') => [|h'z] Eh';
-        (* B4d-1/2/3: at least one [Top] bound; [build_snapped] returns
-           the snapped pair directly. *)
-        try exact: gamma_pair_build_snapped_eq i r m _ _ Hmne El' Eh'.
-      (* Both bounds finite: split on the snapped range. *)
-      case_eq (Z.ltb h'z l'z) => Hlt.
-      * (* B4a: snapped bounds cross — empty. *)
-        move/Z.ltb_lt: Hlt => Hlt'.
-        have Hgp := gamma_pair_empty_of_snap_disjoint
-                      i r m l'z h'z Hmne El' Eh' Hlt'.
-        exact: bottom_gamma_of_empty Hgp.
-      * case_eq (Z.eqb l'z h'z) => Heq.
-        -- (* B4b: snap collapses to {l'z}. *)
-           move/Z.eqb_eq: Heq => ?; subst h'z.
-           transitivity ({[ x | x = l'z ]} : propset Z).
-           ++ exact: singleton_gamma_eq.
-           ++ symmetry. exact: gamma_pair_snap_collapse i r m l'z Hmne El' Eh'.
-        -- (* B4c: snapped range *)
-           exact: gamma_pair_build_snapped_eq i r m _ _ Hmne El' Eh'.
-  - (* B1: γ p = ∅, γ bottom = ∅. *)
-    have Hgp := gamma_pair_empty_of_non_bottomb i (r, m) Hnb.
-    exact: bottom_gamma_of_empty Hgp.
+        -- symmetry. exact: gamma_pair_snap_collapse (l, h) r m l'z Hmne El' Eh'.
+      * (* B4c: snapped range *)
+        exact: gamma_pair_build_snapped_eq (l, h) r m _ _ Hmne El' Eh'.
 Qed.
 
 (** ** Witness / unboundedness helpers for the snapped output's γ. *)
@@ -789,11 +780,8 @@ Qed.
 Lemma reduce_reduced_shape (p : collapsed_ad) :
   reduced_shape (reduce p).
 Proof.
-  case: (p : zintervalcongruence) => i [r m].
+  case: (p : zintervalcongruence) => [[l h] [r m]].
   rewrite /reduce /ZCongruence.is_singleton.
-  case_eq (non_bottomb i) => Hnb; last first.
-  { exact: (RS_bottom bottom is_bottom_bottom). }
-  set l := fst i. set h := snd i.
   case_eq (Z.eqb m 0) => Hm0.
   - case_eq (itv_gammab (l, h) r) => Hmem.
     + exact: RS_singleton.
@@ -806,11 +794,11 @@ Proof.
     case_eq (snap_high h r m') => [|h'z] Eh'.
     + apply: RS_interval; [exact Hm' | by [] | by [] | by []].
     + have Hh'z_cong : (m' | h'z - r).
-      { move: Eh'. rewrite /snap_high /h. case: (snd i) => [|hz] //=.
+      { move: Eh'. rewrite /snap_high. case: h => [|hz] //=.
         case=> <-. exact: snap_high_z_cong. }
       apply: RS_interval; [exact Hm' | by [] | exact Hh'z_cong | by []].
     + have Hl'z_cong : (m' | l'z - r).
-      { move: El'. rewrite /snap_low /l. case: (fst i) => [|lz] //=.
+      { move: El'. rewrite /snap_low. case: l => [|lz] //=.
         case=> <-. exact: snap_low_z_cong. }
       apply: RS_interval; [exact Hm' | exact Hl'z_cong | by [] | by []].
     + case_eq (Z.ltb h'z l'z) => Hlt.
@@ -821,10 +809,10 @@ Proof.
            move/Z.eqb_neq: Heq => Hneq.
            have Hltz : l'z < h'z by lia.
            have Hl'z_cong : (m' | l'z - r).
-           { move: El'. rewrite /snap_low /l. case: (fst i) => [|lz] //=.
+           { move: El'. rewrite /snap_low. case: l => [|lz] //=.
              case=> <-. exact: snap_low_z_cong. }
            have Hh'z_cong : (m' | h'z - r).
-           { move: Eh'. rewrite /snap_high /h. case: (snd i) => [|hz] //=.
+           { move: Eh'. rewrite /snap_high. case: h => [|hz] //=.
              case=> <-. exact: snap_high_z_cong. }
            apply: RS_interval;
              [exact Hm' | exact Hl'z_cong | exact Hh'z_cong | exact Hltz].
