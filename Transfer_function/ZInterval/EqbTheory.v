@@ -71,10 +71,10 @@ Proof.
   - suffices: exists c2 c1, c2 ∈ γ[itv] (l2, h2)
                          /\ c1 ∈ γ[itv] (l1, h1) /\ (c2 =? c1) = false by tauto.
     move: Hmb. rewrite /may_be_false_eqb.
-    case Hs2: (is_singleton l2 h2) => [x2|] Hmb.
+    case Hs2: (is_singleton (l2, h2)) => [x2|] Hmb.
     + (* γ2 = {x2}; pick c1 ∈ γ1 with c1 ≠ x2 *)
-      have Hns1 : is_singleton l1 h1 <> Some x2.
-      { move: Hmb. case: (is_singleton l1 h1) => [x1|//].
+      have Hns1 : is_singleton (l1, h1) <> Some x2.
+      { move: Hmb. case: (is_singleton (l1, h1)) => [x1|//].
         move=> /negbTE/Z.eqb_neq Hne [?]. by subst. }
       have [c1 [Hc1 Hne]] := is_singleton_witness_not_x _ _ _ Hnb1 Hns1.
       move/is_singleton_spec: Hs2 => Hs2.
@@ -82,7 +82,7 @@ Proof.
       apply/Z.eqb_neq; lia.
     + (* γ2 has multiple elements; any c1 works. *)
       have [c1 Hc1] := proj1 (non_bottom_non_empty _) Hnb1.
-      have Hns2 : is_singleton l2 h2 <> Some c1 by rewrite Hs2.
+      have Hns2 : is_singleton (l2, h2) <> Some c1 by rewrite Hs2.
       have [c2 [Hc2 Hne]] := is_singleton_witness_not_x _ _ _ Hnb2 Hns2.
       exists c2, c1; split=> //; split=> //. by apply/Z.eqb_neq.
   - suffices H: not (exists c2 c1, c2 ∈ γ[itv] (l2, h2)
@@ -93,8 +93,8 @@ Proof.
     { move => ?; subst. by rewrite Z.eqb_refl in Heq. }
     clear Heq.
     rewrite /may_be_false_eqb in Hmb.
-    destruct (is_singleton l1 h1) as [x1|] eqn:Hs1 => //.
-    destruct (is_singleton l2 h2) as [x2|] eqn:Hs2 => //.
+    destruct (is_singleton (l1, h1)) as [x1|] eqn:Hs1 => //.
+    destruct (is_singleton (l2, h2)) as [x2|] eqn:Hs2 => //.
     move: Hmb => /negbFE /Z.eqb_eq ?; subst x2.
     move/is_singleton_spec: Hs1 => Hs1; move/is_singleton_spec: Hs2 => Hs2.
     have: w1 = x1 by apply Hs1. 
@@ -124,8 +124,8 @@ Lemma interval_eqb_opt_eq i2 i1 :
 Proof.
   case: i2 => l2 h2; case: i1 => l1 h1.
   rewrite /interval_eqb_opt /interval_eqb_unopt /may_be_false_eqb.
-  case Hs1: (is_singleton l1 h1) => [x1|];
-  case Hs2: (is_singleton l2 h2) => [x2|];
+  case Hs1: (is_singleton (l1, h1)) => [x1|];
+  case Hs2: (is_singleton (l2, h2)) => [x2|];
     try by case: (may_be_true_eqb l1 h1 l2 h2).
   (* both singletons: unfold and reduce. *)
   move: Hs1 Hs2. rewrite /is_singleton.

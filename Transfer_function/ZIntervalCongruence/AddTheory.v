@@ -21,7 +21,7 @@ Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
   ZInterval ZIntervalTheory ZCongruenceTheory
-  ZIntervalCongruence ZIntervalCongruenceTheory
+  ZIntervalCongruenceTheory
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZInterval.AddTheory
   Transfer_function.ZCongruence.OpsComp

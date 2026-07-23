@@ -391,7 +391,7 @@ Lemma const_block_some (a2 a1 : collapsed_ad) (n q : Z) :
   (forall c2, c2 ∈ γ[collapsed_ad] a2 -> Z.quot c2 n = q).
 Proof.
   case: a2 => [ia2 ca2]. rewrite /const_block.
-  case Hsg: (is_singleton a1) => [m|] //.
+  case Hsg: (is_singleton (fst a1)) => [m|] //.
   case Hm0: (m =? 0) => //.
   change (fst (ia2, ca2)) with ia2.
   case: ia2 => [[|l2] [|h2]] //.
@@ -514,7 +514,7 @@ Lemma const_residue_some (a2 a1 : collapsed_ad) (rho : Z) :
 Proof.
   case: a2 => [i2 [r2 m2]].
   rewrite /const_residue /=.
-  case Hsg: (is_singleton a1) => [n|] //.
+  case Hsg: (is_singleton (fst a1)) => [n|] //.
   case Hguard: ((n =? 0) || negb (m2 mod Z.abs n =? 0)) => //.
   move: Hguard
     => /Bool.orb_false_iff [/Z.eqb_neq Hn0 /Bool.negb_false_iff /Z.eqb_eq Hdiv].

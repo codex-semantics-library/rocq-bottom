@@ -1211,8 +1211,18 @@ Proof.
 Qed.
 
 
+(** ** Singleton detection.
+
+    [is_singleton a = Some n] when the interval component of [a] is the
+    point interval [[n,n]], which forces [γ a ⊆ {n}] — every concrete
+    value is [n]. (It does *not* assert [n ∈ γ a]: the congruence
+    component may still rule [n] out, leaving [γ a] empty. Soundness as a
+    "γ refines to at most {n}" certificate is all that is needed.) The
+    test only inspects the interval, so it is computable and cheap; it is
+    the building block for "constant operand" transfer-function cases
+    (e.g. a constant divisor in [Z.rem]). *)
 Lemma is_singleton_sound (a : prod_ajsl) (n : Z) :
-  is_singleton a = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.
+  is_singleton (fst a) = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.
 Proof.
   case: a => [[l h] cm]. rewrite /is_singleton /=.
   move=> Hs c [Hci _].

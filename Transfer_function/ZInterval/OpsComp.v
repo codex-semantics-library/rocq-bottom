@@ -206,7 +206,7 @@ Definition may_be_true_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
   end.
 
 Definition may_be_false_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
-  match is_singleton l1 h1, is_singleton l2 h2 with
+  match is_singleton (l1, h1), is_singleton (l2, h2) with
   | Some x1, Some x2 => negb (Z.eqb x1 x2)
   | _, _ => true
   end. 
@@ -231,7 +231,7 @@ Definition nbinterval_eqb_unopt (i2 i1 : nb_interval) : quadrivalent :=
 Definition interval_eqb_opt (i2 i1 : interval) : quadrivalent :=
   let (l2, h2) := i2 in
   let (l1, h1) := i1 in
-  match is_singleton l1 h1, is_singleton l2 h2 with
+  match is_singleton (l1, h1), is_singleton (l2, h2) with
   | Some x1, Some x2 => if Z.eqb x1 x2 then QTrue else QFalse
   | _, _ => if may_be_true_eqb l1 h1 l2 h2 then QTop else QFalse
   end.

@@ -100,15 +100,15 @@ Definition itv_gammab (i:interval) z :=
 
 (** ** Singleton detection.
 
-    [is_singleton l h = Some x] exactly when the interval [[l,h]]
-    concretizes to the single value [x]. Generic over interval bounds,
-    so it serves any "constant operand" transfer-function case; the
-    [prod_ajsl] wrapper in [ZIntervalCongruence] delegates to it. *)
-Definition is_singleton (l h : WithTop.with_top Z) : option Z :=
-  match l, h with
-  | WithTop.NotTop l', WithTop.NotTop h' =>
+    [is_singleton i = Some x] exactly when the interval [i]
+    concretizes to the single value [x]. It serves any "constant
+    operand" transfer-function case; the interval×congruence product
+    applies it to its interval component. *)
+Definition is_singleton (i : interval) : option Z :=
+  match i with
+  | (WithTop.NotTop l', WithTop.NotTop h') =>
       if Z.eqb l' h' then Some l' else None
-  | _, _ => None
+  | _ => None
   end.
 
 Inductive classification := Pos | Neg | Across.
