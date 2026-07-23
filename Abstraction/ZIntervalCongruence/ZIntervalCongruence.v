@@ -27,7 +27,7 @@ Definition t := zintervalcongruence.
     is γ-empty regardless, so (via [CollapsedBottom]) it is [⊑] every
     element. *)
 Definition bottom : zintervalcongruence :=
-  ((WithTop.NotTop 1, WithTop.NotTop 0), (0, 0)).
+  (ZInterval.bottom, (0, 0)).
 
 Definition is_bottomb (p : zintervalcongruence) : bool :=
   let '(i, _) := p in negb (non_bottomb i).
