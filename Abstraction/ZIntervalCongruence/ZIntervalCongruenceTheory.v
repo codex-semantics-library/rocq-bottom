@@ -400,7 +400,7 @@ Lemma reduce_preserves_gamma (p : collapsed_ad) :
   γ[collapsed_ad] (reduce p) ⊆⊇ γ[collapsed_ad] p.
 Proof.
   case: (p : zintervalcongruence) => i [r m].
-  rewrite /reduce.
+  rewrite /reduce /ZCongruence.is_singleton.
   case_eq (non_bottomb i) => Hnb.
   - case_eq (Z.eqb m 0) => Hm0.
     + case_eq (itv_gammab (fst i, snd i) r) => Hmem.
@@ -790,7 +790,7 @@ Lemma reduce_reduced_shape (p : collapsed_ad) :
   reduced_shape (reduce p).
 Proof.
   case: (p : zintervalcongruence) => i [r m].
-  rewrite /reduce.
+  rewrite /reduce /ZCongruence.is_singleton.
   case_eq (non_bottomb i) => Hnb; last first.
   { exact: (RS_bottom bottom is_bottom_bottom). }
   set l := fst i. set h := snd i.
@@ -1222,11 +1222,11 @@ Qed.
     the building block for "constant operand" transfer-function cases
     (e.g. a constant divisor in [Z.rem]). *)
 Lemma is_singleton_sound (a : prod_ajsl) (n : Z) :
-  is_singleton (fst a) = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.
+  ZInterval.is_singleton (fst a) = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.
 Proof.
-  case: a => [[l h] cm]. rewrite /is_singleton /=.
+  case: a => [[l h] cm]. rewrite /ZInterval.is_singleton /=.
   move=> Hs c [Hci _].
-  exact: (proj1 (proj1 (is_singleton_spec l h n) Hs c) Hci).
+  exact: (proj1 (proj1 (ZIntervalTheory.is_singleton_spec l h n) Hs c) Hci).
 Qed.
 
 (** ** Building maximally-reduced elements from explicit bounds.

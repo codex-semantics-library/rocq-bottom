@@ -175,6 +175,27 @@ Proof.
   - move=> ->. unfold_set. by exists 0; lia.
 Qed.
 
+(** [is_singleton c = Some x] exactly when [γ c] is the singleton [{x}].
+    The [None] case covers every non-singleton class — one with at least
+    two elements (for a congruence, in fact an infinite progression, as
+    [γ] is never empty). *)
+Lemma is_singleton_spec (c : zcongruence) (x : Z) :
+  is_singleton c = Some x <-> (forall z, z ∈ γ[cong_ad] c <-> z = x).
+Proof.
+  destruct c as [r m]. unfold is_singleton. split.
+  - destruct (Z.eqb m 0) eqn:Hm; [| discriminate].
+    apply Z.eqb_eq in Hm. subst m.
+    move=> H. injection H as Heq. subst x.
+    move=> z. exact: gamma_singleton.
+  - move=> Hchar.
+    have Hr : r ∈ γ[cong_ad] (r, m) by simpl; unfold_set; exists 0; lia.
+    have Hrx : r = x := proj1 (Hchar r) Hr.
+    have Hm0 : m = 0.
+    { have Hrm : (r + m) ∈ γ[cong_ad] (r, m) by simpl; unfold_set; exists 1; lia.
+      have Hrmx : r + m = x := proj1 (Hchar (r + m)) Hrm. lia. }
+    subst m. simpl. by rewrite Hrx.
+Qed.
+
 (** There is no best abstraction of the empty set: given any (r,m),
     (r+1,0) is also an overapproximation of ∅, but (r,m) ⊑ (r+1,0)
     leads to 0 | -1, a contradiction. *)

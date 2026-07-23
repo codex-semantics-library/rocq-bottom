@@ -53,7 +53,7 @@ Definition itv_add_const (K : Z) (i : interval) : interval :=
     In that case [Z.rem _ n] is the affine map [c2 ↦ c2 - n*q] over
     [γ a2], whose best interval is [fst a2] shifted by [-(n*q)]. *)
 Definition const_block (a2 a1 : zintervalcongruence) : option (Z * Z) :=
-  match is_singleton (fst a1) with
+  match ZInterval.is_singleton (fst a1) with
   | Some n =>
       if n =? 0 then None
       else match fst a2 with
@@ -95,7 +95,7 @@ Definition itv_nonposb (i : interval) : bool :=
   end.
 
 Definition const_residue (a2 a1 : zintervalcongruence) : option Z :=
-  match is_singleton (fst a1) with
+  match ZInterval.is_singleton (fst a1) with
   | Some n =>
       if (n =? 0) || negb (snd (snd a2) mod Z.abs n =? 0) then None
       else if itv_nonnegb (fst a2) then Some (fst (snd a2) mod Z.abs n)

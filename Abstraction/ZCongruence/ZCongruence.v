@@ -17,6 +17,11 @@ Definition t := zcongruence.
     (modulus 0). *)
 Definition singleton (k : Z) : zcongruence := (k, 0).
 
+(** [is_singleton c = Some r] exactly when [c] concretizes to the single
+    value [r] (modulus 0) — the companion of [singleton]. *)
+Definition is_singleton (c : zcongruence) : option Z :=
+  let (r, m) := c in if Z.eqb m 0 then Some r else None.
+
 (** The join of two congruence classes γ(r1,m1) and γ(r2,m2) is the
     smallest congruence class containing both: (r1, gcd(gcd(m1,m2), r1-r2)).
     The modulus is the gcd of both moduli and the difference of remainders,

@@ -84,15 +84,15 @@ Definition build_snapped (l h : WithTop.with_top Z) (r m' : Z) : zintervalcongru
 
 Definition reduce (p : zintervalcongruence) : zintervalcongruence :=
   let (i, c) := p in
-  let (r, m) := c in
   if non_bottomb i then
     let l := fst i in
     let h := snd i in
-    if Z.eqb m 0 then
-      if itv_gammab (l, h) r then
-        singleton r
-      else bottom
-    else
-      let m' := Z.abs m in
-      build_snapped (snap_low l r m') (snap_high h r m') r m'
+    match ZCongruence.is_singleton c with
+    | Some r =>
+        if itv_gammab (l, h) r then singleton r else bottom
+    | None =>
+        let (r, m) := c in
+        let m' := Z.abs m in
+        build_snapped (snap_low l r m') (snap_high h r m') r m'
+    end
   else bottom.
