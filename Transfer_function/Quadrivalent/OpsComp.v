@@ -6,7 +6,7 @@
 
    STATUS: negb, andb, orb, xorb, forward and backward (OpsTheory). *)
 
-Require Import QuadrivalentComp.
+Require Import Quadrivalent.
 
 (* Abstract negation function *)
 Definition abs_negb (x:quadrivalent) : quadrivalent :=
@@ -63,9 +63,9 @@ Definition backward_abs_andb_left (a2 a1 a0:quadrivalent) : quadrivalent :=
 
 Definition backward_abs_andb_right a2 a1 a0 := backward_abs_andb_left a1 a2 a0.
 
-Definition refine_bottom a := if QuadrivalentComp.eqb a QBottom then None else Some QBottom.
-Definition refine_true a := if QuadrivalentComp.eqb a QTrue then None else Some QTrue.
-Definition refine_false a := if QuadrivalentComp.eqb a QFalse then None else Some QFalse. 
+Definition refine_bottom a := if Quadrivalent.eqb a QBottom then None else Some QBottom.
+Definition refine_true a := if Quadrivalent.eqb a QTrue then None else Some QTrue.
+Definition refine_false a := if Quadrivalent.eqb a QFalse then None else Some QFalse. 
 
 Definition impl_backward_abs_andb (a2 a1 a0: quadrivalent): option quadrivalent * option quadrivalent :=
   match a2, a1, a0 with

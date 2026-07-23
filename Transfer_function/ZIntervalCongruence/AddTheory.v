@@ -1,7 +1,7 @@
 (* AddTheory.v - [Z.add] transfer function for the ZIntervalCongruence
    single-value abstraction: the operation [add] (the raw transfer
    function [add_raw] from [OpsComp]), its soundness, and its
-   α-completeness. Split out of ZIntervalCongruence.v. *)
+   α-completeness. Split out of ZIntervalCongruenceTheory.v. *)
 
 (* STATUS: add: sound + best (α-complete); NOT γ-exact
    ([add_reduced_not_gamma_exact]).
@@ -20,8 +20,8 @@ Require Import ssreflect ssrbool.
 Require Import
   base Abstraction AbstractLattice
   AbstractionCombination
-  ZIntervalComp ZIntervalTheory ZCongruenceTheory
-  ZIntervalCongruence
+  ZInterval ZIntervalTheory ZCongruenceTheory
+  ZIntervalCongruenceTheory
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZInterval.AddTheory
   Transfer_function.ZCongruence.OpsComp
@@ -103,7 +103,7 @@ Definition add_nonempty : nonempty_prod_ajsl -> nonempty_prod_ajsl -> nonempty_p
 
 (** [mr_nonempty_iff_prod] (maximal reduction coincides on the
     [nonempty_prod_ajsl] subtype and the base [prod_ajsl]) lives in
-    [ZIntervalCongruence]. *)
+    [ZIntervalCongruenceTheory]. *)
 
 (** [add] preserves maximal reduction on [nonempty_prod_ajsl] — thin wrapper
     of [add_raw_preserves_mr] through the bridge. No bottom cases. *)

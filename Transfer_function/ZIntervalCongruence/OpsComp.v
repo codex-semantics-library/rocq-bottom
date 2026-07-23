@@ -9,8 +9,8 @@ From Stdlib Require Import ZArith Bool.
 Require Import
   Abstraction AbstractLattice
   AbstractionCombination
-  ZIntervalComp ZIntervalTheory
-  ZIntervalCongruence
+  ZInterval ZIntervalTheory
+  ZIntervalCongruenceTheory
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZCongruence.OpsComp.
 

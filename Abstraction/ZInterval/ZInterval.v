@@ -1,4 +1,4 @@
-(* ZIntervalComp.v - Computational core of the integer interval abstraction:
+(* ZInterval.v - Computational core of the integer interval abstraction:
    the [interval] carrier, its non-bottom subset type, the lattice operations
    and the sign classifiers. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZIntervalTheory.v].
@@ -84,7 +84,7 @@ Definition non_bottomb (i : interval) : bool :=
     [is_singleton l h = Some x] exactly when the interval [[l,h]]
     concretizes to the single value [x]. Generic over interval bounds,
     so it serves any "constant operand" transfer-function case; the
-    [prod_ajsl] wrapper in [ZIntervalCongruence] delegates to it. *)
+    [prod_ajsl] wrapper in [ZIntervalCongruenceTheory] delegates to it. *)
 Definition is_singleton (l h : WithTop.with_top Z) : option Z :=
   match l, h with
   | WithTop.NotTop l', WithTop.NotTop h' =>

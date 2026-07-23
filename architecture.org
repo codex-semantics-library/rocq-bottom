@@ -32,26 +32,26 @@ Along with core properties, notations, and lemmas (e.g. Galois connection & inse
 
 * Abstraction (=Abstraction=)
 
-Every abstraction follows a strict structure of two =.v= files plus an OCaml interface.
+Every abstraction follows a strict structure of two =.v= files plus an OCaml interface, grouped in one subdirectory per abstraction (e.g. =Abstraction/ZInterval/=).
 
-** =*Comp.v= (Computational Layer)
+** =<Abstraction>.v= (Computational Layer)
 
-This file contains the executable core, destined to be extracted 1:1 to OCaml.
+This file contains the executable core, destined to be extracted 1:1 to OCaml. It is named after the abstraction and carries no suffix (e.g. =ZInterval.v=), so that the Rocq file, the extracted OCaml module and its interface all share one name, and qualified uses read as =ZInterval.t=.
 - The raw carrier type of the abstract element;
 - Structural subset types (e.g., ={ i : interval | ~(i.low > i.high) }= ).
 - Computational lattice operations (=join=, =meet=, =leb=), structural helpers (=widen=, =is_singleton=) etc.
 - Extraction directives to OCaml. Extraction should not introduce Obj.magic.
 
-** =*Theory.v= (Mathematical/Logical Layer)
+** =<Abstraction>Theory.v= (Mathematical/Logical Layer)
 
-This file imports =*Comp.v= and contains:
+This file imports the computational layer and contains:
 - the concretization, abstract order, and semi-lattice (and possibly lattice) operations, following the algebraic hierarchy in =Abstraction.v= and =AbstractLattice.v=;
 - key optional properties (=JoinIsLUB=, =ExactOrder=, alpha-relations) also defined in those files;
 - domain-specific facts, helper lemmas and tactics (e.g., =i.low > i.high <->= empty concretization).
 
-** =*.mli=
+** =<Abstraction>.mli=
 
-The OCaml interface for the computational layer (it carries no =Comp= suffix).
+The OCaml interface for the computational layer.
 
 * Transfer functions and single-value abstractions (=Transfer_function=)
 

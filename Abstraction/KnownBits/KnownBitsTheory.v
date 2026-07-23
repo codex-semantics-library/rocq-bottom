@@ -18,7 +18,7 @@ Require Import QuadrivalentTheory.
 From Stdlib Require Import ssreflect ssrbool.
 Require Import Stdlib.ZArith.ZArith.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
-Require Import KnownBitsComp.
+Require Import KnownBits.
 Open Scope Z_scope.
 
 (** * Known-bits abstraction

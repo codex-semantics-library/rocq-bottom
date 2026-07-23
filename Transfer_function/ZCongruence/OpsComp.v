@@ -7,8 +7,8 @@
    quot (QuotTheory), le (LeTheory), eqb (EqbTheory). *)
 
 From Stdlib Require Import ZArith Bool.
-Require Import AbstractionCombination QuadrivalentComp.
-Require Import ZCongruenceComp.
+Require Import AbstractionCombination Quadrivalent.
+Require Import ZCongruence.
 Open Scope Z_scope.
 
 (** * Z.add / Z.opp / Z.sub. See [AddTheory.v]. *)

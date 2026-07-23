@@ -1,10 +1,10 @@
-(* KnownBitsComp.v - Computational core of the known-bits abstraction: the
+(* KnownBits.v - Computational core of the known-bits abstraction: the
    [must0_must1] carrier, its non-bottom subset type, the [testbit] /
    [setbit_to] toolkit and the computational lattice operations. This is the
    executable core, destined to be extracted 1:1 to OCaml. Its proofs are in
    [KnownBitsTheory.v]. *)
 
-Require Import QuadrivalentComp.
+Require Import Quadrivalent.
 Require Import Stdlib.ZArith.ZArith.
 Open Scope Z_scope.
 

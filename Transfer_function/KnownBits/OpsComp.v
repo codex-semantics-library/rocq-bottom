@@ -6,7 +6,7 @@
    STATUS: lor, land, lxor (BitwiseTheory), add, sub (AddSubTheory). *)
 
 From Stdlib Require Import ZArith.
-Require Import KnownBitsComp.
+Require Import KnownBits.
 
 Open Scope Z_scope.
 

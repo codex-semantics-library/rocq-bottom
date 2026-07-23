@@ -1,4 +1,4 @@
-(* ZCongruenceComp.v - Computational core of the congruence abstraction
+(* ZCongruence.v - Computational core of the congruence abstraction
    (r, m) ↦ { z | m | z - r }. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZCongruenceTheory.v].
 

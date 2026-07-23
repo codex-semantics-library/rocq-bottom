@@ -19,7 +19,7 @@ Extraction Inline ssrbool.is_left.
 
 Module Concrete := Datatypes.
 
-Require Import QuadrivalentComp QuadrivalentTheory QuadrivalentAPI.
+Require Import Quadrivalent QuadrivalentTheory QuadrivalentAPI.
 Require Import Transfer_function.Quadrivalent.OpsComp.
 
 (* The signature conformance checks are in QuadrivalentAPI.v. *)

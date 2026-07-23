@@ -1,4 +1,4 @@
-(* ZIntervalCongruence.v - Reduced product of integer intervals and
+(* ZIntervalCongruenceTheory.v - Reduced product of integer intervals and
    integer congruences.
 
    The carrier is [interval * (Z * Z)] (an interval paired with a
@@ -37,7 +37,7 @@
 From Stdlib Require Import ZArith Lia.
 Require Import ssreflect ssrbool.
 Require Import base Abstraction AbstractLattice
-  AbstractionCombination ZIntervalComp ZIntervalTheory ZCongruenceTheory.
+  AbstractionCombination ZInterval ZIntervalTheory ZCongruenceTheory.
 
 Open Scope Z_scope.
 
@@ -1285,7 +1285,7 @@ Qed.
     the building block for "constant operand" transfer-function cases
     (e.g. a constant divisor in [Z.rem]). *)
 Definition is_singleton (a : prod_ajsl) : option Z :=
-  let (l, h) := fst a in ZIntervalComp.is_singleton l h.
+  let (l, h) := fst a in ZInterval.is_singleton l h.
 
 Lemma is_singleton_sound (a : prod_ajsl) (n : Z) :
   is_singleton a = Some n -> forall c, c ∈ γ[prod_ajsl] a -> c = n.

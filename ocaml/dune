@@ -7,5 +7,5 @@
 (coq.extraction
  (prelude quadrivalentextract)
  (theories RocqBottom Stdlib)
- (extracted_modules Datatypes QuadrivalentComp QuadrivalentTheory OpsComp)
+ (extracted_modules Datatypes Quadrivalent QuadrivalentTheory OpsComp)
  (mode promote))

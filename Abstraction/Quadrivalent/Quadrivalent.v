@@ -1,4 +1,4 @@
-(* QuadrivalentComp.v - Computational core of the quadrivalent (4-valued
+(* Quadrivalent.v - Computational core of the quadrivalent (4-valued
    logic) abstraction of booleans: the carrier, the inclusion test, the
    lattice operations and the decidable equalities. This is the executable
    core, destined to be extracted 1:1 to OCaml. Its proofs are in

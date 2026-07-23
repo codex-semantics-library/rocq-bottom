@@ -4,13 +4,13 @@
 
    The signatures span both layers ([t], [is_included], [join], [meet],
    [equal] are computational; [ad] and [ad_car_ad_eq_t] are not), so the
-   conformance checks live here rather than in [QuadrivalentComp.v].
+   conformance checks live here rather than in [Quadrivalent.v].
 
    The extraction directives are in [ocaml/quadrivalentextract.v], which
    must sit next to the generated OCaml for dune's [coq.extraction]. *)
 
 Require Import Abstraction AbstractLattice.
-Require Import QuadrivalentComp QuadrivalentTheory.
+Require Import Quadrivalent QuadrivalentTheory.
 Require Import Transfer_function.Quadrivalent.OpsComp.
 
 Module QuadrivalentCheck <: ABSTRACT_DOMAIN := QuadrivalentTheory.

@@ -11,9 +11,9 @@ Require Import Abstraction.
 Require Import autoreflect.
 From Stdlib Require Import ssreflect ssrbool.
 From Stdlib Require Ring. (* bool_eq *)
-Require Import QuadrivalentComp.
+Require Import Quadrivalent.
 
-Include QuadrivalentComp.
+Include Quadrivalent.
 
 Definition bool_eq := Ring.bool_eq.
 

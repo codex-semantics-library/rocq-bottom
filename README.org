@@ -55,7 +55,7 @@ camera-ready paper cites:
 - *α-completeness* (=Abstraction.v=, =AbstractLattice.v=, =BoundAbstraction.v=,
   =ZIntervalTheory.v=) — the =IsAlpha= relation and its bridges to best abstraction, and
   α-completeness of interval addition and multiplication.
-- *Interval×congruence reduced product* (=ZIntervalCongruence.v=,
+- *Interval×congruence reduced product* (=ZIntervalCongruenceTheory.v=,
   =Transfer_function/ZIntervalCongruence/=) — the layered =zic= domain and its
   =reduce=; addition, proved sound and best (=add_raw_alpha_complete_prod=) but
   /not/ γ-exact, with ={0,3,8,11}= as the witness (=add_reduced_not_gamma_exact=);
@@ -148,50 +148,50 @@ depends on no axioms.
 * Files
 
 #+ATTR_LATEX: :environment tabularx :width \textwidth :align lX :font \small
-| File                                                    | Description                                                                                           |
-|---------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
-| =base.v=                                                | Foundational type classes and notations: =Equiv=, =SqSubsetEq=  =propset= , set membership            |
-| =Abstraction.v=                                         | Core abstraction hierarchy: =Concretization=, =abstract_domain= (adds order).                         |
-| =AbstractLattice.v=                                     | Extends abstract domains with lattice operations: join, meet, and lattice laws                        |
-| =autoreflect.v=                                         | =AutoReflect= type class for computational reflection — reflects =Prop= goals to =bool= computations  |
-| =Abstraction/Quadrivalent/QuadrivalentComp.v=           | Four-valued boolean carrier (=QBottom=, =QTrue=, =QFalse=, =QTop=), lattice and equality ops          |
-| =Abstraction/Quadrivalent/QuadrivalentTheory.v=         | Quadrivalent concretization, order and lattice laws, verified by =AutoReflect=                        |
-| =QuadrivalentAPI.v=                                     | Export layer: ABSTRACT_DOMAIN / ABSTRACT_LATTICE conformance for quadrivalent                         |
-| =Transfer_function/Quadrivalent/OpsComp.v=              | Executable boolean transfer functions: forward and backward =negb=, =andb=, =orb=, =xorb=             |
-| =Transfer_function/Quadrivalent/OpsTheory.v=            | Boolean transfer functions on quadrivalent: exactness, and backward-refinement correctness            |
-| =ocaml/quadrivalentextract.v=                           | OCaml extraction directives for the quadrivalent domain (drives the extraction into =ocaml/=)         |
-| =Tactics.v=                                             | Proof tactics: =gamma_db= hint database, =decompose_hypothesis=                                       |
-| =AbstractionCombination.v=                              | Domain composition: =WithTop=, =Subset= (restricts elements), =Conjunction= (product domain)          |
-| =BoundAbstraction.v=                                    | GLB abstraction: an element represents all larger elements, forming a Galois connection               |
-| =BoundLattice.v=                                        | =ConcreteLattice= record and construction of =abstract_join_semilattice_laws= from bound abstractions |
-| =Abstraction/ZInterval/ZIntervalComp.v=                 | Interval computational core: the interval carrier, subset type, join/meet, sign classifiers           |
-| =Abstraction/ZInterval/ZIntervalTheory.v=               | Interval domain: concretization, order, lattice structure and the α-machinery                         |
-| =Transfer_function/ZInterval/OpsComp.v=                 | Executable interval transfer functions: =interval_add=, =interval_mul_opt=, =interval_quot_full=      |
-| =Transfer_function/ZInterval/OppTheory.v=               | Interval negation =interval_opp=: exact; shared by the add, mul and quot proofs                       |
-| =Transfer_function/ZInterval/AddTheory.v=               | Interval addition and subtraction: =interval_add_alpha_complete=, =nb_interval_sub_exact=             |
-| =Transfer_function/ZInterval/MulTheory.v=               | Interval multiplication: =interval_mul_opt_best= and its α-completeness                               |
-| =Transfer_function/ZInterval/QuotTheory.v=              | Interval truncating division: best in all nine sign cases (=interval_quot_full_best=)                 |
-| =Transfer_function/ZInterval/LeTheory.v=                | Interval =Z.leb= into quadrivalent: =nbinterval_leb_exact=                                            |
-| =Transfer_function/ZInterval/EqbTheory.v=               | Interval =Z.eqb= into quadrivalent: naive and optimized variants, both exact                          |
-| =Abstraction/KnownBits/KnownBitsComp.v=                 | Known-bits computational core: the (must0, must1) carrier, subset type, testbit toolkit               |
-| =Abstraction/KnownBits/KnownBitsTheory.v=               | Known-bits abstraction for Z: concretization, order, lattice laws and per-bit facts                   |
-| =Transfer_function/KnownBits/OpsComp.v=                 | Executable known-bits transfer functions: =kb_lor=, =kb_land=, =kb_lxor=, =kb_add=, =kb_sub=          |
-| =Transfer_function/KnownBits/BitwiseTheory.v=           | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument             |
-| =Transfer_function/KnownBits/AddSubTheory.v=            | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete           |
-| =Abstraction/ZCongruence/ZCongruenceComp.v=             | Congruence computational core: the =zcongruence= carrier (r, m) and the join                          |
-| =Abstraction/ZCongruence/ZCongruenceTheory.v=           | Congruence domain over Z: concretization, order, and join laws for r + mZ                             |
-| =Transfer_function/ZCongruence/OpsComp.v=               | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only       |
-| =Transfer_function/ZCongruence/AddTheory.v=             | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                         |
-| =Transfer_function/ZCongruence/MulTheory.v=             | Congruence multiplication: =cong_mul= is best but not γ-exact                                         |
-| =Transfer_function/ZCongruence/DivTheory.v=             | Congruence floor division =cong_div=: best, and γ-exact in cases A/B/D1                               |
-| =Transfer_function/ZCongruence/QuotTheory.v=            | Congruence truncating division =cong_quot=: best, via the gcd-of-quotients walk                       |
-| =Transfer_function/ZCongruence/LeTheory.v=              | Congruence =Z.leb= into quadrivalent: =cong_le= is exact (hence best)                                 |
-| =Transfer_function/ZCongruence/EqbTheory.v=             | Congruence =Z.eqb= into quadrivalent: =cong_eqb= is exact (hence best)                                |
-| =Abstraction/ZIntervalCongruence/ZIntervalCongruence.v= | Reduced product of integer intervals and congruences with cross-component reduction                   |
-| =Transfer_function/ZIntervalCongruence/OpsComp.v=       | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
-| =Transfer_function/ZIntervalCongruence/AddTheory.v=     | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=          |
-| =Transfer_function/ZIntervalCongruence/RemTheory.v=     | Remainder on the product: soundness, the =gcd= congruence rule, and the constant-divisor best cases   |
-|---------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
+| File                                                          | Description                                                                                           |
+|---------------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
+| =base.v=                                                      | Foundational type classes and notations: =Equiv=, =SqSubsetEq=  =propset= , set membership            |
+| =Abstraction.v=                                               | Core abstraction hierarchy: =Concretization=, =abstract_domain= (adds order).                         |
+| =AbstractLattice.v=                                           | Extends abstract domains with lattice operations: join, meet, and lattice laws                        |
+| =autoreflect.v=                                               | =AutoReflect= type class for computational reflection — reflects =Prop= goals to =bool= computations  |
+| =Abstraction/Quadrivalent/Quadrivalent.v=                     | Four-valued boolean carrier (=QBottom=, =QTrue=, =QFalse=, =QTop=), lattice and equality ops          |
+| =Abstraction/Quadrivalent/QuadrivalentTheory.v=               | Quadrivalent concretization, order and lattice laws, verified by =AutoReflect=                        |
+| =QuadrivalentAPI.v=                                           | Export layer: ABSTRACT_DOMAIN / ABSTRACT_LATTICE conformance for quadrivalent                         |
+| =Transfer_function/Quadrivalent/OpsComp.v=                    | Executable boolean transfer functions: forward and backward =negb=, =andb=, =orb=, =xorb=             |
+| =Transfer_function/Quadrivalent/OpsTheory.v=                  | Boolean transfer functions on quadrivalent: exactness, and backward-refinement correctness            |
+| =ocaml/quadrivalentextract.v=                                 | OCaml extraction directives for the quadrivalent domain (drives the extraction into =ocaml/=)         |
+| =Tactics.v=                                                   | Proof tactics: =gamma_db= hint database, =decompose_hypothesis=                                       |
+| =AbstractionCombination.v=                                    | Domain composition: =WithTop=, =Subset= (restricts elements), =Conjunction= (product domain)          |
+| =BoundAbstraction.v=                                          | GLB abstraction: an element represents all larger elements, forming a Galois connection               |
+| =BoundLattice.v=                                              | =ConcreteLattice= record and construction of =abstract_join_semilattice_laws= from bound abstractions |
+| =Abstraction/ZInterval/ZInterval.v=                           | Interval computational core: the interval carrier, subset type, join/meet, sign classifiers           |
+| =Abstraction/ZInterval/ZIntervalTheory.v=                     | Interval domain: concretization, order, lattice structure and the α-machinery                         |
+| =Transfer_function/ZInterval/OpsComp.v=                       | Executable interval transfer functions: =interval_add=, =interval_mul_opt=, =interval_quot_full=      |
+| =Transfer_function/ZInterval/OppTheory.v=                     | Interval negation =interval_opp=: exact; shared by the add, mul and quot proofs                       |
+| =Transfer_function/ZInterval/AddTheory.v=                     | Interval addition and subtraction: =interval_add_alpha_complete=, =nb_interval_sub_exact=             |
+| =Transfer_function/ZInterval/MulTheory.v=                     | Interval multiplication: =interval_mul_opt_best= and its α-completeness                               |
+| =Transfer_function/ZInterval/QuotTheory.v=                    | Interval truncating division: best in all nine sign cases (=interval_quot_full_best=)                 |
+| =Transfer_function/ZInterval/LeTheory.v=                      | Interval =Z.leb= into quadrivalent: =nbinterval_leb_exact=                                            |
+| =Transfer_function/ZInterval/EqbTheory.v=                     | Interval =Z.eqb= into quadrivalent: naive and optimized variants, both exact                          |
+| =Abstraction/KnownBits/KnownBits.v=                           | Known-bits computational core: the (must0, must1) carrier, subset type, testbit toolkit               |
+| =Abstraction/KnownBits/KnownBitsTheory.v=                     | Known-bits abstraction for Z: concretization, order, lattice laws and per-bit facts                   |
+| =Transfer_function/KnownBits/OpsComp.v=                       | Executable known-bits transfer functions: =kb_lor=, =kb_land=, =kb_lxor=, =kb_add=, =kb_sub=          |
+| =Transfer_function/KnownBits/BitwiseTheory.v=                 | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument             |
+| =Transfer_function/KnownBits/AddSubTheory.v=                  | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete           |
+| =Abstraction/ZCongruence/ZCongruence.v=                       | Congruence computational core: the =zcongruence= carrier (r, m) and the join                          |
+| =Abstraction/ZCongruence/ZCongruenceTheory.v=                 | Congruence domain over Z: concretization, order, and join laws for r + mZ                             |
+| =Transfer_function/ZCongruence/OpsComp.v=                     | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only       |
+| =Transfer_function/ZCongruence/AddTheory.v=                   | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                         |
+| =Transfer_function/ZCongruence/MulTheory.v=                   | Congruence multiplication: =cong_mul= is best but not γ-exact                                         |
+| =Transfer_function/ZCongruence/DivTheory.v=                   | Congruence floor division =cong_div=: best, and γ-exact in cases A/B/D1                               |
+| =Transfer_function/ZCongruence/QuotTheory.v=                  | Congruence truncating division =cong_quot=: best, via the gcd-of-quotients walk                       |
+| =Transfer_function/ZCongruence/LeTheory.v=                    | Congruence =Z.leb= into quadrivalent: =cong_le= is exact (hence best)                                 |
+| =Transfer_function/ZCongruence/EqbTheory.v=                   | Congruence =Z.eqb= into quadrivalent: =cong_eqb= is exact (hence best)                                |
+| =Abstraction/ZIntervalCongruence/ZIntervalCongruenceTheory.v= | Reduced product of integer intervals and congruences with cross-component reduction                   |
+| =Transfer_function/ZIntervalCongruence/OpsComp.v=             | Executable transfer functions on the interval×congruence product (=add_raw=, =rem=)                   |
+| =Transfer_function/ZIntervalCongruence/AddTheory.v=           | Addition on the product: α-completeness, and the non-γ-exactness counterexample ={0,3,8,11}=          |
+| =Transfer_function/ZIntervalCongruence/RemTheory.v=           | Remainder on the product: soundness, the =gcd= congruence rule, and the constant-divisor best cases   |
+|---------------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
 
 * Extending the library
 
@@ -213,7 +213,7 @@ example for what you are doing:
   with a join-semilattice and =ExactOrder= recovered on the non-empty part.
 - =ZCongruenceTheory.v= — an infinite domain with =ExactOrder= and non-trivial
   abstract equivalence (=(r,m)= up to representative).
-- =ZIntervalCongruence.v= — a reduced product where =ExactOrder= does /not/ hold
+- =ZIntervalCongruenceTheory.v= — a reduced product where =ExactOrder= does /not/ hold
   out of the box: the reference for reductions and maximal reduction.
 
 ** Precision notions and the proof recipe
@@ -401,7 +401,7 @@ extraction have a stable interface.
      restore it with a =Reduction= function that maps each element to a
      maximally-reduced one — or, more simply, by composing the combinators in
      step 4, which are built to do exactly this. =BoundAbstraction.v= is the
-     worked example for the α-relations; =ZIntervalCongruence.v= for reductions.
+     worked example for the α-relations; =ZIntervalCongruenceTheory.v= for reductions.
 
 4. *Trim with combinators instead of hand-rolling.* =AbstractionCombination.v=
    builds new domains from existing ones, and most exist specifically to

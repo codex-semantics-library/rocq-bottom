@@ -14,10 +14,10 @@ Require Import BoundLattice.
 Require Import autoreflect.
 Require Import Tactics.
 Require Import Stdlib.Bool.Bool.
-Require Import QuadrivalentComp.
+Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
-Require Import ZIntervalComp.
+Require Import ZInterval.
 Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.OpsComp.
 Require Import Transfer_function.ZInterval.OppTheory.

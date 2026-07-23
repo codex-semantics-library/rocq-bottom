@@ -20,10 +20,10 @@ Require Import BoundLattice.
 Require Import autoreflect.
 Require Import Tactics.
 Require Import Stdlib.Bool.Bool.
-Require Import QuadrivalentComp.
+Require Import Quadrivalent.
 (* From Hammer Require Import Hammer. *)
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
-Require Import ZCongruenceComp.
+Require Import ZCongruence.
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Open Scope Z_scope.             (* Arithmetic operations are all on Z; avoids %Z everywhere. *)
