@@ -9,8 +9,8 @@ From Stdlib Require Import ZArith Bool.
 Require Import
   Abstraction AbstractLattice
   AbstractionCombination
-  ZInterval ZIntervalTheory
-  ZIntervalCongruenceTheory
+  ZInterval
+  ZCongruence ZIntervalCongruence ZIntervalCongruenceTheory
   Transfer_function.ZInterval.OpsComp
   Transfer_function.ZCongruence.OpsComp.
 
@@ -24,7 +24,7 @@ Open Scope Z_scope.
     abstraction of the collecting sum — it is maximally reduced, and no
     [reduce] is needed afterwards. See [AddTheory.add],
     [AddTheory.add_raw_alpha_complete] and [AddTheory.add_alpha_complete]. *)
-Definition add_raw (a2 a1 : prod_ajsl) : prod_ajsl :=
+Definition add_raw (a2 a1 : zintervalcongruence) : zintervalcongruence :=
   let (i2, c2) := a2 in
   let (i1, c1) := a1 in
   (interval_add i2 i1, cong_add c2 c1).
@@ -52,7 +52,7 @@ Definition itv_add_const (K : Z) (i : interval) : interval :=
     within a single [Z.quot _ n] block (both endpoints have quotient [q]).
     In that case [Z.rem _ n] is the affine map [c2 ↦ c2 - n*q] over
     [γ a2], whose best interval is [fst a2] shifted by [-(n*q)]. *)
-Definition const_block (a2 a1 : collapsed_ad) : option (Z * Z) :=
+Definition const_block (a2 a1 : zintervalcongruence) : option (Z * Z) :=
   match is_singleton (fst a1) with
   | Some n =>
       if n =? 0 then None
@@ -75,7 +75,7 @@ Definition itv_abs_min (i : interval) : option Z :=
   | (WithTop.Top, WithTop.Top) => None
   end.
 
-Definition narrow_divb (a2 a1 : collapsed_ad) : bool :=
+Definition narrow_divb (a2 a1 : zintervalcongruence) : bool :=
   match fst a2, itv_abs_min (fst a1) with
   | (WithTop.NotTop l2, WithTop.NotTop h2), Some B =>
       (Z.abs l2 <? B) && (Z.abs h2 <? B)
@@ -94,7 +94,7 @@ Definition itv_nonposb (i : interval) : bool :=
   | WithTop.Top => false
   end.
 
-Definition const_residue (a2 a1 : collapsed_ad) : option Z :=
+Definition const_residue (a2 a1 : zintervalcongruence) : option Z :=
   match is_singleton (fst a1) with
   | Some n =>
       if (n =? 0) || negb (snd (snd a2) mod Z.abs n =? 0) then None
@@ -104,7 +104,7 @@ Definition const_residue (a2 a1 : collapsed_ad) : option Z :=
   | None => None
   end.
 
-Definition rem_itv_envelope (a2 a1 : collapsed_ad) : interval :=
+Definition rem_itv_envelope (a2 a1 : zintervalcongruence) : interval :=
   match const_block a2 a1 with
   | Some (n, q) => itv_add_const (- (n * q)) (fst a2)
   | None => if narrow_divb a2 a1 then fst a2
@@ -116,7 +116,7 @@ Definition rem_itv_envelope (a2 a1 : collapsed_ad) : interval :=
 
 (** Divisor-trivial test for non-bottom arguments: no [is_bottomb] case
     (the argument is structurally non-empty). *)
-Definition divisor_trivialb_nb (a1 : prod_ajsl) : bool :=
+Definition divisor_trivialb_nb (a1 : zintervalcongruence) : bool :=
   match fst a1 with
   | (WithTop.NotTop l, WithTop.NotTop h) => (l =? 0) && (h =? 0)
   | _ => false
@@ -125,10 +125,10 @@ Definition divisor_trivialb_nb (a1 : prod_ajsl) : bool :=
 (** Projection of a [non_bottom_zic] element to its raw [prod_ajsl]
     carrier (through the two [Subset] layers). The pattern match forces
     the [abs_car]/[ad_car] reductions a bare backtick leaves stuck. *)
-Definition rd_car (a : non_bottom_zic) : prod_ajsl :=
+Definition rd_car (a : non_bottom_zic) : zintervalcongruence :=
   match a with exist _ (exist _ a0 _) _ => a0 end.
 
-Definition rem_cong (g2 g1 : Z * Z) : Z * Z :=
+Definition rem_cong (g2 g1 : zcongruence) : zcongruence :=
   let '(r2, m2) := g2 in
   let '(r1, m1) := g1 in
   (r2, Z.gcd m2 (Z.gcd r1 m1)).
@@ -137,7 +137,7 @@ Definition rem_cong (g2 g1 : Z * Z) : Z * Z :=
     the constant-divisor single-block, narrow-dividend, and
     congruence-pinned-residue cases, the top interval otherwise. The
     congruence is [rem_cong] — sound on all inputs. *)
-Definition rem_raw (a2 a1 : prod_ajsl) : prod_ajsl :=
+Definition rem_raw (a2 a1 : zintervalcongruence) : zintervalcongruence :=
   (rem_itv_envelope a2 a1, rem_cong (snd a2) (snd a1)).
 
 Definition rem_final (x y : non_bottom_zic) : zic :=
