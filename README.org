@@ -178,7 +178,8 @@ depends on no axioms.
 | =Transfer_function/KnownBits/OpsComp.v=             | Executable known-bits transfer functions: =kb_lor=, =kb_land=, =kb_lxor=, =kb_add=, =kb_sub=      |
 | =Transfer_function/KnownBits/BitwiseTheory.v=       | Bitwise =kb_lor= / =kb_land= / =kb_lxor=: sound and exact, by one shared per-bit argument         |
 | =Transfer_function/KnownBits/AddSubTheory.v=        | =kb_add= / =kb_sub= via the shared carry chain; both best, add neither exact nor α-complete       |
-| =ZCongruenceTheory.v=                               | Congruence domain over Z: the pair (r, m) represents r + mZ (abstraction only)                    |
+| =ZCongruenceComp.v=                                 | Congruence computational core: the =zcongruence= carrier (r, m) and the join                      |
+| =ZCongruenceTheory.v=                               | Congruence domain over Z: concretization, order, and join laws for r + mZ                         |
 | =Transfer_function/ZCongruence/OpsComp.v=           | Executable congruence transfer functions =cong_add= .. =cong_eqb=; theory files are proofs only   |
 | =Transfer_function/ZCongruence/AddTheory.v=         | Congruence add/opp/sub: soundness, exactness and α-completeness of =cong_add=                     |
 | =Transfer_function/ZCongruence/MulTheory.v=         | Congruence multiplication: =cong_mul= is best but not γ-exact                                     |

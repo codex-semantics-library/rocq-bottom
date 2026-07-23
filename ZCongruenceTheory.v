@@ -23,6 +23,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import QuadrivalentComp.
 (* From Hammer Require Import Hammer. *)
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
+Require Import ZCongruenceComp.
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Open Scope Z_scope.             (* Arithmetic operations are all on Z; avoids %Z everywhere. *)
@@ -63,7 +64,7 @@ From Stdlib Require Export Morphisms.
 (* Follows granger definition. The order is aligned with the ⊑ and ⊑γ
    ordering; i.e. smaller multiples represent a larger set of
    numbers. *)
-Definition order (a b: Z * Z) :=
+Definition order (a b: zcongruence) :=
   let (ra,ma) := a in
   let (rb,mb) := b in   
   Z.divide mb ma /\ Z.divide mb (ra - rb).
@@ -117,7 +118,7 @@ Global Instance order_stable a b : Stable (order a b) :=
 
 (** γ(r,m) = {z ∈ Z | m divides (z - r)}.
     When m = 0, Z.divide 0 x iff x = 0, so γ(r,0) = {r}. *)
-Definition cong_gamma (a : Z * Z) : ℘ Z :=
+Definition cong_gamma (a : zcongruence) : ℘ Z :=
   let (r, m) := a in {[ z | (m | (z - r)) ]}.
 
 Definition cong_abs : abstraction Z := BuildAbstraction cong_gamma.
@@ -160,7 +161,7 @@ Qed.
 (** * γ is never empty. *)
 
 (** Every congruence class is inhabited: r ∈ γ(r, m). *)
-Lemma gamma_non_empty (a : Z * Z) : exists z, z ∈ γ[cong_ad] a.
+Lemma gamma_non_empty (a : zcongruence) : exists z, z ∈ γ[cong_ad] a.
 Proof.
   destruct a as [r m]. exists r. simpl. unfold_set.
   exists 0. lia.
@@ -194,7 +195,7 @@ Qed.
     any [¬¬]-stable goal [G], one may assume [∃z, z ∈ S]. The witness
     cannot be produced unconditionally (that would need classical
     logic), but it is available when the goal is stable. *)
-Lemma alpha_non_empty_witness {G : Prop} `{Stable G} (a : Z * Z) (S : ℘ Z) :
+Lemma alpha_non_empty_witness {G : Prop} `{Stable G} (a : zcongruence) (S : ℘ Z) :
   IsAlpha (A:=cong_ad) a S -> ((exists z, z ∈ S) -> G) -> G.
 Proof.
   move=> Ha Hf. apply: stable => Hng.
@@ -204,13 +205,13 @@ Qed.
 
 (** * LUB layer (proof machinery). *)
 
-Definition lub_ad : abstract_domain (Z * Z) :=
+Definition lub_ad : abstract_domain zcongruence :=
   BoundAbstraction.LUB.ad order.
 
 (** * StrongAlphaRelation via LUB layer. *)
 
 (** Embed integers into congruence pairs: z ↦ (z, 0). *)
-Definition singleton_embed (S : propset Z) : propset (Z * Z) :=
+Definition singleton_embed (S : propset Z) : propset zcongruence :=
   {[ p | exists z, z ∈ S /\ p = (z, 0) ]}.
 
 (** The key bijection: (z, 0) ≤ (r, m) ⟺ z ∈ γ(r, m). *)
@@ -224,7 +225,7 @@ Qed.
 
 (** Lifting: membership in γ[lub_ad] via singleton_embed
     is the same as membership in γ[cong_ad]. *)
-Lemma singleton_embed_sub_gamma (S : propset Z) (a : Z * Z) :
+Lemma singleton_embed_sub_gamma (S : propset Z) (a : zcongruence) :
   singleton_embed S ⊆ γ[lub_ad] a <-> S ⊆ γ[cong_ad] a.
 Proof.
   destruct a as [r m]. split.
@@ -240,7 +241,7 @@ Qed.
 
 (** IsAlpha on the LUB layer (for singleton-embedded sets)
     is equivalent to IsAlpha on the direct layer. *)
-Lemma is_alpha_lub_cong (a : Z * Z) (S : propset Z) :
+Lemma is_alpha_lub_cong (a : zcongruence) (S : propset Z) :
   IsAlpha (A:=lub_ad) a (singleton_embed S) <-> IsAlpha (A:=cong_ad) a S.
 Proof.
   split.
@@ -250,21 +251,11 @@ Qed.
 
 (** * Join operation. *)
 
-(** The join of two congruence classes γ(r1,m1) and γ(r2,m2) is the
-    smallest congruence class containing both: (r1, gcd(gcd(m1,m2), r1-r2)).
-    The modulus is the gcd of both moduli and the difference of remainders,
-    and the remainder is r1 (arbitrary choice; r2 works equally). *)
-
-Definition cong_join (a1 a2 : Z * Z) : Z * Z :=
-  let (r1, m1) := a1 in
-  let (r2, m2) := a2 in
-  (r1, Z.gcd (Z.gcd m1 m2) (r1 - r2)).
-
 (** Equivalence: two congruence pairs represent the same set. *)
-Definition cong_equiv (a1 a2 : Z * Z) : Prop :=
+Definition cong_equiv (a1 a2 : zcongruence) : Prop :=
   order a1 a2 /\ order a2 a1.
 
-Lemma conv_equiv1 (a1 a2 : Z * Z) :
+Lemma conv_equiv1 (a1 a2 : zcongruence) :
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   cong_equiv a1 a2 ->
@@ -327,7 +318,7 @@ Qed.
    ExactOrder, this coincides with MostPrecise; we phrase it as an LUB
    because the bound form is more convenient in the precision proofs. *)
 Program Instance cong_strong_alpha : StrongAlphaRelation cong_ad :=
-  {| strong_α_relation (a : Z * Z) (S : propset Z) :=
+  {| strong_α_relation (a : zcongruence) (S : propset Z) :=
        BoundAbstraction.LUB.is_lub order a (singleton_embed S) |}.
 Next Obligation.
   (* is_lub ⟺ IsAlpha(lub_ad) ⟺ IsAlpha(cong_ad) *)

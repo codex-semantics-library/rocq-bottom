@@ -8,6 +8,7 @@
 
 From Stdlib Require Import ZArith Bool.
 Require Import AbstractionCombination QuadrivalentComp.
+Require Import ZCongruenceComp.
 Open Scope Z_scope.
 
 (** * Z.add / Z.opp / Z.sub. See [AddTheory.v]. *)
@@ -16,17 +17,17 @@ Open Scope Z_scope.
     Sum of remainders gives the new remainder; gcd of moduli the new
     modulus — by Bezout, gcd(m1,m2)·Z = m1·Z + m2·Z. *)
 
-Definition cong_add (a2 a1 : Z * Z) : Z * Z :=
+Definition cong_add (a2 a1 : zcongruence) : zcongruence :=
   let (r2, m2) := a2 in
   let (r1, m1) := a1 in
   (r2 + r1, Z.gcd m2 m1).
 
 (** -γ(r, m) = γ(-r, m); negation is exact on congruences. *)
-Definition cong_opp (a : Z * Z) : Z * Z :=
+Definition cong_opp (a : zcongruence) : zcongruence :=
   let (r, m) := a in (-r, m).
 
 (** Subtraction reduces to addition of the negation. *)
-Definition cong_sub (a1 a2 : Z * Z) : Z * Z :=
+Definition cong_sub (a1 a2 : zcongruence) : zcongruence :=
   cong_add a1 (cong_opp a2).
 (* MAYBE: an optimized version. *)
 
@@ -42,7 +43,7 @@ Definition cong_sub (a1 a2 : Z * Z) : Z * Z :=
     since 3 ∉ {(6k+1)(10l+1)} (no integer factorization of 3 has that
     form). So we prove soundness only. *)
 
-Definition cong_mul (a1 a2 : Z * Z) : Z * Z :=
+Definition cong_mul (a1 a2 : zcongruence) : zcongruence :=
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   (r1 * r2, Z.gcd (Z.gcd (r1 * m2) (r2 * m1)) (m1 * m2)).
@@ -52,7 +53,7 @@ Definition cong_mul (a1 a2 : Z * Z) : Z * Z :=
 (** [cong_div] now returns a [WithBottom]-wrapped result so that the case
     where the divisor abstraction is exactly {0} (no valid divisor under
     the partial semantics) can be represented as [Bot]. *)
-Definition cong_div (a1 a2 : Z * Z) : WithBottom.with_bottom (Z * Z) :=
+Definition cong_div (a1 a2 : zcongruence) : WithBottom.with_bottom zcongruence :=
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   if m2 =? 0 then
@@ -99,7 +100,7 @@ Definition quot_gcd_compute (r1 r2 m2 : Z) : Z :=
     Z.gcd (quot_gcd_progression ar rm am)
           (quot_gcd_progression ar (am - rm) am).
 
-Definition cong_quot (a1 a2 : Z * Z) : WithBottom.with_bottom (Z * Z) :=
+Definition cong_quot (a1 a2 : zcongruence) : WithBottom.with_bottom zcongruence :=
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   if m2 =? 0 then
@@ -121,7 +122,7 @@ Definition cong_quot (a1 a2 : Z * Z) : WithBottom.with_bottom (Z * Z) :=
     below, so both [true] and [false] are realised, giving [QTop] —
     again exact. *)
 
-Definition cong_le (a1 a2 : Z * Z) : quadrivalent :=
+Definition cong_le (a1 a2 : zcongruence) : quadrivalent :=
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   if (m1 =? 0) && (m2 =? 0) then
@@ -146,7 +147,7 @@ Definition may_be_true_eqb (r1 m1 r2 m2 : Z) : bool :=
 Definition may_be_false_eqb (r1 m1 r2 m2 : Z) : bool :=
   negb ((m1 =? 0) && (m2 =? 0) && (r1 =? r2)).
 
-Definition cong_eqb (a1 a2 : Z * Z) : quadrivalent :=
+Definition cong_eqb (a1 a2 : zcongruence) : quadrivalent :=
   let (r1, m1) := a1 in
   let (r2, m2) := a2 in
   to_quadrivalent (may_be_true_eqb r1 m1 r2 m2) (may_be_false_eqb r1 m1 r2 m2).
