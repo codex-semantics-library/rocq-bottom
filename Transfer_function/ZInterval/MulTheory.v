@@ -4,7 +4,7 @@
 (* STATUS: mul (Z.mul): sound + best (α-complete)
      (interval_mul_opt_best, interval_mul_opt_alpha_complete).
    Uses the negation transfer function ([neg_bound], [interval_opp]), now in
-   [OpsComp.v], and the split-at-zero α-machinery, still in ZIntervalTheory.v. *)
+   [ZIntervalOps.v], and the split-at-zero α-machinery, still in ZIntervalTheory.v. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -19,7 +19,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import ZInterval.
 Require Import ZIntervalTheory.
-Require Import Transfer_function.ZInterval.OpsComp.
+Require Import Transfer_function.ZInterval.ZIntervalOps.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.

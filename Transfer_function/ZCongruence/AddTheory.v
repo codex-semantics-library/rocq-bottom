@@ -3,7 +3,7 @@
    they are interdependent: [cong_sub] is [cong_add] composed with [cong_opp].
    Split out of Congruence.v.
 
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+   The operations themselves live in [ZCongruenceOps.v]; this file is proofs only. *)
 
 (* STATUS: add (Z.add): sound + exact + α-complete
      (cong_add_sound / cong_add_exact / cong_add_alpha_complete);
@@ -23,7 +23,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import ZCongruenceTheory.
-Require Import Transfer_function.ZCongruence.OpsComp.
+Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
 Generalizable All Variables.
 

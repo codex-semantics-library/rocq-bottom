@@ -2,7 +2,7 @@
    abstraction: [cong_mul] takes two congruences (r, m) and returns a
    congruence. Split out of Congruence.v.
 
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+   The operations themselves live in [ZCongruenceOps.v]; this file is proofs only. *)
 
 (* STATUS: mul (Z.mul): sound + best, NOT γ-exact
    (cong_mul_sound / cong_mul_best / cong_mul_not_gamma_exact). *)
@@ -20,7 +20,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import ZCongruenceTheory.
-Require Import Transfer_function.ZCongruence.OpsComp.
+Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
 Generalizable All Variables.
 

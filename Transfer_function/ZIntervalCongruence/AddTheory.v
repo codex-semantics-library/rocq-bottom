@@ -1,12 +1,12 @@
 (* AddTheory.v - [Z.add] transfer function for the ZIntervalCongruence
    single-value abstraction: the operation [add] (the raw transfer
-   function [add_raw] from [OpsComp]), its soundness, and its
+   function [add_raw] from [ZIntervalCongruenceOps]), its soundness, and its
    α-completeness. Split out of ZIntervalCongruenceTheory.v. *)
 
 (* STATUS: add: sound + best (α-complete); NOT γ-exact
    ([add_reduced_not_gamma_exact]).
 
-   [add_raw] lives in the computational layer ([OpsComp.v]). The
+   [add_raw] lives in the computational layer ([ZIntervalCongruenceOps.v]). The
    user-facing operation is [add_reduced], typed on the *non-bottom*
    maximally-reduced domain [non_bottom_zic]: since [add] of two non-empty
    sets is never empty, that domain is its natural home and there are no
@@ -22,11 +22,11 @@ Require Import
   AbstractionCombination
   ZInterval ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruenceTheory
-  Transfer_function.ZInterval.OpsComp
+  Transfer_function.ZInterval.ZIntervalOps
   Transfer_function.ZInterval.AddTheory
-  Transfer_function.ZCongruence.OpsComp
+  Transfer_function.ZCongruence.ZCongruenceOps
   Transfer_function.ZCongruence.AddTheory
-  Transfer_function.ZIntervalCongruence.OpsComp.
+  Transfer_function.ZIntervalCongruence.ZIntervalCongruenceOps.
 
 Open Scope Z_scope.
 

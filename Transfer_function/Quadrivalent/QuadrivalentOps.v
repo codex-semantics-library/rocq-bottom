@@ -1,4 +1,4 @@
-(* OpsComp.v - Computational transfer functions for the Quadrivalent
+(* QuadrivalentOps.v - Computational transfer functions for the Quadrivalent
    single-value abstraction: the forward boolean operations and their
    backward (refinement) counterparts. This is the executable core,
    destined to be extracted 1:1 to OCaml. Their proofs are in

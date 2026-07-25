@@ -11,7 +11,7 @@
 
 Require Import Abstraction AbstractLattice.
 Require Import Quadrivalent QuadrivalentTheory.
-Require Import Transfer_function.Quadrivalent.OpsComp.
+Require Import Transfer_function.Quadrivalent.QuadrivalentOps.
 
 Module QuadrivalentCheck <: ABSTRACT_DOMAIN := QuadrivalentTheory.
 Module QuadrivalentLatticeCheck <: ABSTRACT_LATTICE := QuadrivalentTheory.

@@ -3,7 +3,7 @@
    congruence sound everywhere via the gcd rule.
 
    [rem_final] and the definitions it calls live in the computational
-   layer ([OpsComp.v]).
+   layer ([ZIntervalCongruenceOps.v]).
 
    [rem_final : non_bottom_zic -> non_bottom_zic -> zic] follows the
    transfer-function convention (non-bottom args, bottom-carrying result).
@@ -42,7 +42,7 @@ Require Import
   AbstractionCombination
   ZInterval ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruence ZIntervalCongruenceTheory
-  Transfer_function.ZIntervalCongruence.OpsComp.
+  Transfer_function.ZIntervalCongruence.ZIntervalCongruenceOps.
 
 Open Scope Z_scope.
 

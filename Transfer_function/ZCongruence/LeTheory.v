@@ -2,7 +2,7 @@
    abstraction: [cong_le] takes two congruences (r, m) and returns a
    [quadrivalent]. Split out of Congruence.v.
 
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+   The operations themselves live in [ZCongruenceOps.v]; this file is proofs only. *)
 
 (* STATUS: le (Z.leb): exact + best (cong_le_exact / cong_le_best). *)
 
@@ -15,7 +15,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import ZCongruenceTheory.
-Require Import Transfer_function.ZCongruence.OpsComp.
+Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
 
 Local Instance qv_exact_order : ExactOrder QuadrivalentTheory.qv.

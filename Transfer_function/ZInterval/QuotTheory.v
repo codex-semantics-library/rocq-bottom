@@ -6,7 +6,7 @@
      (interval_quot_*_best, interval_quot_full_best).
    Dispatches on [classify] / [classify_divisor], still in ZIntervalTheory.v, and
    uses the negation transfer function ([neg_bound], [interval_opp]), now in
-   [OpsComp.v]. *)
+   [ZIntervalOps.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -21,7 +21,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import ZInterval.
 Require Import ZIntervalTheory.
-Require Import Transfer_function.ZInterval.OpsComp.
+Require Import Transfer_function.ZInterval.ZIntervalOps.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
 Generalizable All Variables.

@@ -2,7 +2,7 @@
    Congruence single-value abstraction: [cong_quot] takes two congruences
    (r, m) and returns a congruence. Split out of Congruence.v.
 
-   The operations themselves live in [OpsComp.v]; this file is proofs only. *)
+   The operations themselves live in [ZCongruenceOps.v]; this file is proofs only. *)
 
 (* STATUS: quot (Z.quot): sound + best (cong_quot_sound / cong_quot_best).
    Not γ-exact in general: the concrete quotient set of a progression is
@@ -21,7 +21,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import ZCongruenceTheory.
-Require Import Transfer_function.ZCongruence.OpsComp.
+Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
 Generalizable All Variables.
 

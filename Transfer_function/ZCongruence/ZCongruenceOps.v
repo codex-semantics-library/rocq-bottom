@@ -1,4 +1,4 @@
-(* OpsComp.v - Computational transfer functions for the Congruence
+(* ZCongruenceOps.v - Computational transfer functions for the Congruence
    single-value abstraction. This is the executable core, destined to be
    extracted 1:1 to OCaml. Their proofs are in the matching [*Theory.v]
    files of this directory.

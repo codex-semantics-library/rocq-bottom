@@ -1,10 +1,12 @@
-(* OpsComp.v - Computational transfer functions for the ZInterval
+(* ZIntervalOps.v - Computational transfer functions for the ZInterval
    single-value abstraction. This is the executable core, destined to be
    extracted 1:1 to OCaml. Their proofs are in the matching [*Theory.v]
    files of this directory.
 
    STATUS: opp (OppTheory), add, sub (AddTheory), mul (MulTheory),
-   quot (QuotTheory), le (LeTheory), eqb (EqbTheory). *)
+   quot (QuotTheory), le (LeTheory), eqb (EqbTheory);
+   backward add, sub (AddBackwardTheory), backward mul
+   (MulBackwardTheory), backward quot (QuotBackwardTheory). *)
 
 From Stdlib Require Import ZArith.
 Require Import

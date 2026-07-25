@@ -1,4 +1,4 @@
-(* OpsComp.v - Computational transfer functions for the ZIntervalCongruence
+(* ZIntervalCongruenceOps.v - Computational transfer functions for the ZIntervalCongruence
    single-value abstraction. This is the executable core, destined to be
    extracted 1:1 to OCaml. Their proofs are in the matching [*Theory.v]
    files of this directory.
@@ -11,8 +11,8 @@ Require Import
   AbstractionCombination
   ZInterval
   ZCongruence ZIntervalCongruence ZIntervalCongruenceTheory
-  Transfer_function.ZInterval.OpsComp
-  Transfer_function.ZCongruence.OpsComp.
+  Transfer_function.ZInterval.ZIntervalOps
+  Transfer_function.ZCongruence.ZCongruenceOps.
 
 Open Scope Z_scope.
 

@@ -2,7 +2,7 @@ Require Import Abstraction.
 Require Import ssrbool ssreflect.
 Require Import autoreflect.
 Require Import QuadrivalentTheory.
-Require Import Transfer_function.Quadrivalent.OpsComp.
+Require Import Transfer_function.Quadrivalent.QuadrivalentOps.
 Require Import Extraction.
 Include QuadrivalentTheory.
 
