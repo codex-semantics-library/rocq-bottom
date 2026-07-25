@@ -72,6 +72,44 @@ Definition join_itv (i1 i2 : interval) : interval :=
   let (l2, h2) := i2 in
   (min_opt l1 l2, max_opt h1 h2).
 
+(** Meet. Unlike the join, the meet is *exact*: [γ (meet_itv i1 i2)] is exactly
+    [γ i1 ∩ γ i2] ([meet_itv_exact]). This is what makes the calculated
+    backward transfer functions optimal. It may return a γ-empty
+    interval, which is intended: a backward step detecting a
+    contradiction is the whole point. *)
+Definition meet_lb (a b : WithTop.with_top Z) : WithTop.with_top Z :=
+  match a, b with
+  | WithTop.Top, x | x, WithTop.Top => x
+  | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.max x y)
+  end.
+
+Definition meet_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
+  match a, b with
+  | WithTop.Top, x | x, WithTop.Top => x
+  | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.min x y)
+  end.
+
+Definition meet_itv (i1 i2 : interval) : interval :=
+  let (l1, h1) := i1 in
+  let (l2, h2) := i2 in
+  (meet_lb l1 l2, meet_ub h1 h2).
+
+(** Structural equality of intervals. Used by the backward transfer
+    functions to report "nothing learned" ([None]) in the low-level
+    [option]-based refinement interface; it is not a γ-level test (two
+    distinct γ-empty intervals compare unequal). *)
+Definition bound_equal (a b : WithTop.with_top Z) : bool :=
+  match a, b with
+  | WithTop.Top, WithTop.Top => true
+  | WithTop.NotTop x, WithTop.NotTop y => Z.eqb x y
+  | _, _ => false
+  end.
+
+Definition interval_equal (i1 i2 : interval) : bool :=
+  let (l1, h1) := i1 in
+  let (l2, h2) := i2 in
+  bound_equal l1 l2 && bound_equal h1 h2.
+
 (** Boolean form of [non_bottom], for decidability of γ-emptiness. *)
 Definition non_bottomb (i : interval) : bool :=
   match i with

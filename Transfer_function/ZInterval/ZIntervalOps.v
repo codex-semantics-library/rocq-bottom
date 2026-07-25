@@ -81,7 +81,7 @@ Definition backward_interval_sub_right (i2 i1 i0 : interval) : interval :=
     no extra reasoning: it is the pair of the two independent meets. *)
 
 Definition refine_itv (old new : interval) : option interval :=
-  if interval_beq new old then None else Some new.
+  if interval_equal new old then None else Some new.
 
 Definition impl_backward_interval_add (i2 i1 i0 : interval)
   : option interval * option interval :=
