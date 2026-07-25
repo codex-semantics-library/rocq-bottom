@@ -104,6 +104,12 @@ Proof.
   move: i => [[[|l] [|h]] P] //=.
 Qed.
 
+(** Set-level form of [gamma_nbitv_gamma_itv], for rewriting a whole
+    concretization (rather than a membership) when transporting a result
+    proved on [nbitv] down to the raw carrier. *)
+Lemma gamma_nbitv_gamma_itv_set (i : nb_interval) : γ[nbitv] i ⊆⊇ γ[itv] (`i).
+Proof. split=> c; by rewrite gamma_nbitv_gamma_itv. Qed.
+
 
 
 Instance glb_gammaP: forall l z, AutoReflect(z ∈ γ[glb] l)(glb_gammab l z).
@@ -368,6 +374,48 @@ Qed.
 
 Global Instance itv_join_is_lub : JoinIsLUB itv :=
   IntervalUnbounded.IntervalUnbounded_JoinIsLUB Z_CL.
+
+(** ** Meet.
+
+    [meet_itv] is *exact*: it concretizes to the intersection. Contrast with the
+    join, which only over-approximates the union.
+
+    In calculational derivations, it allows turns the [∩] introduced by inverting the
+    operation into an abstract operation without loss of precision. *)
+
+Lemma meet_itv_eq_al_meet (i1 i2 : interval) : meet_itv i1 i2 = i1 ⊓[itv] i2.
+Proof. by move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]]. Qed.
+
+Lemma meet_itv_exact (i1 i2 : interval) :
+  γ[itv] (meet_itv i1 i2) ⊆⊇ γ[itv] i1 ∩ γ[itv] i2.
+Proof.
+  move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]];
+    unfold_set_equiv => c; unfold_set; simpl; lia.
+Qed.
+
+(** The meet is a lower bound in the abstract order. *)
+Lemma meet_itv_lower_bound_l (i1 i2 : interval) : meet_itv i1 i2 ⊑[itv] i1.
+Proof.
+  apply/is_includedP.
+  move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]] //=;
+    repeat (apply/andP; split=> //); apply/Z.leb_spec0; lia.
+Qed.
+
+(** ** Structural equality of intervals. *)
+
+Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (bound_equal a b).
+Proof.
+  case: a => [|x]; case: b => [|y] /=; try by constructor.
+  case: (Z.eqb_spec x y) => [->|Hne]; constructor=> //. by case.
+Qed.
+
+Lemma interval_equalP (i1 i2 : interval) : reflect (i1 = i2) (interval_equal i1 i2).
+Proof.
+  move: i1 i2 => [l1 h1] [l2 h2] /=.
+  case: (bound_equalP l1 l2) => [->|Hl] /=; last by constructor => - [].
+  case: (bound_equalP h1 h2) => [->|Hh] /=; first by constructor.
+  by constructor => - [].
+Qed.
 
 (** Non-bottom intervals: non_bottom is equivalent to non-empty concretization. *)
 Lemma non_bottom_non_empty:
