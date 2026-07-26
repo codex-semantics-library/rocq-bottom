@@ -1,11 +1,20 @@
-; OCaml extraction of the quadrivalent domain.
+; The OCaml side of the development. Nothing is built from this directory
+; itself; it exists to hold the extraction and the libraries, and to stop
+; the parent theory's (include_subdirs qualified) recursion — without the
+; stanza below, the RocqBottom theory would try to claim extraction/
+; extract.v as one of its modules and dune would abort on directory load.
 ;
-; The prelude quadrivalentextract.v is compiled (in dune's DuneExtraction
-; namespace) and `Separate Extraction` emits one .ml/.mli per module below.
-; (mode promote) copies the generated files back into this source directory,
-; so they sit next to any hand-written OCaml.
-(coq.extraction
- (prelude quadrivalentextract)
- (theories RocqBottom Stdlib)
- (extracted_modules Datatypes Quadrivalent QuadrivalentTheory OpsComp)
- (mode promote))
+;   extraction/PrimitiveExtraction.v: Rocq primitives -> OCaml primitives
+;   extraction/driver/       the single (coq.extraction)
+;   abstractioncombination/  \
+;   quadrivalent/             |  one library per node of the Rocq module
+;   tf_quadrivalent/          |
+;   zinterval/                |  graph, each owning the modules it defines
+;   tf_zinterval/            /   and copying them out of extraction/driver
+;
+; Each library's .ml/.mli are checked in and are the deliverable: they
+; build without Rocq. `dune build` refreshes them in place via
+; (copy_files (mode promote)), so a proof change that alters a transfer
+; function shows up as a plain `git diff` (no need for manual calls
+; to dune promote).
+(include_subdirs no)
