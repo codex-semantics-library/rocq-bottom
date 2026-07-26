@@ -341,7 +341,7 @@ Qed.
 Module Type ABSTRACT_JOIN_SEMILATTICE.
   Include ABSTRACT_DOMAIN.
 
-  Parameter equal: t -> t -> bool.
+  Parameter equiv: t -> t -> bool.
   Parameter join: t -> t -> t.
 End ABSTRACT_JOIN_SEMILATTICE.
 
