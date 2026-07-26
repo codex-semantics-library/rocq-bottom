@@ -1410,8 +1410,7 @@ Ltac overapproximation_proof :=
 Module Type ABSTRACT_DOMAIN.
   Parameter t: Type.      (* The type of abstract elements. *)
   Parameter concr: Type.  (* The type of concrete elements. *)
-  Parameter ad: abstract_domain concr.
-  Axiom ad_car_ad_eq_t : ad_car ad = t.
+  Parameter singleton: concr -> t.  (* Exact abstraction of one value. *)
   Parameter is_included: t -> t -> bool.
   (* Optional: printing function, quickcheck generators, implementation of gamma. *)
 End ABSTRACT_DOMAIN.
