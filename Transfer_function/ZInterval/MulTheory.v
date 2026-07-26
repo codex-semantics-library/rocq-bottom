@@ -981,4 +981,24 @@ Section Interval_mul.
               (interval_mul_opt_alpha_complete i2 i1 _ _ Hnb1 Hnb2 Hex2 Hex1)).
   Qed.
 
+  (** Soundness on the raw carrier, unconditionally. [interval_mul_opt_best]
+      needs both operands non-bottom, but the two concrete witnesses that
+      [binary_overapproximation] hands us establish exactly that. *)
+  Lemma interval_mul_opt_sound:
+    binary_overapproximation itv itv itv interval_mul_opt
+      (collecting_binary_forward Z.mul).
+  Proof.
+    overapproximation_proof.
+    have Hnb2 : non_bottom a2 by apply/non_bottom_non_empty; exists c2.
+    have Hnb1 : non_bottom a1 by apply/non_bottom_non_empty; exists c1.
+    have HB := interval_mul_opt_best a2 a1 Hnb1 Hnb2.
+    apply: best_abstraction_overapproximates.
+    unfold_set.
+    by exists c2, c1.
+  Qed.
+
+  (** Lift to non-bottom intervals, as [nb_interval_add]/[nb_interval_sub]. *)
+  Definition nb_interval_mul :=
+    non_bottom_lift_total_binary interval_mul_opt Z.mul (Hsound:=interval_mul_opt_sound).
+
 End Interval_mul.
