@@ -2,6 +2,8 @@
 From Stdlib Require Import Utf8.
 From Stdlib Require Export RelationClasses.
 From Stdlib Require Import Relations.
+From Stdlib Require Export Setoid.
+From Stdlib Require Export Classes.Morphisms. (** Setoid rewriting for [⊆⊇] and [⊆]. *)
 
 Require Import ssreflect.
 
@@ -170,6 +172,45 @@ Proof.
   - move=> A. split; reflexivity.
   - by move=> A B [HAB HBA].
   - move=> X Y Z [HXY HYX] [HYZ HZY]. split; by transitivity Y.
+Qed.
+
+(** [∪] and [∩] as morphisms for the equivalence [⊆⊇]: rewriting one
+    operand by an equivalent set preserves equivalence. Important for
+    rewriting of set equations. The [⊆] morphisms are further below. *)
+Global Instance propset_intersection_proper {C:Type}:
+  Proper ((⊆⊇) ==> (⊆⊇) ==> (⊆⊇)) (@propset_intersection C).
+Proof.
+  move=> A A' [HA HA'] B B' [HB HB']; split=> c;
+    rewrite !propset_elem_of_iff; move=> [H1 H2]; split; auto.
+Qed.
+
+Global Instance propset_union_proper {C:Type}:
+  Proper ((⊆⊇) ==> (⊆⊇) ==> (⊆⊇)) (@propset_union C).
+Proof.
+  move=> A A' [HA HA'] B B' [HB HB']; split=> c;
+    rewrite !propset_elem_of_iff; move=> [H|H]; by [left; auto | right; auto].
+Qed.
+
+Global Instance propset_subseteq_proper {C:Type}:
+  Proper ((⊆⊇) ==> (⊆⊇) ==> iff) (@propset_subseteq C).
+Proof.
+  move=> A A' [HA HA'] B B' [HB HB']; split => Hsub c Hc; auto.
+Qed.
+
+(** [∪] and [∩] as morphisms for the preorder [⊆]. Important for weakening
+    rewrites. *)
+Global Instance propset_intersection_mono {C:Type}:
+  Proper ((⊆) ==> (⊆) ==> (⊆)) (@propset_intersection C).
+Proof.
+  move=> A A' HA B B' HB c; rewrite !propset_elem_of_iff.
+  move=> [H1 H2]; split; auto.
+Qed.
+
+Global Instance propset_union_mono {C:Type}:
+  Proper ((⊆) ==> (⊆) ==> (⊆)) (@propset_union C).
+Proof.
+  move=> A A' HA B B' HB c; rewrite !propset_elem_of_iff.
+  move=> [H|H]; by [left; auto | right; auto].
 Qed.
 
 
