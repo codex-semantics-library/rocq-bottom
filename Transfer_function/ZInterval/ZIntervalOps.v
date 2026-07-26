@@ -11,7 +11,7 @@
 From Stdlib Require Import ZArith.
 Require Import
   Abstraction AbstractionCombination
-  QuadrivalentTheory
+  Quadrivalent
   ZInterval.
 
 Open Scope Z_scope.
