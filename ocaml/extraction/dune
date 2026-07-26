@@ -1,0 +1,14 @@
+; PrimitiveExtraction.v cannot live in the same directory as a driver. dune wires a theory's
+; load path into a coq.extraction in a *descendant* directory only, so a
+; theory declared beside a prelude is invisible to it — and a theory whose
+; include_subdirs walk reaches a prelude makes dune abort with an internal
+; error. Hence: theory here, driver one level down.
+;
+; That also makes possible a second driver later, reusing this layer rather than restating it.
+
+(include_subdirs no)
+
+(coq.theory
+ (name RocqBottomExtr)
+ (theories Stdlib)
+ (modules PrimitiveExtraction))
