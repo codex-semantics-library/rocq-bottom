@@ -52,8 +52,8 @@ Proof.
   repeat constructor; subst; done.
 Qed.
 
-Instance qv_sqsubseteq: SqSubsetEq quadrivalent := qv_sqsubseteqb.
-Instance qv_sqsubseteqP q1 q2: AutoReflect(q1 ⊑ q2)(qv_sqsubseteqb q1 q2).
+Instance qv_sqsubseteq: SqSubsetEq quadrivalent := is_included.
+Instance qv_sqsubseteqP q1 q2: AutoReflect(q1 ⊑ q2)(is_included q1 q2).
 Proof. 
   apply: (iffP idP); done.
 Qed.
@@ -85,22 +85,22 @@ Proof.
   exact Hr2.
 Qed.
 
-Instance qv_sqsubseteq_gammaP q1 q2: AutoReflect(q1 ⊑γ q2)(qv_sqsubseteqb q1 q2).
+Instance qv_sqsubseteq_gammaP q1 q2: AutoReflect(q1 ⊑γ q2)(is_included q1 q2).
 Proof.
   (* to_set. *)
   evar (b:bool).
   (* We synthesize a decision procedure from the definition of q1 ⊑γ q2.  *)
   eassert(Hr:AutoReflect(γ q1 ⊆ γ q2) b) by apply _.
-  (* Computationally, we check that it corresponds to qv_sqsubseteqb. *)
-  assert(Hb:b = qv_sqsubseteqb q1 q2) by (destruct q1,q2; reflexivity).
+  (* Computationally, we check that it corresponds to is_included. *)
+  assert(Hb:b = is_included q1 q2) by (destruct q1,q2; reflexivity).
   rewrite Hb in Hr. exact Hr.
 Qed.
 
 Lemma qv_sqsubseteq_exact q1 q2: q1 ⊑ q2 <-> q1 ⊑γ q2.
 Proof.
   (* The boolean versions reflect both properties, so they are equal. *)
-  have R1: reflect(q1 ⊑ q2)(qv_sqsubseteqb q1 q2) by apply qv_sqsubseteqP.
-  have R2: reflect(q1 ⊑γ q2)(qv_sqsubseteqb q1 q2) by apply qv_sqsubseteq_gammaP.
+  have R1: reflect(q1 ⊑ q2)(is_included q1 q2) by apply qv_sqsubseteqP.
+  have R2: reflect(q1 ⊑γ q2)(is_included q1 q2) by apply qv_sqsubseteq_gammaP.
   apply Bool.reflect_iff in R1.
   apply Bool.reflect_iff in R2.
   by rewrite R1 R2.
@@ -187,8 +187,8 @@ Proof.
   - move=> Hq. repeat split; by apply /H.
 Qed.
 
-Lemma eqP q1 q2 : reflect (q1 = q2) (eqb q1 q2).
-Proof. rewrite /eqb.
+Lemma eqP q1 q2 : reflect (q1 = q2) (equiv q1 q2).
+Proof. rewrite /equiv.
        by case: dec; constructor.
 Qed.
 

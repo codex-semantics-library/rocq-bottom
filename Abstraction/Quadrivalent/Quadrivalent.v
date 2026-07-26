@@ -17,7 +17,11 @@ Inductive quadrivalent :=
 (* Definition t: Type := ad. *)
 Definition t: Type := quadrivalent.
 
-Definition qv_sqsubseteqb q1 q2 :=
+(** Exact abstraction of a single concrete boolean. [concr] itself is in
+    [QuadrivalentTheory.v], next to the abstraction it names. *)
+Definition singleton (b : bool) : quadrivalent := if b then QTrue else QFalse.
+
+Definition is_included q1 q2 :=
   match q1,q2 with
   | QBottom, _ => true
   | _, QTop => true
@@ -25,8 +29,6 @@ Definition qv_sqsubseteqb q1 q2 :=
   | QFalse,QFalse => true
   | _,_ => false
   end.
-
-Definition is_included := qv_sqsubseteqb.
 
 (** * Conversion from may_be_true/may_be_false to quadrivalent. *)
 
@@ -43,13 +45,11 @@ Definition to_quadrivalent (may_true may_false : bool) : quadrivalent :=
 Definition dec (q1 q2 : quadrivalent) : {q1 = q2} + {q1 <> q2}.
 Proof. decide equality. Defined.
 
-Definition eqb q1 q2 := if dec q1 q2 then true else false.
-
-Definition equal := eqb.
+Definition equiv q1 q2 := if dec q1 q2 then true else false.
 
 (** Simple decidable equality: a direct pattern match that reduces
     even when the arguments are symbolic [match] expressions.
-    Unlike [eqb], this avoids the [decide equality] complexity
+    Unlike [equiv], this avoids the [decide equality] complexity
     that blocks [solve_with_autoreflect]. *)
 Definition qv_eqb (q1 q2 : quadrivalent) : bool :=
   match q1, q2 with
