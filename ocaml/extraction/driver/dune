@@ -1,0 +1,17 @@
+; The single coq.extraction of the project. Output goes to _build; the
+; library directories under ../.. pull their own modules out of here with
+; (copy_files (mode promote)).
+;
+; (extracted_modules) lists every module some library wants. The Stdlib
+; residue extraction also writes here — BinInt, BinNums, PosDef, NatDef,
+; Datatypes, Specif, and the innards of the Z operations — is deliberately
+; absent: naming it nowhere is what keeps it out of the repository, and it
+; is why ../PrimitiveExtraction.v does not bother realizing those modules
+; down to empty.
+
+(include_subdirs no)
+
+(coq.extraction
+ (prelude extract)
+ (theories RocqBottom RocqBottomExtr Stdlib)
+ (extracted_modules Quadrivalent QuadrivalentOps))
