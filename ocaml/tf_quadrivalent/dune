@@ -1,0 +1,18 @@
+; Transfer_function/Quadrivalent — the boolean transfer functions over the
+; quadrivalent domain, forward and backward.
+;
+; Boolean_Forward and Boolean_Backward come out as nested OCaml modules
+; because they are named as extraction roots: the grouping is deliberate,
+; it is what an ARITY functor gets applied to.
+
+(include_subdirs no)
+
+(library
+ (name rocqbottom_tf_quadrivalent)
+ (libraries rocqbottom_quadrivalent)
+ (modules QuadrivalentOps)
+ ; Extracted code is not idiomatic OCaml: unused opens/variables and
+ ; non-exhaustive-looking matches are normal and must not fail the build.
+ (flags (:standard -w -a -open Rocqbottom_quadrivalent)))
+
+(copy_files (mode promote) (files ../extraction/driver/{QuadrivalentOps}.ml*))
