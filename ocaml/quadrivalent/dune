@@ -1,0 +1,18 @@
+; Abstraction/Quadrivalent — the four-valued boolean domain. This is the
+; `boolean` of the GOAL signature: every domain's comparison operators
+; return it, which is exactly why it is its own library rather than a copy
+; inside each domain.
+
+(include_subdirs no)
+
+(library
+ (name rocqbottom_quadrivalent)
+ (libraries zarith)
+ (modules Quadrivalent)
+ (flags (:standard -w -a)))
+
+; Extraction writes into _build; this copies our modules into the source
+; tree on every build. (mode promote) means `dune build` overwrites them,
+; so a hand-edit does not survive and a proof change shows up as a plain
+; `git diff` — git is the record of what the OCaml is supposed to be.
+(copy_files (mode promote) (files ../extraction/driver/{Quadrivalent}.ml*))
