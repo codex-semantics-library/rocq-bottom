@@ -3,7 +3,7 @@
    and the sign classifiers. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZIntervalTheory.v].
 
-   [non_bottom], [min_opt], [max_opt], [join_itv] and the [*_gammab]
+   [non_bottom], [join_lb], [join_ub], [join_itv] and the [*_gammab]
    membership tests are written here as direct matches on the bounds rather
    than as instances of the generic BoundLattice constructions, which would
    drag the [Z_CL] concrete-lattice record (and its proof fields) into this
@@ -55,13 +55,13 @@ Definition lubtop_is_includedb a2 a1 :=
 Definition itv_is_includedb (a2 a1: interval) := 
   let (l2,h2) := a2 in let (l1,h1) := a1 in glbtop_is_includedb l2 l1 && lubtop_is_includedb h2 h1.
 
-Definition min_opt (a b : WithTop.with_top Z) : WithTop.with_top Z :=
+Definition join_lb (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   match a, b with
   | WithTop.Top, _ | _, WithTop.Top => WithTop.Top
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.min x y)
   end.
 
-Definition max_opt (a b : WithTop.with_top Z) : WithTop.with_top Z :=
+Definition join_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   match a, b with
   | WithTop.Top, _ | _, WithTop.Top => WithTop.Top
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.max x y)
@@ -70,7 +70,7 @@ Definition max_opt (a b : WithTop.with_top Z) : WithTop.with_top Z :=
 Definition join_itv (i1 i2 : interval) : interval :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
-  (min_opt l1 l2, max_opt h1 h2).
+  (join_lb l1 l2, join_ub h1 h2).
 
 (** Meet. Unlike the join, the meet is *exact*: [γ (meet_itv i1 i2)] is exactly
     [γ i1 ∩ γ i2] ([meet_itv_exact]). This is what makes the calculated

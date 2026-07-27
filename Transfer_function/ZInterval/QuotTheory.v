@@ -735,7 +735,7 @@ Section Interval_quot.
         interval_quot_pos_neg, interval_quot_pos, interval_opp,
         neg_bound, quot_bound, join_itv;
       unfold Conjunction.join; simpl;
-      unfold min_opt, max_opt; simpl;
+      unfold join_lb, join_ub; simpl;
       simpl in Hl1; unfold_set in Hl1;
       simpl in Hh1; unfold_set in Hh1;
       simpl in Hnb2;
