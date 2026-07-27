@@ -32,7 +32,7 @@ Definition nb_interval: Type := { i: interval | non_bottom i }.
 
 (** A specific γ-empty interval, [(NotTop 1, NotTop 0)], representing
     the empty set of integers. Used as a result in division-by-zero. *)
-Definition bottom := (WithTop.NotTop 1, WithTop.NotTop 0).
+Definition bottom : interval := (WithTop.NotTop 1, WithTop.NotTop 0).
 
 Definition glbtop_is_includedb a2 a1 := 
   match a1 with
