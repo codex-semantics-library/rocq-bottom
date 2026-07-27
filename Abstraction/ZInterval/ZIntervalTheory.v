@@ -609,6 +609,15 @@ Proof.
       lia.
 Qed.
 
+(** [ZInterval.singleton k] contains [k]. *)
+Lemma gamma_itv_singleton k : k ∈ γ[itv] (ZInterval.singleton k).
+Proof.
+  have Hspec : forall z, z ∈ γ[itv] (WithTop.NotTop k, WithTop.NotTop k) <-> z = k.
+  { apply (proj1 (is_singleton_spec (WithTop.NotTop k) (WithTop.NotTop k) k)).
+    simpl. by rewrite Z.eqb_refl. }
+  by apply (proj2 (Hspec k)).
+Qed.
+
 Lemma is_singleton_None_two l h :
   non_bottom (l, h) -> ZInterval.is_singleton (l, h) = None ->
   exists z1 z2, z1 ∈ γ[itv] (l, h) /\ z2 ∈ γ[itv] (l, h) /\ z1 <> z2.

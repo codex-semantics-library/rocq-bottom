@@ -27,7 +27,7 @@ Extraction Inline ssrbool.is_left.
 Module Concrete := Datatypes.
 
 From RocqBottom Require Import Quadrivalent.
-From RocqBottom Require Import ZInterval ZIntervalTheory.
+From RocqBottom Require Import ZInterval ZIntervalTheory ZIntervalAPI.
 From RocqBottom Require Import Transfer_function.Quadrivalent.QuadrivalentOps.
 From RocqBottom Require Import Transfer_function.ZInterval.ZIntervalOps.
 From RocqBottom Require Import Transfer_function.ZInterval.API.
@@ -89,3 +89,12 @@ Separate Extraction
 
   ZInterval.interval ZInterval.nb_interval
 
+  (* Level 3, the split-aware presentation. Members are listed one by one on
+     purpose: rooting the whole module also extracts [gamma_ne]/[gamma_pe],
+     whose [propset] is Type-valued and so is not erased, and the resulting
+     [open AbstractLattice] does not compile. *)
+  ZIntervalAPI.non_empty ZIntervalAPI.possibly_empty
+  ZIntervalAPI.singleton ZIntervalAPI.is_included
+  ZIntervalAPI.embed ZIntervalAPI.is_non_empty
+  ZIntervalAPI.refine
+  ZIntervalAPI.equiv ZIntervalAPI.join ZIntervalAPI.meet.
