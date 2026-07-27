@@ -575,9 +575,9 @@ Proof.
 Qed.
 
 Lemma is_singleton_spec l h x :
-  is_singleton (l, h) = Some x <-> (forall z, z ∈ γ[itv] (l, h) <-> z = x).
+  ZInterval.is_singleton (l, h) = Some x <-> (forall z, z ∈ γ[itv] (l, h) <-> z = x).
 Proof.
-  rewrite /is_singleton.
+  rewrite /ZInterval.is_singleton.
   destruct l as [|l']; destruct h as [|h'].
   - split => // Hall.
     have Hx1 : x + 1 = x by apply (proj1 (Hall (x+1))); unfold_set.
@@ -610,7 +610,7 @@ Proof.
 Qed.
 
 Lemma is_singleton_None_two l h :
-  non_bottom (l, h) -> is_singleton (l, h) = None ->
+  non_bottom (l, h) -> ZInterval.is_singleton (l, h) = None ->
   exists z1 z2, z1 ∈ γ[itv] (l, h) /\ z2 ∈ γ[itv] (l, h) /\ z1 <> z2.
 Proof.
   move=> /non_bottom_non_empty [c Hc] Hns.
@@ -619,20 +619,20 @@ Proof.
   - exists 0, 1. unfold_set; simpl; lia.
   - exists h', (h' - 1). unfold_set; simpl; lia.
   - exists l', (l' + 1). unfold_set; simpl; lia.
-  - rewrite /is_singleton in Hns.
+  - rewrite /ZInterval.is_singleton in Hns.
     case: (Z.eqb_spec l' h') Hns => [//|Hne _].
     exists l', h'. unfold_set; simpl; lia.
 Qed.
 
-(** From [is_singleton (l, h) <> Some x], produce an element of γ
+(** From [ZInterval.is_singleton (l, h) <> Some x], produce an element of γ
     distinct from [x]. Lets us reduce the four-way case split in
     [may_be_false_eqb_exact] to a uniform "find a witness avoiding y". *)
 Lemma is_singleton_witness_not_x l h x :
-  non_bottom (l, h) -> is_singleton (l, h) <> Some x ->
+  non_bottom (l, h) -> ZInterval.is_singleton (l, h) <> Some x ->
   exists c, c ∈ γ[itv] (l, h) /\ c <> x.
 Proof.
   move=> Hnb Hns.
-  case Hs: (is_singleton (l, h)) Hns => [y|] Hns.
+  case Hs: (ZInterval.is_singleton (l, h)) Hns => [y|] Hns.
   - exists y.  move/is_singleton_spec: Hs => Hs.
     split; by [apply Hs| congruence].
   - have [z1 [z2 [Hz1 [Hz2 Hne]]]] := is_singleton_None_two _ _ Hnb Hs.

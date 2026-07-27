@@ -191,7 +191,7 @@ Definition interval_quot_across_across (i2 i1 : interval) : interval :=
 
 Definition interval_quot_full (i2 i1 : interval) : interval :=
   match classify_divisor i1 with
-  | DivZero => bottom
+  | DivZero => ZInterval.bottom
   | DivPos i1_san =>
       match classify i2 with
       | Pos    => interval_quot_pos i2 i1_san
@@ -220,7 +220,7 @@ Definition interval_quot_full (i2 i1 : interval) : interval :=
     - [c2 = 0] annihilates [c1]: if [0] can be both an operand and the
       result, nothing whatsoever can be learned. Dividing regardless
       would be *unsound*, because [interval_quot_full] excludes [0] from
-      its divisor (and answers [bottom] on [[0,0]]), so the guard below
+      its divisor (and answers [ZInterval.bottom] on [[0,0]]), so the guard below
       is not an optimisation but a correctness requirement.
 
     - Divisibility is not expressible: from [2 * c1 = 1] there is no
@@ -400,7 +400,7 @@ Definition may_be_true_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
   end.
 
 Definition may_be_false_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
-  match is_singleton (l1, h1), is_singleton (l2, h2) with
+  match ZInterval.is_singleton (l1, h1), ZInterval.is_singleton (l2, h2) with
   | Some x1, Some x2 => negb (Z.eqb x1 x2)
   | _, _ => true
   end. 
@@ -425,7 +425,7 @@ Definition nbinterval_eqb_unopt (i2 i1 : nb_interval) : quadrivalent :=
 Definition interval_eqb_opt (i2 i1 : interval) : quadrivalent :=
   let (l2, h2) := i2 in
   let (l1, h1) := i1 in
-  match is_singleton (l1, h1), is_singleton (l2, h2) with
+  match ZInterval.is_singleton (l1, h1), ZInterval.is_singleton (l2, h2) with
   | Some x1, Some x2 => if Z.eqb x1 x2 then QTrue else QFalse
   | _, _ => if may_be_true_eqb l1 h1 l2 h2 then QTop else QFalse
   end.
