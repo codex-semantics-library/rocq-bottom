@@ -60,16 +60,16 @@ Definition interval_sub (i1 i2 : interval) : interval :=
     is [fun c0 c2 => c2 - c0], not [Z.sub]. *)
 
 Definition backward_interval_add_left (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i2 (interval_sub i0 i1).
+  ZInterval.meet i2 (interval_sub i0 i1).
 
 Definition backward_interval_add_right (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i1 (interval_sub i0 i2).
+  ZInterval.meet i1 (interval_sub i0 i2).
 
 Definition backward_interval_sub_left (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i2 (interval_add i0 i1).
+  ZInterval.meet i2 (interval_add i0 i1).
 
 Definition backward_interval_sub_right (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i1 (interval_sub i2 i0).
+  ZInterval.meet i1 (interval_sub i2 i0).
 
 (** ** Low-level refinement interface.
 
@@ -81,7 +81,7 @@ Definition backward_interval_sub_right (i2 i1 i0 : interval) : interval :=
     no extra reasoning: it is the pair of the two independent meets. *)
 
 Definition refine_itv (old new : interval) : option interval :=
-  if ZInterval.itv_equal new old then None else Some new.
+  if ZInterval.equiv new old then None else Some new.
 
 Definition impl_backward_interval_add (i2 i1 i0 : interval)
   : option interval * option interval :=
@@ -115,7 +115,7 @@ Definition interval_mul_opt (i2 i1: interval) : interval :=
   | Across, Pos => (m l1 h2, m h1 h2)
   | Neg, Across => (m l1 h2, m l1 l2)
   | Across, Neg => (m h1 l2, m l1 l2)
-  | Across, Across => ZInterval.itv_join (m l1 h2, m l1 l2) (m h1 l2, m h1 h2)
+  | Across, Across => ZInterval.join (m l1 h2, m l1 l2) (m h1 l2, m h1 h2)
   end.
 
 (** * Z.quot. See [QuotTheory.v]. *)
@@ -152,12 +152,12 @@ Definition interval_quot_neg_neg (i2 i1 : interval) : interval :=
     Split the dividend at 0. *)
 
 Definition interval_quot_across_pos (i2 i1 : interval) : interval :=
-  ZInterval.itv_join
+  ZInterval.join
     (interval_quot_neg_pos (fst i2, WithTop.NotTop 0) i1)
     (interval_quot_pos (WithTop.NotTop 0, snd i2) i1).
 
 Definition interval_quot_across_neg (i2 i1 : interval) : interval :=
-  ZInterval.itv_join
+  ZInterval.join
     (interval_quot_neg_neg (fst i2, WithTop.NotTop 0) i1)
     (interval_quot_pos_neg (WithTop.NotTop 0, snd i2) i1).
 
@@ -166,13 +166,13 @@ Definition interval_quot_across_neg (i2 i1 : interval) : interval :=
 
 Definition interval_quot_pos_across (i2 i1 : interval) : interval :=
   let (l1, h1) := i1 in
-  ZInterval.itv_join
+  ZInterval.join
     (interval_quot_pos_neg i2 (l1, WithTop.NotTop (-1)))
     (interval_quot_pos i2 (WithTop.NotTop 1, h1)).
 
 Definition interval_quot_neg_across (i2 i1 : interval) : interval :=
   let (l1, h1) := i1 in
-  ZInterval.itv_join
+  ZInterval.join
     (interval_quot_neg_neg i2 (l1, WithTop.NotTop (-1)))
     (interval_quot_neg_pos i2 (WithTop.NotTop 1, h1)).
 
@@ -185,7 +185,7 @@ Definition interval_quot_neg_across_opt (i2 i1 : interval) : interval :=
 
 Definition interval_quot_across_across (i2 i1 : interval) : interval :=
   let (l2, h2) := i2 in
-  ZInterval.itv_join
+  ZInterval.join
     (interval_quot_neg_across_opt (l2, WithTop.NotTop 0) i1)
     (interval_quot_pos_across_opt (WithTop.NotTop 0, h2) i1).
 
@@ -243,7 +243,7 @@ Definition interval_mul_solve (i0 i2 : interval) : interval :=
   else interval_quot_full i0 i2.
 
 Definition backward_interval_mul_right (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i1 (interval_mul_solve i0 i2).
+  ZInterval.meet i1 (interval_mul_solve i0 i2).
 
 (** [Z.mul] is commutative, so the left refinement is the right one with
     the operands swapped. *)
@@ -313,7 +313,7 @@ Definition interval_quot_solve_left (i1 i0 : interval) : interval :=
   interval_add (interval_mul_opt i0 i1) (quot_slack_signed i1 i0).
 
 Definition backward_interval_quot_left (i2 i1 i0 : interval) : interval :=
-  ZInterval.itv_meet i2 (interval_quot_solve_left i1 i0).
+  ZInterval.meet i2 (interval_quot_solve_left i1 i0).
 
 (** Magnitude bounds on the members of an interval. [itv_max_abs] is
     [None] when the interval is unbounded; [itv_min_abs] falls back to
@@ -350,7 +350,7 @@ Definition quot_divisor_bound (i2 i0 : interval) : interval :=
   end.
 
 Definition backward_interval_quot_right (i2 i1 i0 : interval) : interval :=
-  itv_remove_zero (ZInterval.itv_meet i1 (quot_divisor_bound i2 i0)).
+  itv_remove_zero (ZInterval.meet i1 (quot_divisor_bound i2 i0)).
 
 Definition impl_backward_interval_quot (i2 i1 i0 : interval)
   : option interval * option interval :=

@@ -431,7 +431,7 @@ Section Interval_mul.
     IsAlpha (A:=itv) (l2neg, WithTop.NotTop m) S2n ->
     IsAlpha (A:=itv) (WithTop.NotTop p, h2) S2p ->
     IsAlpha (A:=itv)
-      ( ZInterval.itv_join
+      ( ZInterval.join
           (interval_opp (interval_mul_pos (WithTop.NotTop l1, h1)
                            (interval_opp (l2neg, WithTop.NotTop m))))
           (interval_mul_pos (WithTop.NotTop l1, h1) (WithTop.NotTop p, h2)) )
@@ -479,9 +479,9 @@ Section Interval_mul.
       first [ done | move=> *; exfalso; lia ].
   Qed.
 
-  (** [ZInterval.itv_join] is componentwise [ZInterval.join_lb] / [ZInterval.join_ub]. *)
+  (** [ZInterval.join] is componentwise [ZInterval.join_lb] / [ZInterval.join_ub]. *)
   Lemma itv_join_pair (a b c d : WithTop.with_top Z) :
-    ZInterval.itv_join (a, b) (c, d) = (ZInterval.join_lb a c, ZInterval.join_ub b d).
+    ZInterval.join (a, b) (c, d) = (ZInterval.join_lb a c, ZInterval.join_ub b d).
   Proof. reflexivity. Qed.
 
   (** Sign facts and negation identities for [bound_mul] / [neg_bound]. *)
@@ -536,7 +536,7 @@ Section Interval_mul.
     (l1 m p : Z) (h1 l2 h2 : WithTop.with_top Z) :
     0 <= l1 -> m <= 0 -> 0 <= p ->
     0 ∈ γ[glbtop] l2 -> 0 ∈ γ[lubtop] h2 -> 0 ∈ γ[lubtop] h1 ->
-    ZInterval.itv_join
+    ZInterval.join
       (interval_opp (interval_mul_pos (WithTop.NotTop l1, h1)
                        (interval_opp (l2, WithTop.NotTop m))))
       (interval_mul_pos (WithTop.NotTop l1, h1) (WithTop.NotTop p, h2))
@@ -548,7 +548,7 @@ Section Interval_mul.
       case: l1 Hl1 => [|l1|l1] Hl1; case: m Hm => [|m|m] Hm;
       case: p Hp => [|p|p] Hp;
       rewrite /interval_mul_pos /interval_opp /neg_bound /bound_mul /high_inf
-              /to_high /mul_inf /ZInterval.itv_join /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
+              /to_high /mul_inf /ZInterval.join /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
               /WithTop.lift2 /=;
       move: Hl1 Hm Hp Hl2 Hh2 Hh1; unfold_set => /= *;
       try (exfalso; lia); try done;
@@ -570,7 +570,7 @@ Section Interval_mul.
     IsAlpha (A:=itv) (l2, h2) S2 ->
     (forall m p, m <= 0 -> 0 <= p ->
        IsAlpha (A:=itv)
-         (ZInterval.itv_join
+         (ZInterval.join
             (interval_opp (interval_mul_pos (WithTop.NotTop l1, h1)
                              (interval_opp (l2, WithTop.NotTop m))))
             (interval_mul_pos (WithTop.NotTop l1, h1) (WithTop.NotTop p, h2)))
@@ -685,7 +685,7 @@ Section Interval_mul.
     IsAlpha (A:=itv) (l1, h1) S1 ->
     IsAlpha (A:=itv) (l2, h2) S2 ->
     IsAlpha (A:=itv)
-      (ZInterval.itv_join
+      (ZInterval.join
          (interval_opp (bound_mul l2 (neg_bound l1), bound_mul h2 (neg_bound l1)))
          (bound_mul l2 h1, bound_mul h2 h1))
       (collecting_binary_forward Z.mul S1 S2).
@@ -739,7 +739,7 @@ Section Interval_mul.
     match b with WithTop.NotTop z => z | WithTop.Top => 0 end.
 
   (** Interval multiplication expressed in the "mathematical" vocabulary
-      (to_high, mul_inf, high_inf, neg_bound, interval_opp, ZInterval.itv_join).
+      (to_high, mul_inf, high_inf, neg_bound, interval_opp, ZInterval.join).
       Each branch directly matches the corresponding _best lemma statement. *)
   Definition interval_mul_math (i2 i1 : interval) : interval :=
     let (l1,h1) := i1 in
@@ -761,7 +761,7 @@ Section Interval_mul.
            to_high (mul_inf (high_inf (neg_bound l2)) (high_inf h1)))
     | Pos, Across =>
         let l := extract_z l1 in
-        ZInterval.itv_join
+        ZInterval.join
           (interval_opp
              (WithTop.NotTop (0 * l),
               to_high (mul_inf (high_inf (neg_bound l2)) (high_inf h1))))
@@ -769,7 +769,7 @@ Section Interval_mul.
            to_high (mul_inf (high_inf h1) (high_inf h2)))
     | Neg, Across =>
         let h := extract_z h1 in
-        ZInterval.itv_join
+        ZInterval.join
           (WithTop.NotTop (h * 0),
            to_high (mul_inf (high_inf (neg_bound l1)) (high_inf (neg_bound l2))))
           (interval_opp
@@ -777,7 +777,7 @@ Section Interval_mul.
               to_high (mul_inf (high_inf (neg_bound l1)) (high_inf h2))))
     | Across, Pos =>
         let l := extract_z l2 in
-        ZInterval.itv_join
+        ZInterval.join
           (interval_opp
              (WithTop.NotTop (0 * l),
               to_high (mul_inf (high_inf (neg_bound l1)) (high_inf h2))))
@@ -785,21 +785,21 @@ Section Interval_mul.
            to_high (mul_inf (high_inf h2) (high_inf h1)))
     | Across, Neg =>
         let h := extract_z h2 in
-        ZInterval.itv_join
+        ZInterval.join
           (WithTop.NotTop (h * 0),
            to_high (mul_inf (high_inf (neg_bound l2)) (high_inf (neg_bound l1))))
           (interval_opp
              (WithTop.NotTop ((-h) * 0),
               to_high (mul_inf (high_inf (neg_bound l2)) (high_inf h1))))
     | Across, Across =>
-        ZInterval.itv_join
-          (ZInterval.itv_join
+        ZInterval.join
+          (ZInterval.join
              (WithTop.NotTop 0,
               to_high (mul_inf (high_inf (neg_bound l2)) (high_inf (neg_bound l1))))
              (interval_opp
                 (WithTop.NotTop 0,
                  to_high (mul_inf (high_inf (neg_bound l2)) (high_inf h1)))))
-          (ZInterval.itv_join
+          (ZInterval.join
              (interval_opp
                 (WithTop.NotTop 0,
                  to_high (mul_inf (high_inf (neg_bound l1)) (high_inf h2))))
@@ -816,7 +816,7 @@ Section Interval_mul.
     move=> [l2 h2] [l1 h1].
     case: l1 => [|[|l1|l1]]; case: h1 => [|[|h1|h1]];
        case: l2 => [|[|l2|l2]]; case: h2 => [|[|h2|h2]];
-       rewrite /interval_mul_math /interval_mul_opt /ZInterval.itv_join
+       rewrite /interval_mul_math /interval_mul_opt /ZInterval.join
               /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
               /WithTop.lift2 /= => Hnb1 Hnb2 //;
        congr pair; congr (WithTop.NotTop); nia.
@@ -939,11 +939,11 @@ Section Interval_mul.
       rewrite (interval_mul_math_eq (l2,h2) (l1,h1) Hnb1 Hnb2)
               /interval_mul_opt Hcl1 Hcl2.
       apply: alpha_mul_comm.
-      have ->: ZInterval.itv_join (bound_mul l1 h2, bound_mul l1 l2)
+      have ->: ZInterval.join (bound_mul l1 h2, bound_mul l1 l2)
                         (bound_mul h1 l2, bound_mul h1 h2)
-             = ZInterval.itv_join (interval_opp (bound_mul l2 (neg_bound l1), bound_mul h2 (neg_bound l1)))
+             = ZInterval.join (interval_opp (bound_mul l2 (neg_bound l1), bound_mul h2 (neg_bound l1)))
                         (bound_mul l2 h1, bound_mul h2 h1).
-      { rewrite /ZInterval.itv_join /Conjunction.join /interval_opp
+      { rewrite /ZInterval.join /Conjunction.join /interval_opp
                 !bound_mul_neg_l !bound_mul_neg_neg
                 (bound_mul_comm h2 l1) (bound_mul_comm l2 h1)
                 (bound_mul_comm l2 l1) (bound_mul_comm h2 h1). by []. }

@@ -733,7 +733,7 @@ Section Interval_quot.
     destruct l1 as [|l1'], h1 as [|h1'], h2 as [|h2'];
       unfold interval_quot_pos_across_opt, interval_quot_pos_across,
         interval_quot_pos_neg, interval_quot_pos, interval_opp,
-        neg_bound, quot_bound, ZInterval.itv_join;
+        neg_bound, quot_bound, ZInterval.join;
       unfold Conjunction.join; simpl;
       unfold ZInterval.join_lb, ZInterval.join_ub; simpl;
       simpl in Hl1; unfold_set in Hl1;

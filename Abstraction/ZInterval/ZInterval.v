@@ -3,7 +3,7 @@
    and the sign classifiers. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZIntervalTheory.v].
 
-   [non_bottom], [join_lb], [join_ub], [itv_join] and the [*_gammab]
+   [non_bottom], [join_lb], [join_ub], [join] and the [*_gammab]
    membership tests are written here as direct matches on the bounds rather
    than as instances of the generic BoundLattice constructions, which would
    drag the [Z_CL] concrete-lattice record (and its proof fields) into this
@@ -52,7 +52,7 @@ Definition lubtop_is_includedb a2 a1 :=
           | WithTop.NotTop a2 => Z.leb a2 a1
           end
   end.
-Definition itv_is_includedb (a2 a1: interval) := 
+Definition is_included (a2 a1: interval) := 
   let (l2,h2) := a2 in let (l1,h1) := a1 in glbtop_is_includedb l2 l1 && lubtop_is_includedb h2 h1.
 
 Definition join_lb (a b : WithTop.with_top Z) : WithTop.with_top Z :=
@@ -67,12 +67,12 @@ Definition join_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.max x y)
   end.
 
-Definition itv_join (i1 i2 : interval) : interval :=
+Definition join (i1 i2 : interval) : interval :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   (join_lb l1 l2, join_ub h1 h2).
 
-(** Meet. Unlike the join, the meet is *exact*: [γ (itv_meet i1 i2)] is exactly
+(** Meet. Unlike the join, the meet is *exact*: [γ (meet i1 i2)] is exactly
     [γ i1 ∩ γ i2] ([itv_meet_exact]). This is what makes the calculated
     backward transfer functions optimal. It may return a γ-empty
     interval, which is intended: a backward step detecting a
@@ -89,7 +89,7 @@ Definition meet_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.min x y)
   end.
 
-Definition itv_meet (i1 i2 : interval) : interval :=
+Definition meet (i1 i2 : interval) : interval :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   (meet_lb l1 l2, meet_ub h1 h2).
@@ -105,7 +105,7 @@ Definition bound_equal (a b : WithTop.with_top Z) : bool :=
   | _, _ => false
   end.
 
-Definition itv_equal (i1 i2 : interval) : bool :=
+Definition equiv (i1 i2 : interval) : bool :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   bound_equal l1 l2 && bound_equal h1 h2.
