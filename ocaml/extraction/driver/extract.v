@@ -63,11 +63,23 @@ Extraction Inline
   QuadrivalentOps.refine_bottom QuadrivalentOps.refine_true
   QuadrivalentOps.refine_false.
 
+(** * ZInterval
+
+    Zinterval has two layers: bound-level helpers, and interval-level. Only the interval
+    layer is interface, so inlining them leaves [ZInterval.mli] with the
+    abstraction's operations and nothing else. *)
+Extraction Inline
+  ZInterval.glbtop_is_includedb ZInterval.lubtop_is_includedb
+  ZInterval.join_lb  ZInterval.join_ub
+  ZInterval.meet_lb  ZInterval.meet_ub
+  ZInterval.bound_equal
+  ZInterval.glb_gammab ZInterval.lub_gammab.
+
 (* Everything is extracted by ONE [Separate Extraction]. Each call rewrites
    from scratch every module reachable from its own roots, so two calls
    touching the same module do not merge: the second overwrites the first. *)
 Separate Extraction
-  (* Quadrivalent: the carrier, its lattice operations. *)
+  (* Quadrivalent: carrier, and lattice operations. *)
   Quadrivalent.quadrivalent
   Quadrivalent.join Quadrivalent.meet Quadrivalent.equiv
   Quadrivalent.is_included Quadrivalent.singleton
