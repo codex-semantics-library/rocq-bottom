@@ -422,6 +422,17 @@ Lemma non_bottom_non_empty:
   forall i:interval, (non_bottom i) <->  exists c, c ∈ γ[itv] i.
 Proof. exact (IntervalUnbounded.non_bottom_non_empty Z_CL 0). Qed.
 
+(** [ZInterval.join] preserves non-bottom: the union of two non-empty intervals is
+    non-empty. (Used by the split-aware lattice check, where [join] is typed
+    over the non-empty carrier and so must package an [nb_interval].) *)
+Lemma itv_join_non_bottom (a b : interval) :
+  non_bottom a -> non_bottom b -> non_bottom (ZInterval.join a b).
+Proof.
+  move=> /non_bottom_non_empty Ha _.
+  apply/non_bottom_non_empty.
+  exact: NonEmpty.nonempty_join_sound itv a b Ha.
+Qed.
+
 (** ** Collapsed-bottom intervals.
 
     The carrier [interval] has many syntactic representations of [∅]

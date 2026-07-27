@@ -661,6 +661,23 @@ Module NonEmpty.
     Defined.
   End AD.
 
+  Section AJSL.
+    Context {C : Type} (A: abstract_join_semilattice C).
+
+    (** Join preserves non-emptiness. [join] is an upper bound, so any member
+        of the left argument is still a member of the join; the right one is
+        not even needed. A domain whose own predicate is merely equivalent to
+        [pred] bridges with that equivalence at the call site. *)
+    Lemma nonempty_join_sound a1 a2 :
+      pred A a1 -> pred A (ajsl_join A a1 a2).
+    Proof.
+      move=> [c Hc]. exists c.
+      have Hsub : γ[A] a1 ⊆ γ[A] (ajsl_join A a1 a2).
+      { apply: ad_γ_order_preserving. apply: ajsl_join_compat_l. }
+      unfold_set in *. exact: (Hsub c Hc).
+    Qed.
+  End AJSL.
+
 End NonEmpty.
 
 (** ** MaximallyReducedSubset: restrict to maximally-reduced elements.

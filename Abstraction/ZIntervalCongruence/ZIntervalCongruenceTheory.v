@@ -914,10 +914,8 @@ Lemma nonempty_join_closure (a1 a2 : prod_ajsl) :
   nonempty_pred a1 -> nonempty_pred a2 ->
   nonempty_pred (ajsl_join prod_ajsl a1 a2).
 Proof.
-  move=> [c1 Hc1] _. exists c1.
-  have Hsub : γ[prod_ajsl] a1 ⊆ γ[prod_ajsl] (ajsl_join prod_ajsl a1 a2).
-  { apply: ad_γ_order_preserving. apply: ajsl_join_compat_l. }
-  unfold_set in *. exact: (Hsub c1 Hc1).
+  move=> H1 _.
+  exact: NonEmpty.nonempty_join_sound prod_ajsl a1 a2 H1.
 Qed.
 
 Definition nonempty_prod_ajsl : abstract_join_semilattice Z :=
