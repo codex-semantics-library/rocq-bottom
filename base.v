@@ -151,12 +151,33 @@ Notation "(⊆⊇)" := (propset_equiv) (only parsing) : rocq_bottom_scope.
 
 Lemma propset_equiv_iff {C} (A B: propset C): A ⊆⊇ B <-> forall c, c ∈ A <-> c ∈ B.
 Proof.
-  rewrite /propset_equiv/propset_subseteq. 
+  rewrite /propset_equiv/propset_subseteq.
   split.
   - move=> [H1 H2] c. split; by [move /H1|move /H2].
   - move=> H. split; by move=> c /H.
 Qed.
-    
+
+(** A set is empty iff it has no elements: the two formulations of
+    emptiness — set-equivalence to [∅] ([S ⊆⊇ ∅]) and absence of a
+    witness ([~ exists c, c ∈ S]) — coincide.  The [⊆⊇] direction adds
+    only the trivial [∅ ⊆ S], so the whole correspondence reduces to
+    [c ∈ ∅ <-> False]. *)
+Lemma propset_elem_of_empty {C} (c : C) : (c ∈ ∅) <-> False.
+Proof. apply propset_elem_of_iff. Qed.
+
+Lemma propset_equiv_empty_iff {C} (S : propset C) :
+  S ⊆⊇ ∅ <-> ~ exists c, c ∈ S.
+Proof.
+  rewrite propset_equiv_iff.
+  split.
+  - move=> H [c Hc].
+    exact: (proj1 (propset_elem_of_empty c) (proj1 (H c) Hc)).
+  - move=> H c. split.
+    + move=> Hc. apply (proj2 (propset_elem_of_empty c)).
+      apply: H. by exists c.
+    + move=> Hc. exact: (False_rect _ (proj1 (propset_elem_of_empty c) Hc)).
+Qed.
+
 Global Instance propset_subseteq_preorder {C:Type}: PreOrder (@propset_subseteq C).
 Proof.
   rewrite /propset_subseteq.

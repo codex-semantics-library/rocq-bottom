@@ -469,11 +469,8 @@ Proof.
     rewrite non_bottom_non_empty in Hnb.
     move: Hnb => [c Hc].
     exact: (proj1 Hsub c Hc).
-  - left. rewrite non_bottom_non_empty in Hnb.
-    split => //.
-    rewrite /(_ ⊆ _).
-    move => c H. exfalso. 
-    apply: Hnb. by exists c.
+  - left. apply propset_equiv_empty_iff. move=> [c Hc].
+    apply: Hnb. apply/non_bottom_non_empty. by exists c.
 Qed.
 
 (** Exact order on non-empty intervals: γ-inclusion implies abstract
