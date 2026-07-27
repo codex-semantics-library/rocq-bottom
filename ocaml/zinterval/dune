@@ -1,0 +1,24 @@
+; Abstraction/ZInterval — the interval carrier and its lattice operations.
+; The abstraction only; the transfer functions over it are ../tf_zinterval.
+;
+; -open: the generated sources say plain `open AbstractionCombination`,
+; because in Rocq that is a sibling module, not a qualified path. Opening
+; the dependency library-wide resolves those names without post-processing
+; the extracted code. Each -open corresponds to one Require in the .v.
+
+(include_subdirs no)
+
+(library
+ (name rocqbottom_zinterval)
+ (libraries zarith rocqbottom_abstractioncombination)
+ (modules ZInterval ZIntervalAPI)
+ (flags (:standard -w -a -open Rocqbottom_abstractioncombination)))
+
+; Extraction writes into _build; this copies our modules into the source
+; tree on every build. (mode promote) means `dune build` overwrites them,
+; so a hand-edit does not survive and a proof change shows up as a plain
+; `git diff` — git is the record of what the OCaml is supposed to be.
+; [ZIntervalAPI] is the split-aware presentation (non_empty/possibly_empty +
+; singleton/join/meet/...), built on [ZInterval]'s raw code; its .mli
+; conforms to ABSTRACT_LATTICE_SPLIT.
+(copy_files (mode promote) (files ../extraction/driver/{ZInterval,ZIntervalAPI}.ml*))
