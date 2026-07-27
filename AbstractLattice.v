@@ -354,3 +354,36 @@ Module Type ABSTRACT_LATTICE.
      We don't require them for intermediate lattices. *)
 
 End ABSTRACT_LATTICE.
+
+(* The same two signatures over a carrier that records γ-emptiness in its type:
+   [non_empty] elements concretize to an inhabited set, [possibly_empty] may
+   not. Which operations can yield the empty set becomes part of their type —
+   [join] cannot and stays in [non_empty], [meet] can and so lands in
+   [possibly_empty] — so a caller tests for emptiness only where emptiness is
+   reachable. [to_non_empty] is the way back in. Nothing goes the other way: the
+   API is designed such that empty values are discharged as soon as possible.
+
+   There are many reasons to take empty apart: it often makes abstract and
+   concrete order disagree, and we want to detect empty states as soon as
+   possible to avoid useless propagation of dead states in the analyzer.
+
+   Signatures only for now; [singleton_sound] is the one law carried. *)
+Module Type NONEMPTY_ABSTRACT_DOMAIN.
+  Parameter concr : Type.
+  Parameter non_empty : Type.
+  Parameter possibly_empty : Type.
+  Parameter gamma_ne : non_empty -> propset concr.
+  Parameter gamma_pe : possibly_empty -> propset concr.
+  Parameter singleton : concr -> non_empty.
+  Parameter is_included : non_empty -> non_empty -> bool.
+  Parameter is_non_empty : possibly_empty -> bool.
+  Parameter to_non_empty : possibly_empty -> option non_empty.
+  Parameter singleton_sound : forall k, (k ∈ gamma_ne (singleton k)).
+End NONEMPTY_ABSTRACT_DOMAIN.
+
+Module Type NONEMPTY_ABSTRACT_LATTICE.
+  Include NONEMPTY_ABSTRACT_DOMAIN.
+  Parameter equiv : non_empty -> non_empty -> bool.
+  Parameter join : non_empty -> non_empty -> non_empty.
+  Parameter meet : non_empty -> non_empty -> possibly_empty.
+End NONEMPTY_ABSTRACT_LATTICE.

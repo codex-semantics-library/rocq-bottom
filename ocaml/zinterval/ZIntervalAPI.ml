@@ -16,19 +16,14 @@ let singleton =
 let is_included =
   is_included
 
-(** val embed : non_empty -> possibly_empty **)
-
-let embed x =
-  x
-
 (** val is_non_empty : possibly_empty -> bool **)
 
 let is_non_empty =
   non_bottomb
 
-(** val refine : possibly_empty -> non_empty option **)
+(** val to_non_empty : possibly_empty -> non_empty option **)
 
-let refine x =
+let to_non_empty x =
   if non_bottomb x then Some x else None
 
 (** val equiv : non_empty -> non_empty -> bool **)

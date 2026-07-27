@@ -95,6 +95,5 @@ Separate Extraction
      [open AbstractLattice] does not compile. *)
   ZIntervalAPI.non_empty ZIntervalAPI.possibly_empty
   ZIntervalAPI.singleton ZIntervalAPI.is_included
-  ZIntervalAPI.embed ZIntervalAPI.is_non_empty
-  ZIntervalAPI.refine
+  ZIntervalAPI.is_non_empty ZIntervalAPI.to_non_empty
   ZIntervalAPI.equiv ZIntervalAPI.join ZIntervalAPI.meet.

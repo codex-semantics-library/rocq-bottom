@@ -1,6 +1,6 @@
 (* ZIntervalAPI.v - Combines computation [ZInterval.v] and proofs
-   [ZIntervalTheory.v] to an API conforming to [ABSTRACT_LATTICE_SPLIT] (checked
-   in ocaml/API.v). *)
+   [ZIntervalTheory.v] to an API conforming to [NONEMPTY_ABSTRACT_LATTICE]
+   (checked in APICheck.v). *)
 
 From Stdlib Require Import ZArith.
 Require Import Abstraction AbstractLattice AbstractionCombination
@@ -20,9 +20,8 @@ Definition singleton (k : concr) : non_empty :=
 
 Definition is_included (a b : non_empty) : bool := ZInterval.is_included (`a) (`b).
 
-Definition embed (x : non_empty) : possibly_empty := `x.
 Definition is_non_empty (x : possibly_empty) : bool := non_bottomb x.
-Definition refine (x : possibly_empty) : option non_empty :=
+Definition to_non_empty (x : possibly_empty) : option non_empty :=
   match non_bottomb x as b return non_bottomb x = b -> option non_empty with
   | true => fun H => Some (exist _ x (non_bottomb_true x H))
   | false => fun _ => None
