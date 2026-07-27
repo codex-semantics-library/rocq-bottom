@@ -123,17 +123,17 @@ Definition non_bottomb (i : interval) : bool :=
     [Z_CL]-derived lattices; the reflection instances are in
     [ZIntervalTheory.v]. *)
 Definition glb_gammab (l : Z) z := Z.leb l z.
-Definition lub_gammab (l : Z) z := Z.leb z l.
+Definition lub_gammab (h : Z) z := Z.leb z h.
 
 Definition itv_gammab (i:interval) z :=
-  (let (a, b) := i in
-   match a with
+  (let (l, h) := i in
+   match l with
    | WithTop.Top => true
-   | WithTop.NotTop a0 => lub_gammab z a0
+   | WithTop.NotTop l' => glb_gammab l' z
    end &&
-     match b with
+     match h with
      | WithTop.Top => true
-     | WithTop.NotTop a0 => glb_gammab z a0
+     | WithTop.NotTop h' => lub_gammab h' z
      end).
 
 (** [singleton k] is the interval concretizing to exactly [{k}] — the
