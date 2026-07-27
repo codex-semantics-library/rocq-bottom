@@ -1,0 +1,14 @@
+; AbstractionCombination.v — WithTop / WithBottom. 
+
+(include_subdirs no)
+
+(library
+ (name rocqbottom_abstractioncombination)
+ (libraries zarith)
+ (modules AbstractionCombination)
+ (flags (:standard -w -a)))
+
+; Extraction writes into _build; this copies our modules into the source
+; tree on every build, oeverwriting so git is the record of what the OCaml
+; is supposed to be.
+(copy_files (mode promote) (files ../extraction/driver/{AbstractionCombination}.ml*))

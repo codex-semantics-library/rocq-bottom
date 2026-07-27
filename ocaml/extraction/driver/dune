@@ -14,4 +14,4 @@
 (coq.extraction
  (prelude extract)
  (theories RocqBottom RocqBottomExtr Stdlib)
- (extracted_modules Quadrivalent QuadrivalentOps))
+ (extracted_modules AbstractionCombination Quadrivalent QuadrivalentOps))
