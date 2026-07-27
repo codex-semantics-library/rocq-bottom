@@ -86,3 +86,6 @@ Separate Extraction
   Quadrivalent.to_quadrivalent
   (* QuadrivalentOps: boolean transfer functions. *)  
   QuadrivalentOps.Boolean_Forward QuadrivalentOps.Boolean_Backward
+
+  ZInterval.interval ZInterval.nb_interval
+
