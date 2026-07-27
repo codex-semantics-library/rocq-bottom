@@ -939,8 +939,8 @@ Section Interval_mul.
       rewrite (interval_mul_math_eq (l2,h2) (l1,h1) Hnb1 Hnb2)
               /interval_mul_opt Hcl1 Hcl2.
       apply: alpha_mul_comm.
-      have ->: (min_opt (bound_mul l1 h2) (bound_mul h1 l2),
-                max_opt (bound_mul l1 l2) (bound_mul h1 h2))
+      have ->: join_itv (bound_mul l1 h2, bound_mul l1 l2)
+                        (bound_mul h1 l2, bound_mul h1 h2)
              = join_itv (interval_opp (bound_mul l2 (neg_bound l1), bound_mul h2 (neg_bound l1)))
                         (bound_mul l2 h1, bound_mul h2 h1).
       { rewrite /join_itv /Conjunction.join /interval_opp

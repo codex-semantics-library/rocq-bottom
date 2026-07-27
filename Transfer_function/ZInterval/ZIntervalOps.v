@@ -115,8 +115,7 @@ Definition interval_mul_opt (i2 i1: interval) : interval :=
   | Across, Pos => (m l1 h2, m h1 h2)
   | Neg, Across => (m l1 h2, m l1 l2)
   | Across, Neg => (m h1 l2, m l1 l2)
-  | Across, Across =>
-      (min_opt (m l1 h2) (m h1 l2), max_opt (m l1 l2) (m h1 h2))
+  | Across, Across => join_itv (m l1 h2, m l1 l2) (m h1 l2, m h1 h2)
   end.
 
 (** * Z.quot. See [QuotTheory.v]. *)
