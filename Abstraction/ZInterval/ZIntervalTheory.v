@@ -5,7 +5,7 @@
 
    All transfer functions now live in Transfer_function/ZInterval/; what is
    left here is the abstraction itself, the generic α-machinery the operation
-   proofs share, and the [classify] / [classify_divisor] sign dispatchers.
+   proofs share, and the [classify] inversion lemmas.
      opp:  exact                      -- OppTheory.v
      add:  sound + best (α-complete)  -- AddTheory.v
      sub:  sound + exact (non-bottom) -- AddTheory.v

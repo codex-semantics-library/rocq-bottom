@@ -4,7 +4,7 @@
 
 (* STATUS: quot (Z.quot): best in all 9 sign cases
      (interval_quot_*_best, interval_quot_full_best).
-   Dispatches on [classify] / [classify_divisor], still in ZIntervalTheory.v, and
+   Dispatches on [classify] / [classify_divisor], now in ZInterval.v, and
    uses the negation transfer function ([neg_bound], [interval_opp]), now in
    [ZIntervalOps.v]. *)
 
