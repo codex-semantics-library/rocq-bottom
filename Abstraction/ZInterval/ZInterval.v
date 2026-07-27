@@ -3,7 +3,7 @@
    and the sign classifiers. This is the executable core, destined to be
    extracted 1:1 to OCaml. Its proofs are in [ZIntervalTheory.v].
 
-   [non_bottom], [join_lb], [join_ub], [join_itv] and the [*_gammab]
+   [non_bottom], [join_lb], [join_ub], [itv_join] and the [*_gammab]
    membership tests are written here as direct matches on the bounds rather
    than as instances of the generic BoundLattice constructions, which would
    drag the [Z_CL] concrete-lattice record (and its proof fields) into this
@@ -67,13 +67,13 @@ Definition join_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.max x y)
   end.
 
-Definition join_itv (i1 i2 : interval) : interval :=
+Definition itv_join (i1 i2 : interval) : interval :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   (join_lb l1 l2, join_ub h1 h2).
 
-(** Meet. Unlike the join, the meet is *exact*: [γ (meet_itv i1 i2)] is exactly
-    [γ i1 ∩ γ i2] ([meet_itv_exact]). This is what makes the calculated
+(** Meet. Unlike the join, the meet is *exact*: [γ (itv_meet i1 i2)] is exactly
+    [γ i1 ∩ γ i2] ([itv_meet_exact]). This is what makes the calculated
     backward transfer functions optimal. It may return a γ-empty
     interval, which is intended: a backward step detecting a
     contradiction is the whole point. *)
@@ -89,7 +89,7 @@ Definition meet_ub (a b : WithTop.with_top Z) : WithTop.with_top Z :=
   | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (Z.min x y)
   end.
 
-Definition meet_itv (i1 i2 : interval) : interval :=
+Definition itv_meet (i1 i2 : interval) : interval :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   (meet_lb l1 l2, meet_ub h1 h2).
@@ -105,7 +105,7 @@ Definition bound_equal (a b : WithTop.with_top Z) : bool :=
   | _, _ => false
   end.
 
-Definition interval_equal (i1 i2 : interval) : bool :=
+Definition itv_equal (i1 i2 : interval) : bool :=
   let (l1, h1) := i1 in
   let (l2, h2) := i2 in
   bound_equal l1 l2 && bound_equal h1 h2.

@@ -377,24 +377,24 @@ Global Instance itv_join_is_lub : JoinIsLUB itv :=
 
 (** ** Meet.
 
-    [meet_itv] is *exact*: it concretizes to the intersection. Contrast with the
+    [itv_meet] is *exact*: it concretizes to the intersection. Contrast with the
     join, which only over-approximates the union.
 
     In calculational derivations, it allows turns the [∩] introduced by inverting the
     operation into an abstract operation without loss of precision. *)
 
-Lemma meet_itv_eq_al_meet (i1 i2 : interval) : meet_itv i1 i2 = i1 ⊓[itv] i2.
+Lemma itv_meet_eq_al_meet (i1 i2 : interval) : itv_meet i1 i2 = i1 ⊓[itv] i2.
 Proof. by move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]]. Qed.
 
-Lemma meet_itv_exact (i1 i2 : interval) :
-  γ[itv] (meet_itv i1 i2) ⊆⊇ γ[itv] i1 ∩ γ[itv] i2.
+Lemma itv_meet_exact (i1 i2 : interval) :
+  γ[itv] (itv_meet i1 i2) ⊆⊇ γ[itv] i1 ∩ γ[itv] i2.
 Proof.
   move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]];
     unfold_set_equiv => c; unfold_set; simpl; lia.
 Qed.
 
 (** The meet is a lower bound in the abstract order. *)
-Lemma meet_itv_lower_bound_l (i1 i2 : interval) : meet_itv i1 i2 ⊑[itv] i1.
+Lemma itv_meet_lower_bound_l (i1 i2 : interval) : itv_meet i1 i2 ⊑[itv] i1.
 Proof.
   apply/is_includedP.
   move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]] //=;
@@ -409,7 +409,7 @@ Proof.
   case: (Z.eqb_spec x y) => [->|Hne]; constructor=> //. by case.
 Qed.
 
-Lemma interval_equalP (i1 i2 : interval) : reflect (i1 = i2) (interval_equal i1 i2).
+Lemma itv_equalP (i1 i2 : interval) : reflect (i1 = i2) (itv_equal i1 i2).
 Proof.
   move: i1 i2 => [l1 h1] [l2 h2] /=.
   case: (bound_equalP l1 l2) => [->|Hl] /=; last by constructor => - [].
