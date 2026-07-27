@@ -3,6 +3,7 @@
    (checked in APICheck.v). *)
 
 From Stdlib Require Import ZArith.
+From Stdlib Require Import ssreflect ssrbool ssrfun.
 Require Import Abstraction AbstractLattice AbstractionCombination
   ZInterval ZIntervalTheory.
 
@@ -22,10 +23,33 @@ Definition is_included (a b : non_empty) : bool := ZInterval.is_included (`a) (`
 
 Definition is_non_empty (x : possibly_empty) : bool := non_bottomb x.
 Definition to_non_empty (x : possibly_empty) : option non_empty :=
-  match non_bottomb x as b return non_bottomb x = b -> option non_empty with
-  | true => fun H => Some (exist _ x (non_bottomb_true x H))
+  match non_bottomb x as b return (b = true -> non_bottom x) -> option non_empty with
+  | true => fun H => Some (exist _ x (H eq_refl))
   | false => fun _ => None
-  end (eq_refl _).
+  end (elimT (non_bottombP x)).
+
+(* Everything the laws below need to know about [to_non_empty], proved once:
+   reasoning about the dependent match takes the same two steps every time —
+   generalize the [elimT] argument, which is what removes [non_bottombP x] from
+   the goal, then [case] on [non_bottomb x] to reduce the match. *)
+Lemma to_non_emptyP x :
+  if to_non_empty x is Some y then `y = x else ~ non_bottom x.
+Proof.
+  rewrite /to_non_empty; move: (elimT (non_bottombP x)) (elimF (non_bottombP x)).
+  by case: (non_bottomb x) => // _ H; apply: H.
+Qed.
+
+Lemma to_non_empty_none : forall x, to_non_empty x = None -> gamma_pe x ⊆⊇ ∅.
+Proof.
+  move=> x; move: (to_non_emptyP x).
+  by case: (to_non_empty x) => // H _; apply: non_bottom_empty.
+Qed.
+
+Lemma to_non_empty_some : forall x y, to_non_empty x = Some y -> gamma_ne y ⊆⊇ gamma_pe x.
+Proof.
+  move=> x y; move: (to_non_emptyP x).
+  by case: (to_non_empty x) => // z <- [<-]; apply: gamma_nbitv_gamma_itv_set.
+Qed.
 
 Definition singleton_sound : forall k, (k ∈ gamma_ne (singleton k)).
 Proof.

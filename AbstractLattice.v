@@ -355,19 +355,24 @@ Module Type ABSTRACT_LATTICE.
 
 End ABSTRACT_LATTICE.
 
-(* The same two signatures over a carrier that records γ-emptiness in its type:
-   [non_empty] elements concretize to an inhabited set, [possibly_empty] may
-   not. Which operations can yield the empty set becomes part of their type —
-   [join] cannot and stays in [non_empty], [meet] can and so lands in
-   [possibly_empty] — so a caller tests for emptiness only where emptiness is
-   reachable. [to_non_empty] is the way back in. Nothing goes the other way: the
-   API is designed such that empty values are discharged as soon as possible.
+(* The same two signatures over a carrier that records γ-emptiness in its type.
+   The goal is for [non_empty] to represent elements that cannot concretize to
+   the emptyset. However, some domains may fail to spot a contradiction, so
+   actually, [possibly_empty] represent elements that have not been tested for
+   emptiness, while [non_empty] has passed the domain's test.  The emptiness
+   test is provided by is_non_empty/to_non_empty, which must be sound
+   (i.e. report empty abstract elements only if their concretization is empty).
+
+   Note that there is no way to lift a [non_empty] value to a [possibly_empty]
+   one: the API is designed such that empty values are discharged as soon as
+   possible.
 
    There are many reasons to take empty apart: it often makes abstract and
    concrete order disagree, and we want to detect empty states as soon as
    possible to avoid useless propagation of dead states in the analyzer.
 
-   Signatures only for now; [singleton_sound] is the one law carried. *)
+   Laws are thin for now: [singleton_sound] and the two [to_non_empty] clauses
+   relating the carriers. *)
 Module Type NONEMPTY_ABSTRACT_DOMAIN.
   Parameter concr : Type.
   Parameter non_empty : Type.
@@ -378,6 +383,13 @@ Module Type NONEMPTY_ABSTRACT_DOMAIN.
   Parameter is_included : non_empty -> non_empty -> bool.
   Parameter is_non_empty : possibly_empty -> bool.
   Parameter to_non_empty : possibly_empty -> option non_empty.
+  (* [to_non_empty] tests emptiness and preserves the concretization. [None]
+     only when there was nothing to concretize (the converse is not required,
+     since a domain may fail to spot a contradiction). *)
+  Parameter to_non_empty_none :
+    forall x, to_non_empty x = None -> gamma_pe x ⊆⊇ ∅.
+  Parameter to_non_empty_some :
+    forall x y, to_non_empty x = Some y -> gamma_ne y ⊆⊇ gamma_pe x.
   Parameter singleton_sound : forall k, (k ∈ gamma_ne (singleton k)).
 End NONEMPTY_ABSTRACT_DOMAIN.
 

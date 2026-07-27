@@ -459,6 +459,13 @@ Proof.
   apply: Z.leb_spec0.
 Qed.
 
+(** A bottom interval really does concretize to ∅. *)
+Lemma non_bottom_empty i : ~ non_bottom i -> γ[itv] i ⊆⊇ ∅.
+Proof.
+  move=> /non_bottom_non_empty Hn.
+  apply propset_equiv_empty_iff. exact: Hn.
+Qed.
+
 (** Decidability of γ-emptiness for intervals. *)
 Definition itv_is_empty_dec (i : itv) :
   {CollapsedBottom.is_empty itv i} + {~ CollapsedBottom.is_empty itv i}.
