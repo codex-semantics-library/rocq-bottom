@@ -253,7 +253,7 @@ Lemma itv_gammab_add_const (K : Z) (i : interval) (y : Z) :
   itv_gammab (itv_add_const K i) y = itv_gammab i (y - K).
 Proof.
   case: i => l h.
-  rewrite /itv_add_const /itv_gammab /add_const_bound /lub_gammab /glb_gammab /=.
+  rewrite /itv_add_const /itv_gammab /add_const_bound /ZInterval.lub_gammab /ZInterval.glb_gammab /=.
   case: l => [|l]; case: h => [|h] //=.
   - by rewrite Zleb_add_r.
   - by rewrite Zleb_add_l.
@@ -370,7 +370,7 @@ Proof.
     case: l => [|lz] //; case: h => [|hz] //.
     move=> /andP [/Z.eqb_eq -> /Z.eqb_eq ->] [Hc1i _].
     move/itv_gammaP: Hc1i.
-    rewrite /itv_gammab /glb_gammab /lub_gammab => /andP [Hle Hge].
+    rewrite /itv_gammab /ZInterval.glb_gammab /ZInterval.lub_gammab => /andP [Hle Hge].
     move: Hle Hge => /Z.leb_le ? /Z.leb_le ?. lia.
 Qed.
 
@@ -402,7 +402,7 @@ Proof.
   - exact: is_singleton_sound a1 m Hsg.
   - move=> c2 Hc2.
     move/itv_gammaP: (gamma_fst_itv _ c2 Hc2).
-    rewrite /itv_gammab /glb_gammab /lub_gammab => /andP [/Z.leb_le Hle /Z.leb_le Hge].
+    rewrite /itv_gammab /ZInterval.glb_gammab /ZInterval.lub_gammab => /andP [/Z.leb_le Hle /Z.leb_le Hge].
     have Hb : l2 <= c2 <= h2 by lia.
     exact: Z_quot_const_on_interval l2 h2 m c2 Hb Hq.
 Qed.
@@ -582,7 +582,7 @@ Proof.
   apply best_abstraction_iff; split.
   - move=> z Hz. move/propset_elem_of_iff: Hz => ->.
     apply/itv_gammaP.
-    by rewrite /itv_gammab /glb_gammab /lub_gammab /= !Z.leb_refl.
+    by rewrite /itv_gammab /ZInterval.glb_gammab /ZInterval.lub_gammab /= !Z.leb_refl.
   - move=> b Hb.
     have Hrho : rho ∈ γ[itv] b.
     { apply: Hb. by apply/propset_elem_of_iff. }
@@ -624,7 +624,7 @@ Proof.
         move=> c [c2 [c1 [Hc2 [Hc1 [_ Heq]]]]].
         rewrite -Heq (Hconst c1 Hc1) (Hrem c2 Hc2).
         apply/itv_gammaP.
-        by rewrite /itv_gammab /glb_gammab /lub_gammab /= !Z.leb_refl.
+        by rewrite /itv_gammab /ZInterval.glb_gammab /ZInterval.lub_gammab /= !Z.leb_refl.
       * move=> c _. apply/itv_gammaP. by [].
 Qed.
 
@@ -775,7 +775,7 @@ Proof.
   case: l => [|lz] //; case: h => [|hz] //.
   move=> /andP [/Z.eqb_eq -> /Z.eqb_eq ->] c1 [Hc1i _].
   move/itv_gammaP: Hc1i.
-  rewrite /itv_gammab /glb_gammab /lub_gammab => /andP [Hle Hge].
+  rewrite /itv_gammab /ZInterval.glb_gammab /ZInterval.lub_gammab => /andP [Hle Hge].
   move: Hle Hge => /Z.leb_le ? /Z.leb_le ?. lia.
 Qed.
 

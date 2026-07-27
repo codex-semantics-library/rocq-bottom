@@ -112,10 +112,10 @@ Proof. split=> c; by rewrite gamma_nbitv_gamma_itv. Qed.
 
 
 
-Instance glb_gammaP: forall l z, AutoReflect(z ∈ γ[glb] l)(glb_gammab l z).
+Instance glb_gammaP: forall l z, AutoReflect(z ∈ γ[glb] l)(ZInterval.glb_gammab l z).
 Proof. apply/Z.leb_spec0. Qed.
 
-Instance lub_gammaP: forall l z, AutoReflect(z ∈ γ[lub] l)(lub_gammab l z).
+Instance lub_gammaP: forall l z, AutoReflect(z ∈ γ[lub] l)(ZInterval.lub_gammab l z).
 Proof. move => l z. apply/Z.leb_spec0. Qed.
 
 
@@ -144,13 +144,13 @@ Global Instance z_leP (z2 z1:Z): (AutoReflect(z2 <= z1)(Z.leb z2 z1)).
 Proof. apply Z.leb_spec0. Qed.
 
 Global Instance glbtop_is_includedP a2 a1 :
-  AutoReflect(a2 ⊑[glbtop] a1)(glbtop_is_includedb a2 a1).
+  AutoReflect(a2 ⊑[glbtop] a1)(ZInterval.glbtop_is_includedb a2 a1).
 Proof.
   { apply WithTop.is_includedP. apply _. }
 Qed.
 
 Global Instance lubtop_is_includedP a2 a1 :
-  AutoReflect(a2 ⊑[lubtop] a1)(lubtop_is_includedb a2 a1).
+  AutoReflect(a2 ⊑[lubtop] a1)(ZInterval.lubtop_is_includedb a2 a1).
 Proof.
 { apply WithTop.is_includedP. apply _. }
 Qed.
@@ -403,7 +403,7 @@ Qed.
 
 (** ** Structural equality of intervals. *)
 
-Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (bound_equal a b).
+Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (ZInterval.bound_equal a b).
 Proof.
   case: a => [|x]; case: b => [|y] /=; try by constructor.
   case: (Z.eqb_spec x y) => [->|Hne]; constructor=> //. by case.

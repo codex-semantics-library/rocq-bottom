@@ -453,19 +453,19 @@ Section Interval_mul.
   Qed.
 
   (** Reduction of the bound joins to [Z.min] / [Z.max]. *)
-  Lemma min_opt_NotTop (c y : Z) :
-    join_lb (WithTop.NotTop c) (WithTop.NotTop y) = WithTop.NotTop (Z.min c y).
+  Lemma join_lb_NotTop (c y : Z) :
+    ZInterval.join_lb (WithTop.NotTop c) (WithTop.NotTop y) = WithTop.NotTop (Z.min c y).
   Proof. reflexivity. Qed.
-  Lemma max_opt_NotTop (c y : Z) :
-    join_ub (WithTop.NotTop c) (WithTop.NotTop y) = WithTop.NotTop (Z.max c y).
+  Lemma join_ub_NotTop (c y : Z) :
+    ZInterval.join_ub (WithTop.NotTop c) (WithTop.NotTop y) = WithTop.NotTop (Z.max c y).
   Proof. reflexivity. Qed.
-  Lemma min_opt_TopL (y : WithTop.with_top Z) : join_lb WithTop.Top y = WithTop.Top.
+  Lemma join_lb_TopL (y : WithTop.with_top Z) : ZInterval.join_lb WithTop.Top y = WithTop.Top.
   Proof. reflexivity. Qed.
-  Lemma min_opt_TopR (x : WithTop.with_top Z) : join_lb x WithTop.Top = WithTop.Top.
+  Lemma join_lb_TopR (x : WithTop.with_top Z) : ZInterval.join_lb x WithTop.Top = WithTop.Top.
   Proof. by case: x. Qed.
-  Lemma max_opt_TopL (y : WithTop.with_top Z) : join_ub WithTop.Top y = WithTop.Top.
+  Lemma join_ub_TopL (y : WithTop.with_top Z) : ZInterval.join_ub WithTop.Top y = WithTop.Top.
   Proof. reflexivity. Qed.
-  Lemma max_opt_TopR (x : WithTop.with_top Z) : join_ub x WithTop.Top = WithTop.Top.
+  Lemma join_ub_TopR (x : WithTop.with_top Z) : ZInterval.join_ub x WithTop.Top = WithTop.Top.
   Proof. by case: x. Qed.
 
   (** [to_high ∘ mul_inf ∘ high_inf = bound_mul] on non-negative arguments
@@ -479,9 +479,9 @@ Section Interval_mul.
       first [ done | move=> *; exfalso; lia ].
   Qed.
 
-  (** [ZInterval.itv_join] is componentwise [join_lb] / [join_ub]. *)
+  (** [ZInterval.itv_join] is componentwise [ZInterval.join_lb] / [ZInterval.join_ub]. *)
   Lemma itv_join_pair (a b c d : WithTop.with_top Z) :
-    ZInterval.itv_join (a, b) (c, d) = (join_lb a c, join_ub b d).
+    ZInterval.itv_join (a, b) (c, d) = (ZInterval.join_lb a c, ZInterval.join_ub b d).
   Proof. reflexivity. Qed.
 
   (** Sign facts and negation identities for [bound_mul] / [neg_bound]. *)
@@ -511,19 +511,19 @@ Section Interval_mul.
   Qed.
 
   (** Absorption: a non-positive lower candidate is dominated by a
-      non-negative bound in the [join_lb]; dually for [join_ub]. *)
-  Lemma min_opt_absorb_r (X : WithTop.with_top Z) (c : Z) :
-    0 <= c -> 0 ∈ γ[glbtop] X -> join_lb X (WithTop.NotTop c) = X.
+      non-negative bound in the [ZInterval.join_lb]; dually for [ZInterval.join_ub]. *)
+  Lemma join_lb_absorb_r (X : WithTop.with_top Z) (c : Z) :
+    0 <= c -> 0 ∈ γ[glbtop] X -> ZInterval.join_lb X (WithTop.NotTop c) = X.
   Proof.
-    move=> Hc; case: X => [|x]; first by rewrite min_opt_TopL.
-    unfold_set => /= Hx; rewrite ?min_opt_NotTop; f_equal; lia.
+    move=> Hc; case: X => [|x]; first by rewrite join_lb_TopL.
+    unfold_set => /= Hx; rewrite ?join_lb_NotTop; f_equal; lia.
   Qed.
 
-  Lemma max_opt_absorb_l (c : Z) (Y : WithTop.with_top Z) :
-    c <= 0 -> 0 ∈ γ[lubtop] Y -> join_ub (WithTop.NotTop c) Y = Y.
+  Lemma join_ub_absorb_l (c : Z) (Y : WithTop.with_top Z) :
+    c <= 0 -> 0 ∈ γ[lubtop] Y -> ZInterval.join_ub (WithTop.NotTop c) Y = Y.
   Proof.
-    move=> Hc; case: Y => [|y]; first by rewrite max_opt_TopR.
-    unfold_set => /= Hy; rewrite ?max_opt_NotTop; f_equal; lia.
+    move=> Hc; case: Y => [|y]; first by rewrite join_ub_TopR.
+    unfold_set => /= Hy; rewrite ?join_ub_NotTop; f_equal; lia.
   Qed.
 
   (** Absorption equality: the join of the two quadrant transfers (with
@@ -548,7 +548,7 @@ Section Interval_mul.
       case: l1 Hl1 => [|l1|l1] Hl1; case: m Hm => [|m|m] Hm;
       case: p Hp => [|p|p] Hp;
       rewrite /interval_mul_pos /interval_opp /neg_bound /bound_mul /high_inf
-              /to_high /mul_inf /ZInterval.itv_join /Conjunction.join /join_lb /join_ub
+              /to_high /mul_inf /ZInterval.itv_join /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
               /WithTop.lift2 /=;
       move: Hl1 Hm Hp Hl2 Hh2 Hh1; unfold_set => /= *;
       try (exfalso; lia); try done;
@@ -817,7 +817,7 @@ Section Interval_mul.
     case: l1 => [|[|l1|l1]]; case: h1 => [|[|h1|h1]];
        case: l2 => [|[|l2|l2]]; case: h2 => [|[|h2|h2]];
        rewrite /interval_mul_math /interval_mul_opt /ZInterval.itv_join
-              /Conjunction.join /join_lb /join_ub
+              /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
               /WithTop.lift2 /= => Hnb1 Hnb2 //;
        congr pair; congr (WithTop.NotTop); nia.
   Qed.
