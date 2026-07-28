@@ -33,13 +33,15 @@ clean:
 # Rocq 9 driver and is absent from the Docker image, and a dune rule naming it is
 # built by the default alias, which would fail the build there.
 tags:
-	coqtags $$(find . -name '*.v' \
-	  -not -path './_build/*' -not -path './clean/*' -not -path './publication/*' | sort)
+	coqtags $$(find . -name '*.v' -not -path './_build/*' | sort)
 
 # Axiom-independence check: assert the library relies on no axioms. `rocqchk`
 # (the kernel proof-checker, formerly coqchk; `rocq check` is broken in 9.0.1)
 # with -o reports the axioms the whole closure depends on; we fail unless empty.
 # Like `tags`, dune has no equivalent.
+#
+# ocaml/ is skipped: it is the extraction, whose .vo files dune compiles under
+# the logical name DuneExtraction.*, not RocqBottom.*, so rocqchk rejects them.
 validate: all
 	@set -e; \
 	build=_build/default; \
