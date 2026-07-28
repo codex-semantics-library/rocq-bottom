@@ -1065,7 +1065,18 @@ Qed.
 
 (** * Set operations and transformations. *)
 
-Definition setop1 (C1 C0 : Type) := propset C1 → propset C0.  
+(** ** Numbering of operands.
+
+    Operands are numbered *downwards*, ending at [0] for the result: a binary [f
+    : C2 -> C1 -> C0] consumes [c2], then [c1], and yields [c0]. This makes
+    definitions on multiple arities more consistent, make the argument's index
+    correspond to the arity of the function that still remains when it is
+    consumed, ane make it easy to under "which one is the result" in operations
+    like [collecting_binary_backward_right f S2 S1 S0].
+    
+    Remember: for a binary operation [c1] is not the first argument, [c2] is. *)
+
+Definition setop1 (C1 C0 : Type) := propset C1 → propset C0.
 Definition setop2 (C2 C1 C0 : Type) := propset C2 → propset C1 → propset C0.
 Definition setop3 (C3 C2 C1 C0 : Type) := propset C3 -> propset C2 → propset C1 → propset C0.  
 
