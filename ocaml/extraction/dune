@@ -10,5 +10,7 @@
 
 (coq.theory
  (name RocqBottomExtr)
- (theories Stdlib)
+ ; RocqBottom for Primitives.v, whose operations exist to be realized
+ ; here (quot_non_zero -> Z.div).
+ (theories RocqBottom Stdlib)
  (modules PrimitiveExtraction))
