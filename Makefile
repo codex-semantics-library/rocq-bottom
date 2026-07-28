@@ -43,7 +43,7 @@ tags:
 validate: all
 	@set -e; \
 	build=_build/default; \
-	mods=$$(find $$build -name '*.vo' \
+	mods=$$(find $$build -name '*.vo' -not -path "$$build/ocaml/*" \
 	         | sed -e "s|^$$build/||" -e 's|\.vo$$||' -e 's|/|.|g' -e 's|^|RocqBottom.|'); \
 	echo "Checking axiom-independence of:"; echo "$$mods" | sed 's/^/  /'; \
 	out=$$(cd $$build && rocqchk -o -R . RocqBottom $$mods 2>&1); \
