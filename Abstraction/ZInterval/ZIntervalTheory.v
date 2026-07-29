@@ -752,6 +752,55 @@ Proof.
     + move=> g Hg. apply: Hg. unfold_set; split=> //.
 Qed.
 
+(** Strict counterparts, for a *divisor*: [0] has to be excluded, so the cut is
+    [z < 0] / [0 < z] rather than [z <= 0] / [0 <= z].
+
+    The hypothesis strengthens with it.  A bound merely [<= 0] may *be* [0], and
+    then the strict half is empty and the bound is no longer its glb — so
+    [0 ∈ γ[glbtop] l] is not enough and [low_neg l] is what is needed.  That is
+    exactly what an [across_interval] carries, which is why these apply to
+    precisely the divisors that cross zero. *)
+Lemma glbtop_lt0_restrict (l : WithTop.with_top Z) (S : ℘ Z) :
+  low_neg l -> attained S l ->
+  IsAlpha (A:=glbtop) l S ->
+  IsAlpha (A:=glbtop) l {[ z | z ∈ S /\ z < 0 ]}.
+Proof.
+  case: l => [|a] /= Hl0 Hatt Ha.
+  - rewrite /IsAlpha => b; case: b => [|M] /=.
+    + by unfold_set; split.
+    + unfold_set; split; [|by []].
+      move=> Hsub.
+      apply: (is_alpha_glbtop_top_nn S (Z.min M 0) Ha) => -[c [Hc Hlt]].
+      have Hin : c ∈ {[ z | z ∈ S /\ z < 0 ]} by unfold_set; split=> //; lia.
+      move: (Hsub c Hin); unfold_set => /=; lia.
+  - move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S Ha) => [Hlb Hgr].
+    apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_glbtop)).
+    constructor.
+    + move=> z; unfold_set => -[Hz _]. exact: (Hlb z Hz).
+    + move=> g Hg. apply: Hg. unfold_set; split=> //.
+Qed.
+
+(** Mirror: restricting to the strictly positive part keeps the upper bound. *)
+Lemma lubtop_gt0_restrict (h : WithTop.with_top Z) (S : ℘ Z) :
+  high_pos h -> attained S h ->
+  IsAlpha (A:=lubtop) h S ->
+  IsAlpha (A:=lubtop) h {[ z | z ∈ S /\ 0 < z ]}.
+Proof.
+  case: h => [|a] /= Hh0 Hatt Ha.
+  - rewrite /IsAlpha => b; case: b => [|M] /=.
+    + by unfold_set; split.
+    + unfold_set; split; [|by []].
+      move=> Hsub.
+      apply: (is_alpha_lubtop_top_nn S (Z.max M 0) Ha) => -[c [Hc Hgt]].
+      have Hin : c ∈ {[ z | z ∈ S /\ 0 < z ]} by unfold_set; split=> //; lia.
+      move: (Hsub c Hin); unfold_set => /=; lia.
+  - move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S Ha) => [Hub Hlo].
+    apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
+    constructor.
+    + move=> z; unfold_set => -[Hz _]. exact: (Hub z Hz).
+    + move=> g Hg. apply: Hg. unfold_set; split=> //.
+Qed.
+
 (** A non-empty set of integers bounded above has a greatest element.
     Classically real but not constructible, so delivered double-negated:
     if there were no maximum, every element would be strictly exceeded,
@@ -914,6 +963,91 @@ Proof.
     by move: Hne_pos => [c [Hc Hc0]]; exists c; unfold_set; split.
   apply: (Z_bounded_above_lub_witness 0 _ Hne_neg' Hb_neg) => -[m [Hlubm Hm0]].
   apply: (Z_bounded_below_glb_witness 0 _ Hne_pos' Hb_pos) => -[p [Hglbp Hp0]].
+  apply: (Hk m p Hm0 Hp0).
+  - apply/Conjunction.is_alpha_pair_iff; split; first exact Hglb'.
+    apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)). exact Hlubm.
+  - apply/Conjunction.is_alpha_pair_iff; split; last exact Hlub'.
+    apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_glbtop)). exact Hglbp.
+Qed.
+
+(** Strict counterparts of [across_le0_witness] / [across_ge0_witness]: an
+    element strictly on one side of 0.  [low_neg] / [high_pos] replace the
+    [0 ∈ γ[..]] hypotheses, and in exchange the non-emptiness witness is no
+    longer needed — a bound that is [Top] already says the set is unbounded, and
+    a finite one is attained. *)
+Lemma across_lt0_witness {G : Prop} `{Stable G}
+  (l : WithTop.with_top Z) (S : ℘ Z) :
+  low_neg l -> IsAlpha (A:=glbtop) l S ->
+  ((exists c, c ∈ S /\ c < 0) -> G) -> G.
+Proof.
+  case: l => [|a] /= Hl0 Ha Hk.
+  - apply: (is_alpha_glbtop_top_witness S 0 Ha) => -[c [Hc Hlt]].
+    apply: Hk. by exists c.
+  - move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S Ha) => Hglb.
+    apply: (Z_is_glb_attained_witness a S Hglb) => Hain.
+    apply: Hk. by exists a.
+Qed.
+
+Lemma across_gt0_witness {G : Prop} `{Stable G}
+  (h : WithTop.with_top Z) (S : ℘ Z) :
+  high_pos h -> IsAlpha (A:=lubtop) h S ->
+  ((exists c, c ∈ S /\ 0 < c) -> G) -> G.
+Proof.
+  case: h => [|a] /= Hh0 Ha Hk.
+  - apply: (is_alpha_lubtop_top_witness S 0 Ha) => -[c [Hc Hgt]].
+    apply: Hk. by exists c.
+  - move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S Ha) => Hlub.
+    apply: (Z_is_lub_attained_witness a S Hlub) => Hain.
+    apply: Hk. by exists a.
+Qed.
+
+(** Split the abstraction of a set that does not contain 0 into its two strict
+    sign halves:
+
+    - the strictly negative part keeps the low bound [l] and gets a fresh finite
+      high bound [m ≤ -1] (its lub);
+
+    - the strictly positive part keeps the high bound [h] and gets a fresh low
+      bound [p ≥ 1] (its glb).
+
+    This is useful for all operations that require splitting at 0 excluding 0
+    (division, remainder), and is an opportunity for domains like congruence and
+    known-bits to improve the estimate for the value of [p] and [m]. The bounds
+    [m] and [p] are extracted from [S] (they are the largest negative and
+    smallest positive elements of [S]) but the extraction is classical, so the
+    lemma is in CPS: the continuation receives [m] and [p] together with their
+    [IsAlpha] facts on the two halves.
+
+    The [low_neg l] / [high_pos h] guarantee the halves are non-empty, and they
+    are exactly what [across_interval] carries. *)
+Lemma itv_split_at_zero_strict_alpha {G : Prop} `{Stable G}
+  (l h : WithTop.with_top Z) (S : ℘ Z) :
+  low_neg l -> high_pos h -> (exists c, c ∈ S) ->
+  IsAlpha (A:=itv) (l, h) S ->
+  (forall m p,
+     m <= -1 -> 1 <= p ->
+     IsAlpha (A:=itv) (l, WithTop.NotTop m) {[ z | z ∈ S /\ z < 0 ]} ->
+     IsAlpha (A:=itv) (WithTop.NotTop p, h) {[ z | z ∈ S /\ 0 < z ]} -> G)
+  -> G.
+Proof.
+  move=> Hl Hh Hex Ha Hk.
+  move: (Ha) => /Conjunction.is_alpha_pair_iff [Hglb Hlub].
+  apply: (itv_attained_low_witness l h S Ha Hex) => Hatl.
+  apply: (itv_attained_high_witness l h S Ha Hex) => Hath.
+  have Hglb' := glbtop_lt0_restrict l S Hl Hatl Hglb.
+  have Hlub' := lubtop_gt0_restrict h S Hh Hath Hlub.
+  apply: (across_lt0_witness l S Hl Hglb) => Hne_neg.
+  apply: (across_gt0_witness h S Hh Hlub) => Hne_pos.
+  have Hb_neg : forall c, c ∈ {[ z | z ∈ S /\ z < 0 ]} -> c <= -1
+    by move=> c Hc; unfold_set in Hc; lia.
+  have Hb_pos : forall c, c ∈ {[ z | z ∈ S /\ 0 < z ]} -> 1 <= c
+    by move=> c Hc; unfold_set in Hc; lia.
+  have Hne_neg' : exists c, c ∈ {[ z | z ∈ S /\ z < 0 ]}
+    by move: Hne_neg => [c [Hc Hc0]]; exists c; unfold_set; split.
+  have Hne_pos' : exists c, c ∈ {[ z | z ∈ S /\ 0 < z ]}
+    by move: Hne_pos => [c [Hc Hc0]]; exists c; unfold_set; split.
+  apply: (Z_bounded_above_lub_witness (-1) _ Hne_neg' Hb_neg) => -[m [Hlubm Hm0]].
+  apply: (Z_bounded_below_glb_witness 1 _ Hne_pos' Hb_pos) => -[p [Hglbp Hp0]].
   apply: (Hk m p Hm0 Hp0).
   - apply/Conjunction.is_alpha_pair_iff; split; first exact Hglb'.
     apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)). exact Hlubm.
