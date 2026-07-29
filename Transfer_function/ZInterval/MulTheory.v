@@ -579,8 +579,8 @@ Section Interval_mul.
     move=> Hl1 Hnb1 Hl2 Hh2 Hex1 Hex2 Ha1 Ha2 Hk.
     move: (Ha2) => /Conjunction.is_alpha_pair_iff [Hglb2 Hlub2].
     apply: (itv_split_at_zero_alpha l2 h2 S2 Hl2 Hh2 Hex2 Ha2) => m p Hm Hp Han Hap.
-    apply: (across_le0_witness l2 S2 Hl2 Hex2 Hglb2) => Hne_neg0.
-    apply: (across_ge0_witness h2 S2 Hh2 Hex2 Hlub2) => Hne_pos0.
+    apply: (across_le0_witness l2 S2 Hl2 Hglb2) => Hne_neg0.
+    apply: (across_ge0_witness h2 S2 Hh2 Hlub2) => Hne_pos0.
     have Hexn : exists c, c ∈ {[ z | z ∈ S2 /\ z <= 0 ]}
       by move: Hne_neg0 => [c [Hc Hc0]]; exists c; unfold_set; split.
     have Hexp : exists c, c ∈ {[ z | z ∈ S2 /\ 0 <= z ]}
@@ -693,8 +693,8 @@ Section Interval_mul.
     move=> Hl1 Hh1 Hl2 Hh2 Hex1 Hex2 Ha1 Ha2.
     move: (Ha1) => /Conjunction.is_alpha_pair_iff [Hglb1 Hlub1].
     apply: (itv_split_at_zero_alpha l1 h1 S1 Hl1 Hh1 Hex1 Ha1) => m p Hm Hp Han Hap.
-    apply: (across_le0_witness l1 S1 Hl1 Hex1 Hglb1) => Hne_neg0.
-    apply: (across_ge0_witness h1 S1 Hh1 Hex1 Hlub1) => Hne_pos0.
+    apply: (across_le0_witness l1 S1 Hl1 Hglb1) => Hne_neg0.
+    apply: (across_ge0_witness h1 S1 Hh1 Hlub1) => Hne_pos0.
     have Hexn : exists c, c ∈ {[ z | z ∈ S1 /\ z <= 0 ]}
       by move: Hne_neg0 => [c [Hc Hc0]]; exists c; unfold_set; split.
     have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 <= z ]}

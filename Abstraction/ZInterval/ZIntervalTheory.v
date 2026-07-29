@@ -854,14 +854,13 @@ Proof. by move=> G HSt h S; exact: Z_is_lub_attained_witness. Qed.
     low bound is finite, an element below [1] when it is [Top]. *)
 Lemma across_le0_witness {G : Prop} `{Stable G}
   (l2 : WithTop.with_top Z) (S2 : ℘ Z) :
-  0 ∈ γ[glbtop] l2 -> (exists c, c ∈ S2) -> IsAlpha (A:=glbtop) l2 S2 ->
+  0 ∈ γ[glbtop] l2 -> IsAlpha (A:=glbtop) l2 S2 ->
   ((exists c, c ∈ S2 /\ c <= 0) -> G) -> G.
 Proof.
-  case: l2 => [|a] /= Hl0 Hex Ha Hk.
+  case: l2 => [|a] /= Hl0 Ha Hk.
   - apply: (is_alpha_glbtop_top_witness S2 1 Ha) => -[c [Hc Hlt]].
     apply: Hk. exists c; split=> //; lia.
-  - move: Hl0; unfold_set => Ha0.
-    move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S2 Ha) => Hglb.
+  - move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S2 Ha) => Hglb.
     apply: (Z_is_glb_attained_witness a S2 Hglb) => Hain.
     apply: Hk. by exists a.
 Qed.
@@ -869,14 +868,13 @@ Qed.
 (** Mirror: a non-negative element of [S2]. *)
 Lemma across_ge0_witness {G : Prop} `{Stable G}
   (h2 : WithTop.with_top Z) (S2 : ℘ Z) :
-  0 ∈ γ[lubtop] h2 -> (exists c, c ∈ S2) -> IsAlpha (A:=lubtop) h2 S2 ->
+  0 ∈ γ[lubtop] h2 -> IsAlpha (A:=lubtop) h2 S2 ->
   ((exists c, c ∈ S2 /\ 0 <= c) -> G) -> G.
 Proof.
-  case: h2 => [|a] /= Hh0 Hex Ha Hk.
+  case: h2 => [|a] /= Hh0 Ha Hk.
   - apply: (is_alpha_lubtop_top_witness S2 (-1) Ha) => -[c [Hc Hgt]].
     apply: Hk. exists c; split=> //; lia.
-  - move: Hh0; unfold_set => Ha0.
-    move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S2 Ha) => Hlub.
+  - move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S2 Ha) => Hlub.
     apply: (Z_is_lub_attained_witness a S2 Hlub) => Hain.
     apply: Hk. by exists a.
 Qed.
@@ -904,8 +902,8 @@ Proof.
   apply: (itv_attained_high_witness l2 h2 S2 Ha Hex) => Hath.
   have Hglb' := glbtop_le0_restrict l2 S2 Hl0 Hatl Hglb.
   have Hlub' := lubtop_ge0_restrict h2 S2 Hh0 Hath Hlub.
-  apply: (across_le0_witness l2 S2 Hl0 Hex Hglb) => Hne_neg.
-  apply: (across_ge0_witness h2 S2 Hh0 Hex Hlub) => Hne_pos.
+  apply: (across_le0_witness l2 S2 Hl0 Hglb) => Hne_neg.
+  apply: (across_ge0_witness h2 S2 Hh0 Hlub) => Hne_pos.
   have Hb_neg : forall c, c ∈ {[ z | z ∈ S2 /\ z <= 0 ]} -> c <= 0
     by move=> c Hc; unfold_set in Hc; tauto.
   have Hb_pos : forall c, c ∈ {[ z | z ∈ S2 /\ 0 <= z ]} -> 0 <= c
