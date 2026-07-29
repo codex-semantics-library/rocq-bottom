@@ -137,41 +137,57 @@ let classify = function
            | WithTop.Top -> Across
            | WithTop.NotTop z' -> if Z.leq z' Z.zero then Neg else Across))
 
+type pos_interval = interval
+
+type neg_interval = interval
+
+type across_interval = interval
+
 type divisor_classification =
-| DivPos of interval
-| DivNeg of interval
+| DivPos of pos_interval
+| DivNeg of neg_interval
 | DivZero
 | DivAcross
 
-(** val classify_divisor : interval -> divisor_classification **)
+(** val classify_divisor : nb_interval -> divisor_classification **)
 
-let classify_divisor i = match i with
-| (l, h) ->
-  (match l with
+let classify_divisor = function
+| (w, h) ->
+  (match w with
    | WithTop.Top ->
      (match h with
       | WithTop.Top -> DivAcross
       | WithTop.NotTop h' ->
-        if Z.lt h' Z.zero
-        then DivNeg i
-        else if Z.equal h' Z.zero
-             then DivNeg (l, (WithTop.NotTop (Z.neg Z.one)))
+        let filtered_var = Z.lt h' Z.zero in
+        if filtered_var
+        then DivNeg (WithTop.Top, (WithTop.NotTop h'))
+        else let filtered_var0 = Z.equal h' Z.zero in
+             if filtered_var0
+             then DivNeg (WithTop.Top, (WithTop.NotTop (Z.neg Z.one)))
              else DivAcross)
    | WithTop.NotTop l' ->
-     if Z.gt l' Z.zero
-     then DivPos i
+     let filtered_var = Z.lt Z.zero l' in
+     if filtered_var
+     then DivPos ((WithTop.NotTop l'), h)
      else (match h with
            | WithTop.Top ->
-             if Z.equal l' Z.zero
-             then DivPos ((WithTop.NotTop Z.one), h)
+             let filtered_var0 = Z.equal l' Z.zero in
+             if filtered_var0
+             then DivPos ((WithTop.NotTop Z.one), WithTop.Top)
              else DivAcross
            | WithTop.NotTop h' ->
-             if Z.lt h' Z.zero
-             then DivNeg i
-             else if Z.equal l' Z.zero
-                  then if Z.equal h' Z.zero
+             let filtered_var0 = Z.lt h' Z.zero in
+             if filtered_var0
+             then DivNeg ((WithTop.NotTop l'), (WithTop.NotTop h'))
+             else let filtered_var1 = Z.equal l' Z.zero in
+                  if filtered_var1
+                  then let filtered_var2 = Z.equal h' Z.zero in
+                       if filtered_var2
                        then DivZero
-                       else DivPos ((WithTop.NotTop Z.one), h)
-                  else if Z.equal h' Z.zero
-                       then DivNeg (l, (WithTop.NotTop (Z.neg Z.one)))
+                       else DivPos ((WithTop.NotTop Z.one), (WithTop.NotTop
+                              h'))
+                  else let filtered_var2 = Z.equal h' Z.zero in
+                       if filtered_var2
+                       then DivNeg ((WithTop.NotTop l'), (WithTop.NotTop
+                              (Z.neg Z.one)))
                        else DivAcross))

@@ -11,7 +11,8 @@
    no bridging lemmas. *)
 
 Require Import AbstractionCombination.
-From Stdlib Require Import Bool ZArith.
+(* [Lia] discharges the sign obligations of [classify_divisor]. *)
+From Stdlib Require Import Bool ZArith Lia.
 
 Open Scope Z_scope.
 
@@ -169,38 +170,101 @@ Definition classify (i:interval) :=
   | WithTop.Top, WithTop.Top => Across
   end.
 
-(** Classify the divisor, and returns an interval where 0 has been
-removed from the bounds. *)
-Inductive divisor_classification :=
-  | DivPos : interval -> divisor_classification
-  | DivNeg : interval -> divisor_classification
-  | DivZero
-  | DivAcross.
+(** Sign of a bound, reading [Top] as the infinity on its own side: a
+    [Top] low bound is -∞ and so never positive, a [Top] high bound is
+    +∞ and so never negative. Either way [Top] is not [0], which is all
+    [quot_bound] asks of it. *)
+Definition low_pos  (b : WithTop.with_top Z) : Prop :=
+  match b with WithTop.Top => False | WithTop.NotTop z => 0 < z end.
+Definition high_pos (b : WithTop.with_top Z) : Prop :=
+  match b with WithTop.Top => True  | WithTop.NotTop z => 0 < z end.
+Definition low_neg  (b : WithTop.with_top Z) : Prop :=
+  match b with WithTop.Top => True  | WithTop.NotTop z => z < 0 end.
+Definition high_neg (b : WithTop.with_top Z) : Prop :=
+  match b with WithTop.Top => False | WithTop.NotTop z => z < 0 end.
 
-Definition classify_divisor (i:interval) :=
-  let (l,h) := i in
-  match l with
-  | WithTop.NotTop l' =>
-      if l' >? 0 then DivPos i
-      else match h with
-           | WithTop.NotTop h' =>
-               if h' <? 0 then DivNeg i
-               else if Z.eqb l' 0 then
-                      if  Z.eqb h' 0 then DivZero
-                      else DivPos (WithTop.NotTop 1, h)
-                    else if Z.eqb h' 0 then DivNeg (l, WithTop.NotTop (-1))
-               else DivAcross
-           | WithTop.Top =>
-               if Z.eqb l' 0
-               then DivPos (WithTop.NotTop 1, h)
-               else DivAcross
-           end
-  | WithTop.Top =>
-      match h with
-       | WithTop.NotTop h' =>
-           if h' <? 0 then DivNeg i
-           else if Z.eqb h' 0 then DivNeg (l, WithTop.NotTop (-1))
-           else DivAcross
-       | WithTop.Top => DivAcross
+(** An interval with a definite sign. [across] needs no [non_bottom] (it is
+    redundant with the bounds). All three erase to [interval]. *)
+Definition pos_interval : Type := { i : interval | non_bottom i /\ low_pos (fst i) }.
+Definition neg_interval : Type := { i : interval | non_bottom i /\ high_neg (snd i) }.
+Definition across_interval : Type := { i : interval | low_neg (fst i) /\ high_pos (snd i) }.
+
+(** Indexed by the interval being classified. [DivPos]/[DivNeg] carry a payload
+    because they sanitize : [(NotTop 0, h)] classifies as [DivPos (NotTop 1,
+    h)]; whereas [DivAcross] returns its argument untouched, so indexing lets it
+    carry only the two sign facts, which are [Prop] and erase. MAYBE: separate
+    sanitization and classification could be make the code cleaner. *)
+Inductive divisor_classification (i : interval) : Type :=
+  | DivPos : pos_interval -> divisor_classification i
+  | DivNeg : neg_interval -> divisor_classification i
+  | DivZero : divisor_classification i
+  | DivAcross : low_neg (fst i) -> high_pos (snd i) -> divisor_classification i.
+
+Arguments DivPos {i}. Arguments DivNeg {i}.
+Arguments DivZero {i}. Arguments DivAcross {i}.
+
+(** Classify the divisor, returning a sanitized interval where 0 has been
+    removed from the bounds (guaranteeing that the analysis won't do a division
+    by zero).
+
+    The argument is an [nb_interval]: this allows in some cases to sanitize the
+    interval by looking at a single bound. *) 
+Program Definition classify_divisor (i : nb_interval)
+  : divisor_classification (proj1_sig i) :=
+  match proj1_sig i as x return non_bottom x -> divisor_classification x with
+  | (WithTop.NotTop l', h) =>
+      fun Hnb =>
+      match Z_lt_dec 0 l' with
+      | left Hl => DivPos (exist _ (WithTop.NotTop l', h) (conj Hnb Hl))
+      | right Hl =>
+        match h as hh return non_bottom (WithTop.NotTop l', hh) ->
+                            divisor_classification (WithTop.NotTop l', hh) with
+        | WithTop.NotTop h' =>
+            fun Hnb' =>
+            match Z_lt_dec h' 0 with
+            | left Hh =>
+                DivNeg (exist _ (WithTop.NotTop l', WithTop.NotTop h') (conj Hnb' Hh))
+            | right Hh =>
+              match Z.eq_dec l' 0 with
+              | left _ =>
+                match Z.eq_dec h' 0 with
+                | left _ => DivZero
+                | right Hh0 =>
+                    DivPos (exist _ (WithTop.NotTop 1, WithTop.NotTop h')
+                                    _)
+                end
+              | right Hl0 =>
+                match Z.eq_dec h' 0 with
+                | left _ =>
+                    DivNeg (exist _ (WithTop.NotTop l', WithTop.NotTop (-1))
+                                    _)
+                | right Hh0 => DivAcross _ _
+                end
+              end
+            end
+        | WithTop.Top =>
+            fun Hnb' =>
+            match Z.eq_dec l' 0 with
+            | left _ => DivPos (exist _ (WithTop.NotTop 1, WithTop.Top) _)
+            | right Hl0 => DivAcross _ I
+            end
+        end Hnb
       end
-  end.
+  | (WithTop.Top, h) =>
+      fun Hnb =>
+      match h as hh return non_bottom (WithTop.Top, hh) ->
+                          divisor_classification (WithTop.Top, hh) with
+      | WithTop.NotTop h' =>
+          fun Hnb' =>
+          match Z_lt_dec h' 0 with
+          | left Hh => DivNeg (exist _ (WithTop.Top, WithTop.NotTop h') (conj Hnb' Hh))
+          | right Hh =>
+            match Z.eq_dec h' 0 with
+            | left _ => DivNeg (exist _ (WithTop.Top, WithTop.NotTop (-1)) _)
+            | right Hh0 => DivAcross I _
+            end
+          end
+      | WithTop.Top => fun _ => DivAcross I I
+      end Hnb
+  end (proj2_sig i).
+Solve Obligations of classify_divisor with (simpl in *; repeat split; solve [exact I | lia]).

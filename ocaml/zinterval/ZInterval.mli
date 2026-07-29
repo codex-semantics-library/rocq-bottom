@@ -27,10 +27,16 @@ type classification =
 
 val classify : interval -> classification
 
+type pos_interval = interval
+
+type neg_interval = interval
+
+type across_interval = interval
+
 type divisor_classification =
-| DivPos of interval
-| DivNeg of interval
+| DivPos of pos_interval
+| DivNeg of neg_interval
 | DivZero
 | DivAcross
 
-val classify_divisor : interval -> divisor_classification
+val classify_divisor : nb_interval -> divisor_classification
