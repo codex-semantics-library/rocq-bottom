@@ -127,11 +127,15 @@ Definition interval_mul_opt (i2 i1: interval) : interval :=
 (** Division bound: a / b with Top handling.
   Top / b = Top (unbounded dividend -> unbounded quotient)
   a / Top = 0  (finite dividend / unbounded divisor -> 0) *)
-Definition quot_bound (a b : WithTop.with_top Z) : WithTop.with_top Z :=
-  match a, b with
-  | _, WithTop.Top => WithTop.NotTop 0
-  | WithTop.Top, _ => WithTop.Top
-  | WithTop.NotTop a, WithTop.NotTop b => WithTop.NotTop (Z.quot a b)
+Program Definition quot_bound (a b : WithTop.with_top Z) (Hb : b <> WithTop.NotTop 0)
+  : WithTop.with_top Z :=
+  match b with
+  | WithTop.Top => WithTop.NotTop 0
+  | WithTop.NotTop b =>
+    match a with
+    | WithTop.Top => WithTop.Top
+    | WithTop.NotTop a => WithTop.NotTop (quot_non_zero a b _)
+    end
   end.
 
 (** For positive dividend [l1,h1] and strictly positive divisor [l2,h2]:
