@@ -391,49 +391,6 @@ Section Interval_mul.
   Qed.
 
 
-  (** * Infrastructure for across-zero cases. *)
-
-  (** γ of an across-zero interval splits at 0 into the negative-half γ and
-      positive-half γ. Operand-level statement; product-level splits follow
-      via [collecting_binary_forward_union_l] (Abstraction.v). *)
-  Lemma gamma_itv_split_at_zero_l (l h : WithTop.with_top Z) :
-    0 ∈ γ[glbtop] l -> 0 ∈ γ[lubtop] h ->
-    γ[itv] (l, h) ⊆⊇ γ[itv] (l, WithTop.NotTop 0) ∪ γ[itv] (WithTop.NotTop 0, h).
-  Proof.
-    move=> Hl Hh; split=> z.
-    - unfold_set => -[Hzl Hzh]; unfold_set.
-      case: (Z.le_ge_cases z 0) => Hz; [left | right]; unfold_set; split=> //=; lia.
-    - unfold_set => -[Hz | Hz]; unfold_set in Hz; move: Hz => [Hzl Hzh];
-        unfold_set; split=> //.
-      + by case: h Hh Hzh => [|?]; unfold_set; simpl in *; lia.
-      + by case: l Hl Hzl => [|?]; unfold_set; simpl in *; lia.
-  Qed.
-
-  (** If an interval contains 0 (across-zero), its product set splits into
-      a negative-part product and a positive-part product. Proved directly
-      by case-splitting the left operand on its sign; this is the
-      element-wise analogue of [gamma_itv_split_at_zero_l] composed with
-      [collecting_binary_forward_union_l], avoiding the missing "collecting
-      is proper in its first argument" step that route would require. *)
-  Lemma collecting_across_split_left (l2 h2: WithTop.with_top Z) (S: propset Z) z :
-    0 ∈ γ[glbtop] l2 ->
-    0 ∈ γ[lubtop] h2 ->
-    z ∈ collecting_binary_forward Z.mul (γ[itv] (l2, h2)) S <->
-    z ∈ (collecting_binary_forward Z.mul (γ[itv] (l2, WithTop.NotTop 0)) S ∪
-         collecting_binary_forward Z.mul (γ[itv] (WithTop.NotTop 0, h2)) S).
-  Proof.
-    move=> Hl2 Hh2; unfold_set; split.
-    - move=> [c2 [c1 [Hc2 [Hc1 Hc0]]]]; unfold_set in Hc2; move: Hc2 => [Hc2l Hc2h].
-      case: (Z.le_ge_cases c2 0) => Hc2z;
-        [left | right]; exists c2, c1; unfold_set;
-        repeat split; try assumption; simpl; lia.
-    - move=> [[c2 [c1 [Hc2 [Hc1 Hc0]]]] | [c2 [c1 [Hc2 [Hc1 Hc0]]]]];
-        unfold_set in Hc2; move: Hc2 => [Hc2l Hc2h];
-        exists c2, c1; unfold_set; repeat split; try assumption.
-      + by case: h2 Hh2 Hc2h => [|?]; unfold_set; simpl in *; lia.
-      + by case: l2 Hl2 Hc2l => [|?]; unfold_set; simpl in *; lia.
-  Qed.
-
   (** * α-completeness, abstract operands: positive (left) × across (right).
 
       With both operand sets abstract, split the across (right) operand's

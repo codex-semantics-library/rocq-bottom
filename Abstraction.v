@@ -1126,11 +1126,9 @@ Global Hint Unfold
   collecting_binary_backward_left
   collecting_binary_backward_right : to_set.
 
-(** [collecting_binary_forward] distributes over [∪] in either argument,
-    plus respects [⊆⊇] in the other. Used to discharge the [fC]
-    distributivity hypothesis of [binary_alpha_complete_split_{l,r}] at
-    split call sites. The combined statement [fC S T1 ⊆⊇ fC S_a T1 ∪ fC S_b T1]
-    given [S ⊆⊇ S_a ∪ S_b] follows in one step. *)
+(** [collecting_binary_forward] distributes over [∪] in either argument.
+    Used to discharge the [fC] distributivity hypothesis of
+    [binary_alpha_complete_split_{l,r}] at split call sites. *)
 Lemma collecting_binary_forward_union_l
   {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (S2_a S2_b : propset C2) (T1 : propset C1) :
   collecting_binary_forward f (S2_a ∪ S2_b) T1 ⊆⊇
@@ -1153,6 +1151,48 @@ Proof.
     case: Hor => Hc1; [left | right]; by exists c2, c1.
   - move=> [[c2 [c1 [Hc2 [Hc1 Heq]]]] | [c2 [c1 [Hc2 [Hc1 Heq]]]]];
       exists c2, c1; (repeat split=> //); by [left | right].
+Qed.
+
+(** The same splits for [collecting_binary_forward_partial]. The hypothesis is
+    deliberately *not* the [∪] of the two halves: with a partial operation the
+    split only has to cover the pairs the partiality admits. That is what makes
+    a divisor set splittable at [< 0] / [> 0] even when it contains 0 — the
+    zero divisors have already been discarded — and no [∪]-shaped hypothesis can
+    say it. The plain shape above is the instance [S2 := S2_a ∪ S2_b]. *)
+Lemma collecting_binary_forward_partial_split_l
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S2 S2_a S2_b : propset C2) (T1 : propset C1) :
+  (forall c2 c1, c2 ∈ S2 -> c1 ∈ T1 -> P c2 c1 -> c2 ∈ S2_a \/ c2 ∈ S2_b) ->
+  S2_a ⊆ S2 -> S2_b ⊆ S2 ->
+  collecting_binary_forward_partial P f S2 T1 ⊆⊇
+  collecting_binary_forward_partial P f S2_a T1 ∪
+  collecting_binary_forward_partial P f S2_b T1.
+Proof.
+  move=> Hcover Hsuba Hsubb.
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]].
+    case: (Hcover _ _ Hc2 Hc1 HP) => Hhalf; [left | right]; by exists c2, c1.
+  - move=> [[c2 [c1 [Hc2 [Hc1 [HP Heq]]]]] | [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]]];
+      exists c2, c1; (repeat split=> //);
+      by first [exact: (Hsuba _ Hc2) | exact: (Hsubb _ Hc2)].
+Qed.
+
+Lemma collecting_binary_forward_partial_split_r
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (T2 : propset C2) (S1 S1_a S1_b : propset C1) :
+  (forall c2 c1, c2 ∈ T2 -> c1 ∈ S1 -> P c2 c1 -> c1 ∈ S1_a \/ c1 ∈ S1_b) ->
+  S1_a ⊆ S1 -> S1_b ⊆ S1 ->
+  collecting_binary_forward_partial P f T2 S1 ⊆⊇
+  collecting_binary_forward_partial P f T2 S1_a ∪
+  collecting_binary_forward_partial P f T2 S1_b.
+Proof.
+  move=> Hcover Hsuba Hsubb.
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]].
+    case: (Hcover _ _ Hc2 Hc1 HP) => Hhalf; [left | right]; by exists c2, c1.
+  - move=> [[c2 [c1 [Hc2 [Hc1 [HP Heq]]]]] | [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]]];
+      exists c2, c1; (repeat split=> //);
+      by first [exact: (Hsuba _ Hc1) | exact: (Hsubb _ Hc1)].
 Qed.
 
 (** * Soundness theorems. *)
