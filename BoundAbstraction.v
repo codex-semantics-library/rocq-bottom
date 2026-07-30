@@ -574,6 +574,21 @@ End IntervalUnbounded. End IntervalUnbounded.
    [lubtop] adjoin a ⊤ (via [WithTop]) for sets with no lower / upper bound. *)
 
 
+(** * Minima are greatest lower bounds.
+
+    An element of [S] that is below all of [S] is its glb, and dually.  Free in
+    any preorder — it is the converse, [GlbsAreMins] / [LubsAreMaxs] below, that
+    needs the order to be discrete and has to go through a [Stable]
+    continuation.  Named because the "exhibit the bound as a member" step
+    otherwise gets re-proved at every best-abstraction site. *)
+Lemma is_glb_of_min {A} (le : relation A) (S : ℘ A) (x : A) :
+  x ∈ S -> (forall z, z ∈ S -> le x z) -> GLB.is_glb le x S.
+Proof. move=> Hx Hlb; split; first exact: Hlb. move=> z Hz. exact: (Hz _ Hx). Qed.
+
+Lemma is_lub_of_max {A} (le : relation A) (S : ℘ A) (x : A) :
+  x ∈ S -> (forall z, z ∈ S -> le z x) -> LUB.is_lub le x S.
+Proof. move=> Hx Hub; split; first exact: Hub. move=> z Hz. exact: (Hz _ Hx). Qed.
+
 (** * Generic monotone-binop best-abstraction lemmas.
 
     Given a binary operator [f : A → B → C] monotone in both
@@ -597,38 +612,36 @@ Section MonotoneBinop.
     forall a1 a1' a2 a2',
       leA a1 a1' -> leB a2 a2' -> leC (f a1 a2) (f a1' a2').
 
+  (** The extremes of the image are attained at the extremes of the operands:
+      with [boundA], [boundB] minima of their sets, [f boundA boundB] is the
+      minimum of the image, hence its glb.  Monotonicity enters only to show it
+      is a lower bound; that it is *attained* is [is_glb_of_min] above. *)
   Lemma glb_monotone_binop
         (f : A -> B -> C) (Hmono : monotone_binop f)
-        (SA : propset A) (SB : propset B) (aA : A) (aB : B) :
-    GLB.is_glb leA aA SA ->
-    GLB.is_glb leB aB SB ->
-    aA ∈ SA -> aB ∈ SB ->
-    GLB.is_glb leC (f aA aB) (collecting_binary_forward f SA SB).
+        (SA : propset A) (SB : propset B) (boundA : A) (boundB : B) :
+    GLB.is_glb leA boundA SA ->
+    GLB.is_glb leB boundB SB ->
+    boundA ∈ SA -> boundB ∈ SB ->
+    GLB.is_glb leC (f boundA boundB) (collecting_binary_forward f SA SB).
   Proof using.
-    move=> [HlbA HgrA] [HlbB HgrB] HAin HBin.
-    split.
-    - move=> z; unfold_set; move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
-      rewrite -Heq. apply: Hmono.
-      + exact: (HlbA _ Hc2).
-      + exact: (HlbB _ Hc1).
-    - move=> z Hz. apply: Hz. unfold_set. by exists aA, aB.
+    move=> [HlbA _] [HlbB _] HAin HBin.
+    apply: is_glb_of_min; first by unfold_set; exists boundA, boundB.
+    move=> z; unfold_set; move=> [a [b [Ha [Hb <-]]]].
+    exact: (Hmono _ _ _ _ (HlbA _ Ha) (HlbB _ Hb)).
   Qed.
 
   Lemma lub_monotone_binop
         (f : A -> B -> C) (Hmono : monotone_binop f)
-        (SA : propset A) (SB : propset B) (aA : A) (aB : B) :
-    LUB.is_lub leA aA SA ->
-    LUB.is_lub leB aB SB ->
-    aA ∈ SA -> aB ∈ SB ->
-    LUB.is_lub leC (f aA aB) (collecting_binary_forward f SA SB).
+        (SA : propset A) (SB : propset B) (boundA : A) (boundB : B) :
+    LUB.is_lub leA boundA SA ->
+    LUB.is_lub leB boundB SB ->
+    boundA ∈ SA -> boundB ∈ SB ->
+    LUB.is_lub leC (f boundA boundB) (collecting_binary_forward f SA SB).
   Proof using.
-    move=> [HubA HgrA] [HubB HgrB] HAin HBin.
-    split.
-    - move=> z; unfold_set; move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
-      rewrite -Heq. apply: Hmono.
-      + exact: (HubA _ Hc2).
-      + exact: (HubB _ Hc1).
-    - move=> z Hz. apply: Hz. unfold_set. by exists aA, aB.
+    move=> [HubA _] [HubB _] HAin HBin.
+    apply: is_lub_of_max; first by unfold_set; exists boundA, boundB.
+    move=> z; unfold_set; move=> [a [b [Ha [Hb <-]]]].
+    exact: (Hmono _ _ _ _ (HubA _ Ha) (HubB _ Hb)).
   Qed.
 
 End MonotoneBinop.
