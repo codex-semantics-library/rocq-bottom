@@ -34,16 +34,11 @@ Definition interval_add (i2 i1: interval) : interval :=
 (** Direct definition for efficient extraction. Equivalent to
     interval_add i1 (interval_opp i2), proved below. *)
 
-Definition sub_bound (a b : WithTop.with_top Z) : WithTop.with_top Z :=
-  match a, b with
-  | WithTop.Top, _ | _, WithTop.Top => WithTop.Top
-  | WithTop.NotTop a, WithTop.NotTop b => WithTop.NotTop (a - b)
-  end.
-
 Definition interval_sub (i1 i2 : interval) : interval :=
   let (l1,h1) := i1 in
   let (l2,h2) := i2 in
-  (sub_bound l1 h2, sub_bound h1 l2).
+  (WithTop.lift2 Z.sub l1 h2, WithTop.lift2 Z.sub h1 l2).
+
 
 (** * Backward [Z.add] and [Z.sub]. See [AddBackwardTheory.v].
 
