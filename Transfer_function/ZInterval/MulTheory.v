@@ -80,12 +80,11 @@ Proof.
   move=> Hzero [c0 Hc0] [c1 Hc1].
   have H0z : 0 ∈ S_zero by have E := Hzero c0 Hc0; rewrite -E.
   apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
-  constructor.
+  apply: is_lub_of_max.
+  - by exists 0, c1; repeat split=> //; ring.
   - move=> z' [c2 [c1' [Hc2in [Hc1'in <-]]]].
     have -> : c2 = 0 by apply Hzero.
     unfold_set; simpl; lia.
-  - move=> z' Hz'; apply Hz'.
-    exists 0, c1; split; [exact H0z | split; [exact Hc1 | ring]].
 Qed.
 
 (** Right-zero variant. *)
@@ -99,12 +98,11 @@ Proof.
   move=> Hzero [c0 Hc0] [c1 Hc1].
   have H0z : 0 ∈ S_zero by have E := Hzero c0 Hc0; rewrite -E.
   apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
-  constructor.
+  apply: is_lub_of_max.
+  - by exists c1, 0; repeat split=> //; ring.
   - move=> z' [c2 [c1' [Hc2in [Hc1'in <-]]]].
     have -> : c1' = 0 by apply Hzero.
     unfold_set; simpl; lia.
-  - move=> z' Hz'; apply Hz'.
-    exists c1, 0; split; [exact Hc1 | split; [exact H0z | ring]].
 Qed.
 
 Section Interval_mul.
@@ -186,15 +184,14 @@ Section Interval_mul.
     apply/Conjunction.is_alpha_pair_iff; split.
     - (* GLB: l1*l2 is the glb of the product set *)
       apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_glbtop)).
-      constructor.
+      apply: is_glb_of_min.
+      + by exists l2, l1; repeat split=> //; ring.
       + move=> z [c2 [c1 [Hc2 [Hc1 <-]]]].
         have Hg1 := HS1 _ Hc1. have Hg2 := HS2 _ Hc2.
         clear HS1 HS2 Hlub1 Hlub2 Ha1 Ha2 Hath1 Hath2 Hatl1 Hatl2.
         move: Hg1 Hg2 Hnb1 Hnb2.
         case: h1 => [|?]; case: h2 => [|?];
           unfold_set; simpl => *; nia.
-      + move=> z Hz; apply Hz.
-        exists l2, l1; by repeat split; [exact Hatl2|exact Hatl1|ring].
     - (* LUB: mul_inf of the high bounds *)
       move: Hnb1 Hnb2 Hath1 Hath2 Hlub1 Hlub2 Ha1 Ha2 HS1 HS2;
       case: h1 => [|h1']; case: h2 => [|h2'] /=
@@ -228,13 +225,13 @@ Section Interval_mul.
         have -> : to_high (mul_inf (high_inf (WithTop.NotTop h1')) (high_inf (WithTop.NotTop h2')))
                   = WithTop.NotTop (h1' * h2') by rewrite /high_inf mul_inf_fin.
         apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
-        rewrite /LUBUnbounded.is_α /=. constructor.
+        rewrite /LUBUnbounded.is_α /=.
+        apply: is_lub_of_max.
+        * by exists h2', h1'; repeat split=> //; ring.
         * move=> z' [c2 [c1 [Hc2 [Hc1 <-]]]].
           have Hg1 := HS1 _ Hc1; have Hg2 := HS2 _ Hc2.
           unfold_set in Hg1; unfold_set in Hg2.
           destruct Hg1 as [? ?]; destruct Hg2 as [? ?]; nia.
-        * move=> z' Hz'; apply Hz'.
-          exists h2', h1'; by repeat split; [exact Hath2|exact Hath1|ring].
   Qed.
 
   (** Reindexing an existential through negation on [Z]: lets us align
