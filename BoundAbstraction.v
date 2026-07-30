@@ -574,13 +574,17 @@ End IntervalUnbounded. End IntervalUnbounded.
    [lubtop] adjoin a ⊤ (via [WithTop]) for sets with no lower / upper bound. *)
 
 
-(** * Minima are greatest lower bounds.
+(** * Minima and greatest lower bounds.
 
-    An element of [S] that is below all of [S] is its glb, and dually.  Free in
-    any preorder — it is the converse, [GlbsAreMins] / [LubsAreMaxs] below, that
-    needs the order to be discrete and has to go through a [Stable]
-    continuation.  Named because the "exhibit the bound as a member" step
-    otherwise gets re-proved at every best-abstraction site. *)
+    The two directions, and they are not symmetric in cost.
+
+    *Minimum ⇒ glb* ([is_glb_of_min] below) is free in any preorder: an element
+    of [S] that is below all of [S] is its glb.  Named because the "exhibit the
+    bound as a member" step otherwise gets re-proved at every best-abstraction
+    site.
+
+    *Glb ⇒ minimum* is [GlbsAreMins], further down: it is false in general (the
+    glb need not be attained), so it is a class, discharged per order. *)
 Lemma is_glb_of_min {A} (le : relation A) (S : ℘ A) (x : A) :
   x ∈ S -> (forall z, z ∈ S -> le x z) -> GLB.is_glb le x S.
 Proof. move=> Hx Hlb; split; first exact: Hlb. move=> z Hz. exact: (Hz _ Hx). Qed.
@@ -588,6 +592,37 @@ Proof. move=> Hx Hlb; split; first exact: Hlb. move=> z Hz. exact: (Hz _ Hx). Qe
 Lemma is_lub_of_max {A} (le : relation A) (S : ℘ A) (x : A) :
   x ∈ S -> (forall z, z ∈ S -> le z x) -> LUB.is_lub le x S.
 Proof. move=> Hx Hub; split; first exact: Hub. move=> z Hz. exact: (Hz _ Hx). Qed.
+
+(** * "Glbs are mins" / "Lubs are maxs": universal attainment.
+
+    [GlbsAreMins le] packages the fact that *every* set whose glb
+    exists has that glb as a minimum — i.e. the glb lies in the set.
+    Delivered in CPS to a [Stable] continuation so a domain without
+    decidable membership can still route the witness through the
+    [¬¬]-monad.
+
+    Two concrete realisations:
+
+    - **Discrete orders** ([Z], [N], machine integers): a [NotTop] glb
+      [l] of [S] must be in [S] because otherwise [l+1] would still be
+      a lower bound, contradicting maximality. The "+1" relies on a
+      successor; this is the [Z_glbs_are_mins] route.
+
+    - **Finite posets with decidable [le] and decidable membership**:
+      enumerate the (finitely many) candidates and check membership
+      directly. The continuation [Stable] hypothesis is then trivially
+      discharged because membership is decidable. No successor is
+      needed; finiteness substitutes for discreteness.
+
+    [LubsAreMaxs] is dual (mirror argument on the maximum). *)
+Class GlbsAreMins {A} (le : relation A) : Prop :=
+  glbs_are_mins : forall (G : Prop) `{Stable G} (l : A) (S : ℘ A),
+    GLB.is_glb le l S -> ((l ∈ S) -> G) -> G.
+
+Class LubsAreMaxs {A} (le : relation A) : Prop :=
+  lubs_are_maxs : forall (G : Prop) `{Stable G} (h : A) (S : ℘ A),
+    LUB.is_lub le h S -> ((h ∈ S) -> G) -> G.
+
 
 (** * Generic monotone-binop best-abstraction lemmas.
 
@@ -665,37 +700,6 @@ Proof.
   apply (strong_α_relation_spec (StrongAlphaRelation:=LUB.galois le)).
   move=> a. exact: (H (WithTop.NotTop a)).
 Qed.
-
-
-(** * "Glbs are mins" / "Lubs are maxs": universal attainment.
-
-    [GlbsAreMins le] packages the fact that *every* set whose glb
-    exists has that glb as a minimum — i.e. the glb lies in the set.
-    Delivered in CPS to a [Stable] continuation so a domain without
-    decidable membership can still route the witness through the
-    [¬¬]-monad.
-
-    Two concrete realisations:
-
-    - **Discrete orders** ([Z], [N], machine integers): a [NotTop] glb
-      [l] of [S] must be in [S] because otherwise [l+1] would still be
-      a lower bound, contradicting maximality. The "+1" relies on a
-      successor; this is the [Z_glbs_are_mins] route.
-
-    - **Finite posets with decidable [le] and decidable membership**:
-      enumerate the (finitely many) candidates and check membership
-      directly. The continuation [Stable] hypothesis is then trivially
-      discharged because membership is decidable. No successor is
-      needed; finiteness substitutes for discreteness.
-
-    [LubsAreMaxs] is dual (mirror argument on the maximum). *)
-Class GlbsAreMins {A} (le : relation A) : Prop :=
-  glbs_are_mins : forall (G : Prop) `{Stable G} (l : A) (S : ℘ A),
-    GLB.is_glb le l S -> ((l ∈ S) -> G) -> G.
-
-Class LubsAreMaxs {A} (le : relation A) : Prop :=
-  lubs_are_maxs : forall (G : Prop) `{Stable G} (h : A) (S : ℘ A),
-    LUB.is_lub le h S -> ((h ∈ S) -> G) -> G.
 
 
 (** * Generic monotone-binop, ∞-aware ([WithTop] lifting).
