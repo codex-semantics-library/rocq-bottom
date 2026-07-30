@@ -516,23 +516,15 @@ Section Interval_mul.
          (collecting_binary_forward Z.mul S1 S2) -> G) -> G.
   Proof.
     move=> Hl1 Hnb1 Hl2 Hh2 Hex1 Hex2 Ha1 Ha2 Hk.
-    move: (Ha2) => /Conjunction.is_alpha_pair_iff [Hglb2 Hlub2].
-    apply: (itv_split_at_zero_alpha l2 h2 S2 Hl2 Hh2 Hex2 Ha2) => m p Hm Hp Han Hap.
-    apply: (across_le0_witness l2 S2 Hl2 Hglb2) => Hne_neg0.
-    apply: (across_ge0_witness h2 S2 Hh2 Hlub2) => Hne_pos0.
-    have Hexn : exists c, c ∈ {[ z | z ∈ S2 /\ z <= 0 ]}
-      by move: Hne_neg0 => [c [Hc Hc0]]; exists c; unfold_set; split.
-    have Hexp : exists c, c ∈ {[ z | z ∈ S2 /\ 0 <= z ]}
-      by move: Hne_pos0 => [c [Hc Hc0]]; exists c; unfold_set; split.
-    have Hnbn : non_bottom (l2, WithTop.NotTop m).
-    { apply/non_bottom_non_empty; move: Hexn => [c Hc].
-      exists c; exact: (gamma_alpha_extensive itv _ _ Han c Hc). }
-    have Hnbp : non_bottom (WithTop.NotTop p, h2).
-    { apply/non_bottom_non_empty; move: Hexp => [c Hc].
-      exists c; exact: (gamma_alpha_extensive itv _ _ Hap c Hc). }
+    apply: (itv_split_at_zero_alpha l2 h2 S2 Hl2 Hh2 Hex2 Ha2)
+      => m p Hm Hp Han Hap HmS HpS.
+    have Hmemn : m ∈ {[ z | z ∈ S2 /\ z <= 0 ]} by unfold_set; split.
+    have Hmemp : p ∈ {[ z | z ∈ S2 /\ 0 <= z ]} by unfold_set; split.
+    have Hnbn := non_bottom_of_alpha _ _ _ Han Hmemn.
+    have Hnbp := non_bottom_of_alpha _ _ _ Hap Hmemp.
     have Hjoin := interval_mul_pos_across_join l1 h1 l2 m p h2 S1
                     {[ z | z ∈ S2 /\ z <= 0 ]} {[ z | z ∈ S2 /\ 0 <= z ]}
-                    Hl1 Hm Hp Hnb1 Hnbn Hnbp Hex1 Hexn Hexp Ha1 Han Hap.
+                    Hl1 Hm Hp Hnb1 Hnbn Hnbp Hex1 (nonempty_of_mem _ _ Hmemn) (nonempty_of_mem _ _ Hmemp) Ha1 Han Hap.
     apply: (Hk m p Hm Hp).
     apply: (is_alpha_set_equiv _ _ _ _ Hjoin); split=> z; unfold_set.
     - move=> [c1 [c2 [Hc1 [Hc2 Heq]]]].
@@ -622,26 +614,18 @@ Section Interval_mul.
       (collecting_binary_forward Z.mul S1 S2).
   Proof.
     move=> Hl1 Hh1 Hl2 Hh2 Hex1 Hex2 Ha1 Ha2.
-    move: (Ha1) => /Conjunction.is_alpha_pair_iff [Hglb1 Hlub1].
-    apply: (itv_split_at_zero_alpha l1 h1 S1 Hl1 Hh1 Hex1 Ha1) => m p Hm Hp Han Hap.
-    apply: (across_le0_witness l1 S1 Hl1 Hglb1) => Hne_neg0.
-    apply: (across_ge0_witness h1 S1 Hh1 Hlub1) => Hne_pos0.
-    have Hexn : exists c, c ∈ {[ z | z ∈ S1 /\ z <= 0 ]}
-      by move: Hne_neg0 => [c [Hc Hc0]]; exists c; unfold_set; split.
-    have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 <= z ]}
-      by move: Hne_pos0 => [c [Hc Hc0]]; exists c; unfold_set; split.
-    have Hnbn : non_bottom (l1, WithTop.NotTop m).
-    { apply/non_bottom_non_empty; move: Hexn => [c Hc].
-      exists c; exact: (gamma_alpha_extensive itv _ _ Han c Hc). }
-    have Hnbp : non_bottom (WithTop.NotTop p, h1).
-    { apply/non_bottom_non_empty; move: Hexp => [c Hc].
-      exists c; exact: (gamma_alpha_extensive itv _ _ Hap c Hc). }
+    apply: (itv_split_at_zero_alpha l1 h1 S1 Hl1 Hh1 Hex1 Ha1)
+      => m p Hm Hp Han Hap HmS HpS.
+    have Hmemn : m ∈ {[ z | z ∈ S1 /\ z <= 0 ]} by unfold_set; split.
+    have Hmemp : p ∈ {[ z | z ∈ S1 /\ 0 <= z ]} by unfold_set; split.
+    have Hnbn := non_bottom_of_alpha _ _ _ Han Hmemn.
+    have Hnbp := non_bottom_of_alpha _ _ _ Hap Hmemp.
     have Hn := interval_mul_neg_across_closed l1 m l2 h2
                  {[ z | z ∈ S1 /\ z <= 0 ]} S2
-                 Hm Hnbn Hl2 Hh2 Hexn Hex2 Han Ha2.
+                 Hm Hnbn Hl2 Hh2 (nonempty_of_mem _ _ Hmemn) Hex2 Han Ha2.
     have Hpr := interval_mul_pos_across_closed p h1 l2 h2
                   {[ z | z ∈ S1 /\ 0 <= z ]} S2
-                  Hp Hnbp Hl2 Hh2 Hexp Hex2 Hap Ha2.
+                  Hp Hnbp Hl2 Hh2 (nonempty_of_mem _ _ Hmemp) Hex2 Hap Ha2.
     have HEQ :
       (collecting_binary_forward Z.mul {[ z | z ∈ S1 /\ z <= 0 ]} S2
        ∪ collecting_binary_forward Z.mul {[ z | z ∈ S1 /\ 0 <= z ]} S2)

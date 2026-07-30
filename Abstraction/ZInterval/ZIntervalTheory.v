@@ -422,6 +422,23 @@ Lemma non_bottom_non_empty:
   forall i:interval, (non_bottom i) <->  exists c, c ∈ γ[itv] i.
 Proof. exact (IntervalUnbounded.non_bottom_non_empty Z_CL 0). Qed.
 
+(** An interval that abstracts a non-empty set is non-bottom: α-completeness
+    makes γ contain the set ([gamma_alpha_extensive]), so any witness in the set
+    is a witness in γ.  Spelled out once because the sign-split proofs need it
+    for each half they produce. *)
+Lemma non_bottom_of_alpha (i : interval) (S : ℘ Z) (c : Z) :
+  IsAlpha (A:=itv) i S -> c ∈ S -> non_bottom i.
+Proof.
+  move=> Ha Hc; apply/non_bottom_non_empty.
+  exists c; exact: (gamma_alpha_extensive itv _ _ Ha c Hc).
+Qed.
+
+(** A witness makes a set non-empty.  Spelled out because the codebase's
+    non-emptiness hypotheses are existentials, while the sign split now hands
+    back the actual extremal elements. *)
+Lemma nonempty_of_mem {C : Type} (S : ℘ C) (c : C) : c ∈ S -> exists c', c' ∈ S.
+Proof. by move=> Hc; exists c. Qed.
+
 (** [ZInterval.join] preserves non-bottom: the union of two non-empty intervals is
     non-empty. (Used by the split-aware lattice check, where [join] is typed
     over the non-empty carrier and so must package an [nb_interval].) *)
@@ -831,11 +848,11 @@ Qed.
     set bounded above by [B] has a lub [m ≤ B]. *)
 Lemma Z_bounded_above_lub_witness {G : Prop} `{Stable G} (B : Z) (S : ℘ Z) :
   (exists c, c ∈ S) -> (forall c, c ∈ S -> c <= B) ->
-  ((exists m, LUB.is_lub Z.le m S /\ m <= B) -> G) -> G.
+  ((exists m, LUB.is_lub Z.le m S /\ m <= B /\ m ∈ S) -> G) -> G.
 Proof.
   move=> Hne Hbound Hk. apply: stable => Hng.
   apply: (Z_bounded_above_max_nn B S Hne Hbound) => -[m [Hm Hmax]].
-  apply: Hng; apply: Hk. exists m; split; last exact: (Hbound m Hm).
+  apply: Hng; apply: Hk. exists m; split; last by split; [exact: (Hbound m Hm)|exact: Hm].
   constructor.
   - move=> z Hz. exact: (Hmax z Hz).
   - move=> z' Hz'. exact: (Hz' m Hm).
@@ -864,11 +881,11 @@ Qed.
 
 Lemma Z_bounded_below_glb_witness {G : Prop} `{Stable G} (B : Z) (S : ℘ Z) :
   (exists c, c ∈ S) -> (forall c, c ∈ S -> B <= c) ->
-  ((exists m, GLB.is_glb Z.le m S /\ B <= m) -> G) -> G.
+  ((exists m, GLB.is_glb Z.le m S /\ B <= m /\ m ∈ S) -> G) -> G.
 Proof.
   move=> Hne Hbound Hk. apply: stable => Hng.
   apply: (Z_bounded_below_min_nn B S Hne Hbound) => -[m [Hm Hmin]].
-  apply: Hng; apply: Hk. exists m; split; last exact: (Hbound m Hm).
+  apply: Hng; apply: Hk. exists m; split; last by split; [exact: (Hbound m Hm)|exact: Hm].
   constructor.
   - move=> z Hz. exact: (Hmin z Hz).
   - move=> z' Hz'. exact: (Hz' m Hm).
@@ -942,7 +959,8 @@ Lemma itv_split_at_zero_alpha {G : Prop} `{Stable G}
   (forall m p,
      m <= 0 -> 0 <= p ->
      IsAlpha (A:=itv) (l2, WithTop.NotTop m) {[ z | z ∈ S2 /\ z <= 0 ]} ->
-     IsAlpha (A:=itv) (WithTop.NotTop p, h2) {[ z | z ∈ S2 /\ 0 <= z ]} -> G)
+     IsAlpha (A:=itv) (WithTop.NotTop p, h2) {[ z | z ∈ S2 /\ 0 <= z ]} ->
+     m ∈ S2 -> p ∈ S2 -> G)
   -> G.
 Proof.
   move=> Hl0 Hh0 Hex Ha Hk.
@@ -961,9 +979,10 @@ Proof.
     by move: Hne_neg => [c [Hc Hc0]]; exists c; unfold_set; split.
   have Hne_pos' : exists c, c ∈ {[ z | z ∈ S2 /\ 0 <= z ]}
     by move: Hne_pos => [c [Hc Hc0]]; exists c; unfold_set; split.
-  apply: (Z_bounded_above_lub_witness 0 _ Hne_neg' Hb_neg) => -[m [Hlubm Hm0]].
-  apply: (Z_bounded_below_glb_witness 0 _ Hne_pos' Hb_pos) => -[p [Hglbp Hp0]].
-  apply: (Hk m p Hm0 Hp0).
+  apply: (Z_bounded_above_lub_witness 0 _ Hne_neg' Hb_neg) => -[m [Hlubm [Hm0 Hmemm]]].
+  apply: (Z_bounded_below_glb_witness 0 _ Hne_pos' Hb_pos) => -[p [Hglbp [Hp0 Hmemp]]].
+  unfold_set in Hmemm; unfold_set in Hmemp.
+  apply: (Hk m p ltac:(lia) ltac:(lia) _ _ (proj1 Hmemm) (proj1 Hmemp)).
   - apply/Conjunction.is_alpha_pair_iff; split; first exact Hglb'.
     apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)). exact Hlubm.
   - apply/Conjunction.is_alpha_pair_iff; split; last exact Hlub'.
@@ -1025,7 +1044,7 @@ Lemma itv_split_at_zero_strict_alpha {G : Prop} `{Stable G}
   low_neg l -> high_pos h -> (exists c, c ∈ S) ->
   IsAlpha (A:=itv) (l, h) S ->
   (forall m p,
-     m <= -1 -> 1 <= p ->
+     m ∈ S -> m < 0 -> p ∈ S -> 0 < p ->
      IsAlpha (A:=itv) (l, WithTop.NotTop m) {[ z | z ∈ S /\ z < 0 ]} ->
      IsAlpha (A:=itv) (WithTop.NotTop p, h) {[ z | z ∈ S /\ 0 < z ]} -> G)
   -> G.
@@ -1046,9 +1065,10 @@ Proof.
     by move: Hne_neg => [c [Hc Hc0]]; exists c; unfold_set; split.
   have Hne_pos' : exists c, c ∈ {[ z | z ∈ S /\ 0 < z ]}
     by move: Hne_pos => [c [Hc Hc0]]; exists c; unfold_set; split.
-  apply: (Z_bounded_above_lub_witness (-1) _ Hne_neg' Hb_neg) => -[m [Hlubm Hm0]].
-  apply: (Z_bounded_below_glb_witness 1 _ Hne_pos' Hb_pos) => -[p [Hglbp Hp0]].
-  apply: (Hk m p Hm0 Hp0).
+  apply: (Z_bounded_above_lub_witness (-1) _ Hne_neg' Hb_neg) => -[m [Hlubm [Hm0 Hmemm]]].
+  apply: (Z_bounded_below_glb_witness 1 _ Hne_pos' Hb_pos) => -[p [Hglbp [Hp0 Hmemp]]].
+  unfold_set in Hmemm; unfold_set in Hmemp.
+  apply: (Hk m p (proj1 Hmemm) ltac:(lia) (proj1 Hmemp) ltac:(lia)).
   - apply/Conjunction.is_alpha_pair_iff; split; first exact Hglb'.
     apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)). exact Hlubm.
   - apply/Conjunction.is_alpha_pair_iff; split; last exact Hlub'.
