@@ -85,6 +85,19 @@ Section Interval_opp.
     split=> z; unfold_set => H; by replace (- -z) with z in * by lia.
   Qed.
 
+  (** Map a set equivalence through [Z.opp]. *)
+  Lemma propset_opp_equiv (S S' : ℘ Z) : S ⊆⊇ S' -> {[z | -z ∈ S]} ⊆⊇ {[z | -z ∈ S']}.
+  Proof.
+    move=> [H H']. split => z Hz; unfold_set in Hz; unfold_set.
+    - exact: (H _ Hz).
+    - exact: (H' _ Hz).
+  Qed.
+
+  (** Non-emptiness transports through [Z.opp], for the existence hypotheses of
+      the quarter transports. *)
+  Lemma opp_nonempty (S : ℘ Z) : (exists c, c ∈ S) -> exists c, c ∈ {[ z | -z ∈ S ]}.
+  Proof. move=> [c Hc]. exists (-c). by unfold_set; replace (- - c) with c by lia. Qed.
+
   (** IsAlpha transports through interval_opp / Z.opp on both sides, since
       opp is an involutive bijection (concrete and abstract) and exact. *)
   Lemma is_alpha_opp_iff (a : interval) (S : ℘ Z) :

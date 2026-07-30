@@ -237,12 +237,6 @@ Section Interval_mul.
           exists h2', h1'; by repeat split; [exact Hath2|exact Hath1|ring].
   Qed.
 
-  (** Non-emptiness transfers through negation. *)
-  Local Lemma opp_nonempty (S : ℘ Z) : (exists c, c ∈ S) -> exists c, c ∈ {[ z | -z ∈ S ]}.
-  Proof.
-    move=> [c Hc]. exists (-c). by unfold_set; replace (- - c) with c by lia.
-  Qed.
-
   (** Reindexing an existential through negation on [Z]: lets us align
       witnesses on both sides of a mul/opp commutation. Mirrors the TODO
       at [base.v:358]. *)
@@ -273,6 +267,40 @@ Section Interval_mul.
     unfold_set_equiv => c.
     apply: exists_iff => c2; apply: exists_iff_opp => c1; unfold_set.
     by split; move=> [? [? ?]]; repeat split=> //; lia.
+  Qed.
+
+  (** The involution form of the one-operand transports: the negated collecting
+      set, negated back, is the original.  These are what [is_alpha_set_equiv]
+      consumes after [is_alpha_opp_iff] has pushed the [interval_opp] to the
+      concrete side. *)
+  Lemma collecting_mul_opp_l_inv (S2 S1 : ℘ Z) :
+    {[ z | -z ∈ collecting_binary_forward Z.mul {[ z | -z ∈ S2 ]} S1 ]} ⊆⊇
+    collecting_binary_forward Z.mul S2 S1.
+  Proof.
+    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
+    - apply: propset_opp_equiv. exact: collecting_mul_opp_l.
+    - exact: propset_opp_involutive.
+  Qed.
+
+  Lemma collecting_mul_opp_r_inv (S2 S1 : ℘ Z) :
+    {[ z | -z ∈ collecting_binary_forward Z.mul S2 {[ z | -z ∈ S1 ]} ]} ⊆⊇
+    collecting_binary_forward Z.mul S2 S1.
+  Proof.
+    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
+    - apply: propset_opp_equiv. exact: collecting_mul_opp_r.
+    - exact: propset_opp_involutive.
+  Qed.
+
+  (** Negating both operands cancels. *)
+  Lemma collecting_mul_opp_both (S2 S1 : ℘ Z) :
+    collecting_binary_forward Z.mul {[ z | -z ∈ S2 ]} {[ z | -z ∈ S1 ]} ⊆⊇
+    collecting_binary_forward Z.mul S2 S1.
+  Proof.
+    transitivity {[ z | -z ∈ collecting_binary_forward Z.mul S2 {[ z | -z ∈ S1 ]} ]};
+      first exact: collecting_mul_opp_l.
+    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
+    - apply: propset_opp_equiv. exact: collecting_mul_opp_r.
+    - exact: propset_opp_involutive.
   Qed.
 
   (** α-completeness for negative × positive case, derived from the
