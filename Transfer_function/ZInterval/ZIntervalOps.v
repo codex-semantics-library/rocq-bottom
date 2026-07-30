@@ -212,11 +212,12 @@ Definition interval_quot_full (i2 i1 : interval) : interval :=
       | Neg    => interval_quot_neg_neg i2 i1_san
       | Across => interval_quot_across_neg i2 i1_san
       end
-  | DivAcross =>
+  | DivAcross Hl Hh =>
+      let i1_san := exist _ (proj1_sig i1) (conj Hl Hh) : across_interval in
       match classify i2 with
-      | Pos    => interval_quot_pos_across i2 i1
-      | Neg    => interval_quot_neg_across i2 i1
-      | Across => interval_quot_across_across i2 i1
+      | Pos    => interval_quot_pos_across i2 i1_san
+      | Neg    => interval_quot_neg_across i2 i1_san
+      | Across => interval_quot_across_across i2 i1_san
       end
   end.
 
