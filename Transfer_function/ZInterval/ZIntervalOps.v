@@ -96,10 +96,19 @@ Definition impl_backward_interval_sub (i2 i1 i0 : interval)
 (** * Z.mul. See [MulTheory.v]. *)
 
 Definition bound_mul a b :=
-  match a, b with
-  | WithTop.NotTop 0, _ | _, WithTop.NotTop 0 => WithTop.NotTop 0
-  | WithTop.NotTop x, WithTop.NotTop y => WithTop.NotTop (x * y)
-  | _,_ => WithTop.Top
+  match a with
+  | WithTop.NotTop x =>
+    if Z.eqb x 0 then WithTop.NotTop 0
+    else match b with
+         | WithTop.NotTop y =>
+           if Z.eqb y 0 then WithTop.NotTop 0 else WithTop.NotTop (x * y)
+         | WithTop.Top => WithTop.Top
+         end
+  | WithTop.Top =>
+    match b with
+    | WithTop.NotTop y => if Z.eqb y 0 then WithTop.NotTop 0 else WithTop.Top
+    | WithTop.Top => WithTop.Top
+    end
   end.
 
 Definition interval_mul_opt (i2 i1: interval) : interval :=
