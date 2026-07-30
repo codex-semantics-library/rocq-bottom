@@ -93,6 +93,20 @@ Section Interval_opp.
     - exact: (H' _ Hz).
   Qed.
 
+  (** Solving an equivalence for the negated side: an operation that commutes
+      with negation states its commutation as [f (-S) ⊆⊇ -(f S)], but what the
+      sign-case transports consume is that read the other way round.  Negate
+      both sides and cancel — this one propset rule is the whole content of the
+      per-operation [collecting_*_opp_{l,r}_inv] lemmas it replaces, and it
+      composes by [transitivity] like any other rewriting step. *)
+  Lemma propset_opp_equiv_inv (S S' : ℘ Z) :
+    S ⊆⊇ {[ z | -z ∈ S' ]} -> {[ z | -z ∈ S ]} ⊆⊇ S'.
+  Proof.
+    move=> H. transitivity {[ z | -z ∈ {[ z' | -z' ∈ S' ]} ]}.
+    - exact: propset_opp_equiv.
+    - exact: propset_opp_involutive.
+  Qed.
+
   (** Non-emptiness transports through [Z.opp], for the existence hypotheses of
       the quarter transports. *)
   Lemma opp_nonempty (S : ℘ Z) : (exists c, c ∈ S) -> exists c, c ∈ {[ z | -z ∈ S ]}.
@@ -107,56 +121,6 @@ Section Interval_opp.
     - exact: best_abstraction_opp.
     - move/best_abstraction_opp. rewrite interval_opp_involutive => Hba.
       exact: (best_abstraction_equiv _ _ _ Hba (propset_opp_involutive _)).
-  Qed.
-
-  (** Transport α-completeness across left-argument negation. The new
-      abstract function is [fun b2 b1 => interval_opp (fA (interval_opp b2) b1)];
-      [fC] is unchanged but must commute with negating its left argument. *)
-  Lemma binary_alpha_complete_opp_l
-    (fA : interval -> interval -> interval) (fC : setop2 Z Z Z)
-    (a2 a1 : interval) (S2 S1 : ℘ Z) :
-    (forall T2 T1, fC {[ z | -z ∈ T2 ]} T1 ⊆⊇ {[ z | -z ∈ fC T2 T1 ]}) ->
-    binary_alpha_complete itv itv itv fA fC a2 a1 S2 S1 ->
-    binary_alpha_complete itv itv itv
-      (fun b2 b1 => interval_opp (fA (interval_opp b2) b1)) fC
-      (interval_opp a2) a1 {[ z | -z ∈ S2 ]} S1.
-  Proof.
-    rewrite /binary_alpha_complete => HfC Hac Ha2n Ha1.
-    rewrite interval_opp_involutive.
-    have Ha2 : IsAlpha (A:=itv) a2 S2.
-    { have Hiff := is_alpha_opp_iff (interval_opp a2) {[ z | -z ∈ S2 ]}.
-      rewrite interval_opp_involutive in Hiff.
-      apply: (is_alpha_set_equiv _ _ _ (propset_opp_involutive S2)).
-      exact: (proj1 Hiff Ha2n). }
-    have Hres := Hac Ha2 Ha1.
-    have Hres' : IsAlpha (A:=itv) (interval_opp (fA a2 a1)) {[ z | -z ∈ fC S2 S1 ]}
-      by apply (is_alpha_opp_iff _ _).1.
-    apply: (is_alpha_set_equiv _ _ _ _ Hres').
-    split; apply HfC.
-  Qed.
-
-  (** Right-argument symmetric version. *)
-  Lemma binary_alpha_complete_opp_r
-    (fA : interval -> interval -> interval) (fC : setop2 Z Z Z)
-    (a2 a1 : interval) (S2 S1 : ℘ Z) :
-    (forall T2 T1, fC T2 {[ z | -z ∈ T1 ]} ⊆⊇ {[ z | -z ∈ fC T2 T1 ]}) ->
-    binary_alpha_complete itv itv itv fA fC a2 a1 S2 S1 ->
-    binary_alpha_complete itv itv itv
-      (fun b2 b1 => interval_opp (fA b2 (interval_opp b1))) fC
-      a2 (interval_opp a1) S2 {[ z | -z ∈ S1 ]}.
-  Proof.
-    rewrite /binary_alpha_complete => HfC Hac Ha2 Ha1n.
-    rewrite interval_opp_involutive.
-    have Ha1 : IsAlpha (A:=itv) a1 S1.
-    { have Hiff := is_alpha_opp_iff (interval_opp a1) {[ z | -z ∈ S1 ]}.
-      rewrite interval_opp_involutive in Hiff.
-      apply: (is_alpha_set_equiv _ _ _ (propset_opp_involutive S1)).
-      exact: (proj1 Hiff Ha1n). }
-    have Hres := Hac Ha2 Ha1.
-    have Hres' : IsAlpha (A:=itv) (interval_opp (fA a2 a1)) {[ z | -z ∈ fC S2 S1 ]}
-      by apply (is_alpha_opp_iff _ _).1.
-    apply: (is_alpha_set_equiv _ _ _ _ Hres').
-    split; apply HfC.
   Qed.
 
   (** opp preserves non-bottom, so we can lift it to nb_interval. *)

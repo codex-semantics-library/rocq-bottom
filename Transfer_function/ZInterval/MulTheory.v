@@ -250,7 +250,7 @@ Section Interval_mul.
   Qed.
 
   (** [Z.mul] commutes with negation on either argument: side conditions
-      for [binary_alpha_complete_opp_l] / [_opp_r]. *)
+      for [binary_alpha_complete_opp_{l,r,both}_inv]. *)
   Lemma collecting_mul_opp_l (T2 T1 : ℘ Z) :
     collecting_binary_forward Z.mul {[ z | -z ∈ T2 ]} T1 ⊆⊇
     {[ z | -z ∈ collecting_binary_forward Z.mul T2 T1 ]}.
@@ -269,38 +269,15 @@ Section Interval_mul.
     by split; move=> [? [? ?]]; repeat split=> //; lia.
   Qed.
 
-  (** The involution form of the one-operand transports: the negated collecting
-      set, negated back, is the original.  These are what [is_alpha_set_equiv]
-      consumes after [is_alpha_opp_iff] has pushed the [interval_opp] to the
-      concrete side. *)
-  Lemma collecting_mul_opp_l_inv (S2 S1 : ℘ Z) :
-    {[ z | -z ∈ collecting_binary_forward Z.mul {[ z | -z ∈ S2 ]} S1 ]} ⊆⊇
-    collecting_binary_forward Z.mul S2 S1.
-  Proof.
-    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
-    - apply: propset_opp_equiv. exact: collecting_mul_opp_l.
-    - exact: propset_opp_involutive.
-  Qed.
-
-  Lemma collecting_mul_opp_r_inv (S2 S1 : ℘ Z) :
-    {[ z | -z ∈ collecting_binary_forward Z.mul S2 {[ z | -z ∈ S1 ]} ]} ⊆⊇
-    collecting_binary_forward Z.mul S2 S1.
-  Proof.
-    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
-    - apply: propset_opp_equiv. exact: collecting_mul_opp_r.
-    - exact: propset_opp_involutive.
-  Qed.
-
-  (** Negating both operands cancels. *)
+  (** Negating both operands cancels: negate the left, then solve the remaining
+      right-hand commutation for its negated side. *)
   Lemma collecting_mul_opp_both (S2 S1 : ℘ Z) :
     collecting_binary_forward Z.mul {[ z | -z ∈ S2 ]} {[ z | -z ∈ S1 ]} ⊆⊇
     collecting_binary_forward Z.mul S2 S1.
   Proof.
     transitivity {[ z | -z ∈ collecting_binary_forward Z.mul S2 {[ z | -z ∈ S1 ]} ]};
       first exact: collecting_mul_opp_l.
-    transitivity {[ z | -z ∈ {[ z | -z ∈ collecting_binary_forward Z.mul S2 S1 ]} ]}.
-    - apply: propset_opp_equiv. exact: collecting_mul_opp_r.
-    - exact: propset_opp_involutive.
+    exact: (propset_opp_equiv_inv _ _ (collecting_mul_opp_r S2 S1)).
   Qed.
 
   (** α-completeness for negative × positive case, derived from the
@@ -320,22 +297,14 @@ Section Interval_mul.
     move=> Hl2 Hh1 Hnb2 Hnb1 Hex2 Hex1.
     rewrite /binary_alpha_complete => Ha2 Ha1.
     apply (is_alpha_opp_iff _ _).1 in Ha1.
-    have Hnb1': non_bottom (WithTop.NotTop (-h1), neg_bound l1)
-      by case: l1 Hnb1 Ha1 => [_ | x Hx] _ /=; [done | move: Hx => /= Hx; lia].
+    have Hnb1' := interval_opp_preserves_non_bottom _ Hnb1.
     have Hex1' := opp_nonempty _ Hex1.
     have Hpos := interval_mul_pos_alpha_complete (-h1) l2 (neg_bound l1) h2
                    S2 {[ z | -z ∈ S1 ]}
                    ltac:(lia) Hl2 Hnb1' Hnb2 Hex2 Hex1' Ha2 Ha1.
     apply (is_alpha_opp_iff _ _).1 in Hpos.
-    apply: (is_alpha_set_equiv _ _ _ _ Hpos).
-    split=> z.
-    - unfold_set => -[c2 [c1 [Hc2 [Hc1 Heq]]]]; unfold_set in Hc1.
-      exists c2, (-c1); repeat split; [exact Hc2 | exact Hc1 | lia].
-    - move=> [c2 [c1 [Hc2 [Hc1 <-]]]]; unfold_set.
-      exists c2, (-c1); unfold_set; repeat split.
-      + exact Hc2.
-      + by replace (- - c1) with c1 by lia.
-      + lia.
+    exact: (is_alpha_set_equiv _ _ _
+              (propset_opp_equiv_inv _ _ (collecting_mul_opp_r S2 S1)) Hpos).
   Qed.
 
   (** α-completeness for negative × negative case, derived via both opp transports. *)
@@ -354,30 +323,15 @@ Section Interval_mul.
     rewrite /binary_alpha_complete => Ha2 Ha1.
     apply (is_alpha_opp_iff _ _).1 in Ha1.
     apply (is_alpha_opp_iff _ _).1 in Ha2.
-    have Hnb1': non_bottom (WithTop.NotTop (-h1), neg_bound l1)
-      by case: l1 Hnb1 Ha1 => [_ | x Hx] _ /=; [done | move: Hx => /= Hx; lia].
-    have Hnb2': non_bottom (WithTop.NotTop (-h2), neg_bound l2)
-      by case: l2 Hnb2 Ha2 => [_ | x Hx] _ /=; [done | move: Hx => /= Hx; lia].
+    have Hnb1' := interval_opp_preserves_non_bottom _ Hnb1.
+    have Hnb2' := interval_opp_preserves_non_bottom _ Hnb2.
     have Hex1' := opp_nonempty _ Hex1.
     have Hex2' := opp_nonempty _ Hex2.
     have Hpos := interval_mul_pos_alpha_complete (-h1) (-h2)
                    (neg_bound l1) (neg_bound l2)
                    {[ z | -z ∈ S2 ]} {[ z | -z ∈ S1 ]}
                    ltac:(lia) ltac:(lia) Hnb1' Hnb2' Hex2' Hex1' Ha2 Ha1.
-    apply: (is_alpha_set_equiv _ _ _ _ Hpos).
-    (* collecting_binary_forward Z.mul {[z|-z∈S2]} {[z|-z∈S1]} ⊆⊇
-       collecting_binary_forward Z.mul S2 S1 *)
-    split=> z; unfold_set.
-    - move=> [c2 [c1 [Hc2 [Hc1 <-]]]]; unfold_set in Hc1; unfold_set in Hc2.
-      exists (-c2), (-c1); unfold_set; repeat split.
-      + by replace (- - c2) with c2 by lia.
-      + by replace (- - c1) with c1 by lia.
-      + ring.
-    - move=> [c2 [c1 [Hc2 [Hc1 <-]]]].
-      exists (-c2), (-c1); unfold_set; repeat split.
-      + by replace (- - c2) with c2 by lia.
-      + by replace (- - c1) with c1 by lia.
-      + ring.
+    exact: (is_alpha_set_equiv _ _ _ (collecting_mul_opp_both S2 S1) Hpos).
   Qed.
 
   (** * Best abstraction: positive × negative case (by commutativity). *)
@@ -639,22 +593,14 @@ Section Interval_mul.
   Proof.
     move=> Hh1 Hnb1 Hl2 Hh2 Hex1 Hex2 Ha1 Ha2.
     apply (is_alpha_opp_iff _ _).1 in Ha1.
-    have Hnb1' : non_bottom (WithTop.NotTop (-h1), neg_bound l1)
-      by case: l1 Hnb1 Ha1 => [_ | x Hx] _ /=; [done | move: Hx => /= Hx; lia].
+    have Hnb1' := interval_opp_preserves_non_bottom _ Hnb1.
     have Hex1' := opp_nonempty _ Hex1.
     have Hpos := interval_mul_pos_across_closed (-h1) (neg_bound l1) l2 h2
                    {[ z | -z ∈ S1 ]} S2
                    ltac:(lia) Hnb1' Hl2 Hh2 Hex1' Hex2 Ha1 Ha2.
     apply (is_alpha_opp_iff _ _).1 in Hpos.
-    apply: (is_alpha_set_equiv _ _ _ _ Hpos).
-    split=> z.
-    - unfold_set => -[c2 [c1 [Hc2 [Hc1 Heq]]]]; unfold_set in Hc2.
-      exists (-c2), c1; repeat split; [exact Hc2 | exact Hc1 | lia].
-    - move=> [c2 [c1 [Hc2 [Hc1 <-]]]]; unfold_set.
-      exists (-c2), c1; unfold_set; repeat split.
-      + by replace (- - c2) with c2 by lia.
-      + exact Hc1.
-      + lia.
+    exact: (is_alpha_set_equiv _ _ _
+              (propset_opp_equiv_inv _ _ (collecting_mul_opp_l S1 S2)) Hpos).
   Qed.
 
   (** Closed-form α-completeness, across × across, both operand sets
