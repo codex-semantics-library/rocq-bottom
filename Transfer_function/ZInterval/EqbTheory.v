@@ -3,9 +3,9 @@
    [quadrivalent]. Split out of Z_interval.v. *)
 
 (* STATUS: eqb (Z.eqb): exact
-     (nbinterval_eqb_unopt_exact, may_be_{true,false}_eqb_exact).
+     (nb_interval_eqb_unopt_exact, may_be_{true,false}_eqb_exact).
    Two variants are provided: the naive [interval_eqb_unopt] and the
-   optimized [interval_eqb_opt], proved equal. *)
+   optimized [interval_eqb], proved equal. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -102,12 +102,12 @@ Proof.
     congruence.
 Qed.
 
-Lemma nbinterval_eqb_unopt_exact:
-  binary_exact nbitv nbitv qv nbinterval_eqb_unopt
+Lemma nb_interval_eqb_unopt_exact:
+  binary_exact nbitv nbitv qv (fun a b => interval_eqb_unopt (`a) (`b))
     (collecting_binary_forward Z.eqb).
 Proof.
   move=> [[l2 h2] P2] [[l1 h1] P1].
-  unfold nbinterval_eqb_unopt, interval_eqb_unopt. simpl.
+  unfold interval_eqb_unopt. simpl.
   unfold ExactlyRepresents. to_set.
   have HU := unfold_set_equiv. unfold_set. clear HU.
   move=> c. case: c.
@@ -119,11 +119,11 @@ Proof.
     by split; move=> [c2 [c1 H]]; exists c2, c1; unfold_set in *.
 Qed.
 
-Lemma interval_eqb_opt_eq i2 i1 :
-  interval_eqb_opt i2 i1 = interval_eqb_unopt i2 i1.
+Lemma interval_eqb_unopt_eq i2 i1 :
+  interval_eqb i2 i1 = interval_eqb_unopt i2 i1.
 Proof.
   case: i2 => l2 h2; case: i1 => l1 h1.
-  rewrite /interval_eqb_opt /interval_eqb_unopt /may_be_false_eqb.
+  rewrite /interval_eqb /interval_eqb_unopt /may_be_false_eqb.
   case Hs1: (ZInterval.is_singleton (l1, h1)) => [x1|];
   case Hs2: (ZInterval.is_singleton (l2, h2)) => [x2|];
     try by case: (may_be_true_eqb l1 h1 l2 h2).

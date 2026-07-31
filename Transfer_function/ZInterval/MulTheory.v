@@ -2,7 +2,7 @@
    abstraction: [interval_mul] on two intervals. Split out of Z_interval.v. *)
 
 (* STATUS: mul (Z.mul): sound + best (α-complete)
-     (interval_mul_opt_best, interval_mul_opt_alpha_complete).
+     (interval_mul_best, interval_mul_alpha_complete).
    Uses the negation transfer function ([neg_bound], [interval_opp]), now in
    [ZIntervalOps.v], and the split-at-zero α-machinery, still in ZIntervalTheory.v. *)
 
@@ -28,7 +28,7 @@ Generalizable All Variables.
 
     Stated over [collecting_binary_forward Z.mul], so they belong with the
     multiplication transfer function rather than with the interval
-    abstraction; [interval_mul_opt_best] below is their only client. *)
+    abstraction; [interval_mul_best] below is their only client. *)
 
 (** When one operand of [Z.mul] ranges over an [IsAlpha Top] (unbounded) set
     and the other contains a strictly positive element, the product set is
@@ -542,7 +542,7 @@ Section Interval_mul.
   (** Closed-form α-completeness, positive (left) × across (right), both
       operand sets abstract: the best abstraction of [collecting Z.mul S1 S2]
       is exactly [(bound_mul l2 h1, bound_mul h2 h1)] — the bound-only
-      form (= [interval_mul_opt]'s [Across, Pos] branch). Obtained from
+      form (= [interval_mul]'s [Across, Pos] branch). Obtained from
       [interval_mul_pos_across_abstract] by collapsing the join via
       [interval_mul_pos_across_join_eq]. *)
   Lemma interval_mul_pos_across_closed
@@ -638,12 +638,12 @@ Section Interval_mul.
 
   (** * Corrected interval multiplication with best abstraction.
 
-      [interval_mul_opt] is the *extracted closed form*: a direct
+      [interval_mul] is the *extracted closed form*: a direct
       case split on the sign classification of both operands. Its
       best-abstraction proof is obtained via [interval_mul_math] below
       — a *proof-only* mirror whose branches are written in the same
       vocabulary as the per-quadrant [_best] lemmas — bridged by
-      [interval_mul_math_eq]. Only [interval_mul_opt] is meant to be run
+      [interval_mul_math_eq]. Only [interval_mul] is meant to be run
       / extracted; [interval_mul_math] never leaves the proofs. *)
 
   (** Extract Z value from a with_top bound, defaulting to 0 for Top. *)
@@ -719,16 +719,16 @@ Section Interval_mul.
               to_high (mul_inf (high_inf h2) (high_inf h1))))
     end.
 
-  (** * Equivalence between interval_mul_math and interval_mul_opt. *)
+  (** * Equivalence between interval_mul_math and interval_mul. *)
 
   Theorem interval_mul_math_eq : forall i2 i1,
     non_bottom i1 -> non_bottom i2 ->
-    interval_mul_math i2 i1 = interval_mul_opt i2 i1.
+    interval_mul_math i2 i1 = interval_mul i2 i1.
   Proof.
     move=> [l2 h2] [l1 h1].
     case: l1 => [|[|l1|l1]]; case: h1 => [|[|h1|h1]];
        case: l2 => [|[|l2|l2]]; case: h2 => [|[|h2|h2]];
-       rewrite /interval_mul_math /interval_mul_opt /ZInterval.join
+       rewrite /interval_mul_math /interval_mul /ZInterval.join
               /Conjunction.join /ZInterval.join_lb /ZInterval.join_ub
               /WithTop.lift2 /= => Hnb1 Hnb2 //;
        congr pair; congr (WithTop.NotTop); nia.
@@ -740,7 +740,7 @@ Section Interval_mul.
       sets [S2], [S1] (with [IsAlpha]), not just for [S = γ] of an
       interval. This is the form needed to compose multiplication with
       other domains (e.g. the reduced product). Analog of
-      [interval_add_alpha_complete]; [interval_mul_opt_alpha_complete]
+      [interval_add_alpha_complete]; [interval_mul_alpha_complete]
       follows as a corollary via [interval_mul_math_eq]. *)
 
   (** [bound_mul] is commutative. *)
@@ -760,7 +760,7 @@ Section Interval_mul.
 
   (** Dispatches on the 3×3 sign classification. Sign cases apply the
       matching quadrant α-completeness directly (the [interval_mul_math] branch is the
-      lemma's native form); across cases bridge to [interval_mul_opt]
+      lemma's native form); across cases bridge to [interval_mul]
       via [interval_mul_math_eq] and apply the closed-form across
       α-completeness, with [alpha_mul_comm] / [bound_mul] algebra fixing
       operand order. *)
@@ -793,7 +793,7 @@ Section Interval_mul.
       subst l1.
       have [Hl2z Hh2z] := classify_Across_inv _ _ Hnb2 Hcl2.
       rewrite (interval_mul_math_eq (l2,h2) (WithTop.NotTop l1',h1) Hnb1 Hnb2)
-              /interval_mul_opt Hcl1 Hcl2.
+              /interval_mul Hcl1 Hcl2.
       rewrite (bound_mul_comm h1 l2) (bound_mul_comm h1 h2).
       apply: alpha_mul_comm.
       exact: (interval_mul_pos_across_closed l1' h1 l2 h2 S1 S2
@@ -818,7 +818,7 @@ Section Interval_mul.
       subst h1.
       have [Hl2z Hh2z] := classify_Across_inv _ _ Hnb2 Hcl2.
       rewrite (interval_mul_math_eq (l2,h2) (l1,WithTop.NotTop h1') Hnb1 Hnb2)
-              /interval_mul_opt Hcl1 Hcl2.
+              /interval_mul Hcl1 Hcl2.
       apply: alpha_mul_comm.
       have ->: (bound_mul l1 h2, bound_mul l1 l2)
              = interval_opp (bound_mul l2 (neg_bound l1), bound_mul h2 (neg_bound l1)).
@@ -831,7 +831,7 @@ Section Interval_mul.
       subst l2.
       have [Hl1z Hh1z] := classify_Across_inv _ _ Hnb1 Hcl1.
       rewrite (interval_mul_math_eq (WithTop.NotTop l2',h2) (l1,h1) Hnb1 Hnb2)
-              /interval_mul_opt Hcl1 Hcl2.
+              /interval_mul Hcl1 Hcl2.
       exact: (interval_mul_pos_across_closed l2' h2 l1 h1 S2 S1
                 Hl2 Hnb2 Hl1z Hh1z Hex2 Hex1 Ha2 Ha1).
     (* Across,Neg *)
@@ -839,7 +839,7 @@ Section Interval_mul.
       subst h2.
       have [Hl1z Hh1z] := classify_Across_inv _ _ Hnb1 Hcl1.
       rewrite (interval_mul_math_eq (l2,WithTop.NotTop h2') (l1,h1) Hnb1 Hnb2)
-              /interval_mul_opt Hcl1 Hcl2.
+              /interval_mul Hcl1 Hcl2.
       have ->: (bound_mul h1 l2, bound_mul l1 l2)
              = interval_opp (bound_mul l1 (neg_bound l2), bound_mul h1 (neg_bound l2)).
       { rewrite /interval_opp !bound_mul_neg_l !bound_mul_neg_neg. by []. }
@@ -849,7 +849,7 @@ Section Interval_mul.
     - have [Hl1z Hh1z] := classify_Across_inv _ _ Hnb1 Hcl1.
       have [Hl2z Hh2z] := classify_Across_inv _ _ Hnb2 Hcl2.
       rewrite (interval_mul_math_eq (l2,h2) (l1,h1) Hnb1 Hnb2)
-              /interval_mul_opt Hcl1 Hcl2.
+              /interval_mul Hcl1 Hcl2.
       apply: alpha_mul_comm.
       have ->: ZInterval.join (bound_mul l1 h2, bound_mul l1 l2)
                         (bound_mul h1 l2, bound_mul h1 h2)
@@ -863,11 +863,11 @@ Section Interval_mul.
                 Hl1z Hh1z Hl2z Hh2z Hex1 Hex2 Ha1 Ha2).
   Qed.
 
-  (** Closed-form variant: α-completeness for [interval_mul_opt]. *)
-  Lemma interval_mul_opt_alpha_complete (i2 i1 : interval) (S2 S1 : propset Z) :
+  (** Closed-form variant: α-completeness for [interval_mul]. *)
+  Lemma interval_mul_alpha_complete (i2 i1 : interval) (S2 S1 : propset Z) :
     non_bottom i1 -> non_bottom i2 ->
     (exists c, c ∈ S2) -> (exists c, c ∈ S1) ->
-    binary_alpha_complete itv itv itv interval_mul_opt
+    binary_alpha_complete itv itv itv interval_mul
       (collecting_binary_forward Z.mul) i2 i1 S2 S1.
   Proof.
     move=> Hnb1 Hnb2 Hex2 Hex1.
@@ -875,12 +875,12 @@ Section Interval_mul.
     exact: (interval_mul_math_alpha_complete i2 i1 S2 S1 Hnb1 Hnb2 Hex2 Hex1 Ha2 Ha1).
   Qed.
 
-  (** [interval_mul_opt] is the best abstraction, derived directly
+  (** [interval_mul] is the best abstraction, derived directly
       from α-completeness via [binary_alpha_complete_to_best] (operands
       are maximally reduced since non-bottom). *)
-  Theorem interval_mul_opt_best i2 i1 :
+  Theorem interval_mul_best i2 i1 :
     non_bottom i1 -> non_bottom i2 ->
-    BestAbstraction (A:=itv) (interval_mul_opt i2 i1)
+    BestAbstraction (A:=itv) (interval_mul i2 i1)
       (collecting_binary_forward Z.mul (γ[itv] i2) (γ[itv] i1)).
   Proof.
     move=> Hnb1 Hnb2.
@@ -888,22 +888,22 @@ Section Interval_mul.
     have MR1 := non_bottom_MaximallyReduced _ Hnb1.
     have /non_bottom_non_empty Hex2 := Hnb2.
     have /non_bottom_non_empty Hex1 := Hnb1.
-    exact: (binary_alpha_complete_to_best itv itv itv interval_mul_opt
+    exact: (binary_alpha_complete_to_best itv itv itv interval_mul
               _ _ _
-              (interval_mul_opt_alpha_complete i2 i1 _ _ Hnb1 Hnb2 Hex2 Hex1)).
+              (interval_mul_alpha_complete i2 i1 _ _ Hnb1 Hnb2 Hex2 Hex1)).
   Qed.
 
-  (** Soundness on the raw carrier, unconditionally. [interval_mul_opt_best]
+  (** Soundness on the raw carrier, unconditionally. [interval_mul_best]
       needs both operands non-bottom, but the two concrete witnesses that
       [binary_overapproximation] hands us establish exactly that. *)
-  Lemma interval_mul_opt_sound:
-    binary_overapproximation itv itv itv interval_mul_opt
+  Lemma interval_mul_sound:
+    binary_overapproximation itv itv itv interval_mul
       (collecting_binary_forward Z.mul).
   Proof.
     overapproximation_proof.
     have Hnb2 : non_bottom a2 by apply/non_bottom_non_empty; exists c2.
     have Hnb1 : non_bottom a1 by apply/non_bottom_non_empty; exists c1.
-    have HB := interval_mul_opt_best a2 a1 Hnb1 Hnb2.
+    have HB := interval_mul_best a2 a1 Hnb1 Hnb2.
     apply: best_abstraction_overapproximates.
     unfold_set.
     by exists c2, c1.
@@ -911,6 +911,6 @@ Section Interval_mul.
 
   (** Lift to non-bottom intervals, as [nb_interval_add]/[nb_interval_sub]. *)
   Definition nb_interval_mul :=
-    non_bottom_lift_total_binary interval_mul_opt Z.mul (Hsound:=interval_mul_opt_sound).
+    non_bottom_lift_total_binary interval_mul Z.mul (Hsound:=interval_mul_sound).
 
 End Interval_mul.

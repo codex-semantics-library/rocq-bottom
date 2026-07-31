@@ -2,7 +2,7 @@
    abstraction: [interval_leb] takes two intervals and returns a
    [quadrivalent]. Split out of Z_interval.v. *)
 
-(* STATUS: leb (Z.leb): exact (nbinterval_leb_exact). *)
+(* STATUS: leb (Z.leb): exact (nb_interval_leb_exact). *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -26,11 +26,11 @@ Generalizable All Variables.
 Section Interval_leb.
 
 
-Lemma nbinterval_leb_exact:
-  binary_exact nbitv nbitv qv nbinterval_leb
+Lemma nb_interval_leb_exact:
+  binary_exact nbitv nbitv qv (fun a b => interval_leb (`a) (`b))
     (collecting_binary_forward Z.leb).
 Proof.
-  move=> [[l2 h2] P2] [[l1 h1] P1]. unfold nbinterval_leb,interval_leb. simpl.
+  move=> [[l2 h2] P2] [[l1 h1] P1]. unfold interval_leb. simpl.
   unfold ExactlyRepresents. to_set. 
   have HU := unfold_set_equiv. unfold_set. clear HU.
   apply non_bottom_non_empty in P1. destruct P1 as [w1 H1].

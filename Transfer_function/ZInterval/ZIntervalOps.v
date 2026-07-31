@@ -54,7 +54,7 @@ Definition bound_mul a b :=
     end
   end.
 
-Definition interval_mul_opt (i2 i1: interval) : interval :=
+Definition interval_mul (i2 i1: interval) : interval :=
   let (l1,h1) := i1 in
   let (l2,h2) := i2 in
   let m := bound_mul in
@@ -122,9 +122,9 @@ Ltac nz_obligation :=
     [nz_obligation] above. The [return interval] is not decoration: without it
     [Program] also generalises each obligation by [DivPos p = classify_divisor
     i1], pinning its type to the scrutinee, and
-    [QuotTheory.interval_quot_opt_eq] — the proof that this agrees with the
+    [QuotTheory.interval_quot_unopt_eq] — the proof that this agrees with the
     unoptimized chain — can then no longer case on it. *)
-Program Definition interval_quot_opt (i2 : interval) (i1 : nb_interval) : interval :=
+Program Definition interval_quot (i2 : interval) (i1 : nb_interval) : interval :=
   let (l2, h2) := i2 in
   match classify_divisor i1 return interval with
   | DivZero => ZInterval.bottom
@@ -176,7 +176,6 @@ Definition interval_leb (i2 i1 : interval) : quadrivalent :=
   let (l1, h1) := i1 in
   to_quadrivalent (may_be_true_leb l2 h1) (may_be_false_leb h2 l1).
 
-Definition nbinterval_leb (i2 i1 : nb_interval) : quadrivalent := interval_leb (`i2) (`i1).
 
 (** * Z.eqb. See [EqbTheory.v]. *)
 
@@ -202,21 +201,19 @@ Definition may_be_false_eqb (l1 h1 l2 h2 : WithTop.with_top Z) : bool :=
 (** Naive [interval_eqb]: just combine [may_be_true_eqb] and
     [may_be_false_eqb] via [to_quadrivalent]. Easy to prove correct,
     but evaluates both sides even when the result is forced. A more
-    efficient [interval_eqb_opt] (decision tree with shortcuts) can
+    efficient [interval_eqb] (decision tree with shortcuts) can
     be defined separately and proved equivalent by case analysis. *)
 Definition interval_eqb_unopt (i2 i1 : interval) : quadrivalent :=
   let (l2, h2) := i2 in
   let (l1, h1) := i1 in
   to_quadrivalent (may_be_true_eqb l1 h1 l2 h2) (may_be_false_eqb l1 h1 l2 h2).
 
-Definition nbinterval_eqb_unopt (i2 i1 : nb_interval) : quadrivalent :=
-  interval_eqb_unopt (`i2) (`i1).
 
 (** Optimized [interval_eqb]: skip the [may_be_false_eqb] machinery
     (i.e. the singleton-equality test) when at least one side is not
     a singleton — in that situation [may_be_false_eqb] is always
     [true], so the result is fully determined by the overlap test. *)
-Definition interval_eqb_opt (i2 i1 : interval) : quadrivalent :=
+Definition interval_eqb (i2 i1 : interval) : quadrivalent :=
   let (l2, h2) := i2 in
   let (l1, h1) := i1 in
   match ZInterval.is_singleton (l1, h1), ZInterval.is_singleton (l2, h2) with

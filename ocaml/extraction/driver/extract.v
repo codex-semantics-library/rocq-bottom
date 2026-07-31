@@ -107,10 +107,10 @@ Separate Extraction
   ZIntervalAPI.equiv ZIntervalAPI.join ZIntervalAPI.meet
 
   (* ZIntervalOps: interval forward transfer functions. *)
-  ZIntervalOps.interval_leb ZIntervalOps.nbinterval_leb
+  ZIntervalOps.interval_leb
   ZIntervalOps.interval_add ZIntervalOps.interval_sub
-  ZIntervalOps.interval_mul_opt ZIntervalOps.interval_eqb_opt
-  ZIntervalOps.interval_quot_opt.
+  ZIntervalOps.interval_mul ZIntervalOps.interval_eqb
+  ZIntervalOps.interval_quot.
 
   
   (* Transfer-functions with proper interface, on the nb_interval

@@ -42,9 +42,9 @@ let bound_mul a b =
             then WithTop.NotTop Z.zero
             else WithTop.NotTop (Z.mul x y))
 
-(** val interval_mul_opt : interval -> interval -> interval **)
+(** val interval_mul : interval -> interval -> interval **)
 
-let interval_mul_opt i2 i1 = match i1 with
+let interval_mul i2 i1 = match i1 with
 | (l1, h1) ->
   let (l2, h2) = i2 in
   (match classify i1 with
@@ -76,9 +76,9 @@ let quot_bound a = function
    | WithTop.Top -> WithTop.Top
    | WithTop.NotTop a0 -> WithTop.NotTop (Z.div a0 b0))
 
-(** val interval_quot_opt : interval -> nb_interval -> interval **)
+(** val interval_quot : interval -> nb_interval -> interval **)
 
-let interval_quot_opt i2 i1 =
+let interval_quot i2 i1 =
   let (l2, h2) = i2 in
   (match classify_divisor i1 with
    | DivPos p ->
@@ -132,11 +132,6 @@ let interval_leb i2 i1 =
   let (l1, h1) = i1 in
   to_quadrivalent (may_be_true_leb l2 h1) (may_be_false_leb h2 l1)
 
-(** val nbinterval_leb : nb_interval -> nb_interval -> quadrivalent **)
-
-let nbinterval_leb =
-  interval_leb
-
 (** val may_be_true_eqb :
     Z.t WithTop.with_top -> Z.t WithTop.with_top -> Z.t WithTop.with_top ->
     Z.t WithTop.with_top -> bool **)
@@ -156,9 +151,9 @@ let may_be_true_eqb l1 h1 l2 h2 =
         | WithTop.Top -> true
         | WithTop.NotTop h2' -> Z.leq l1' h2'))
 
-(** val interval_eqb_opt : interval -> interval -> quadrivalent **)
+(** val interval_eqb : interval -> interval -> quadrivalent **)
 
-let interval_eqb_opt i2 i1 =
+let interval_eqb i2 i1 =
   let (l2, h2) = i2 in
   let (l1, h1) = i1 in
   (match is_singleton (l1, h1) with
