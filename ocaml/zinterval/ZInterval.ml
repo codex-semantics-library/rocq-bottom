@@ -141,8 +141,6 @@ type pos_interval = interval
 
 type neg_interval = interval
 
-type across_interval = interval
-
 type divisor_classification =
 | DivPos of pos_interval
 | DivNeg of neg_interval

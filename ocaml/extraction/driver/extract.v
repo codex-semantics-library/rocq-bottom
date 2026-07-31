@@ -75,9 +75,17 @@ Extraction Inline
   ZInterval.bound_equal
   ZInterval.glb_gammab ZInterval.lub_gammab.
 
-(* Everything is extracted by ONE [Separate Extraction]. Each call rewrites
-   from scratch every module reachable from its own roots, so two calls
-   touching the same module do not merge: the second overwrites the first. *)
+(* Two rules govern the root list below.
+
+   One command. [Separate Extraction] translates every module reachable from its
+   roots, overwriting what is already there rather than adding to it. To avoid
+   this, we extract everything using a single command.
+
+   Qualified names only. Roots are resolved in this file's scope, where several
+   modules are imported at once, and a bare name defined by two modules is not
+   an ambiguity error: the most recent [Import] wins.  A root written [join]
+   would therefore let the [Require] order above pick, silently, between
+   [Quadrivalent]'s, [ZInterval]'s and [ZIntervalAPI]'s. *)
 Separate Extraction
   (* Quadrivalent: carrier, and lattice operations. *)
   Quadrivalent.quadrivalent
@@ -87,13 +95,27 @@ Separate Extraction
   (* QuadrivalentOps: boolean transfer functions. *)  
   QuadrivalentOps.Boolean_Forward QuadrivalentOps.Boolean_Backward
 
-  ZInterval.interval ZInterval.nb_interval
+  (* ZInterval: carrier and lattice operations. Pulled by ZIntervalAPI. *)
 
-  (* Level 3, the split-aware presentation. Members are listed one by one on
-     purpose: rooting the whole module also extracts [gamma_ne]/[gamma_pe],
-     whose [propset] is Type-valued and so is not erased, and the resulting
-     [open AbstractLattice] does not compile. *)
+  (* ZIntervalAPI: combines computations and proofs in a single API conforming
+     to NONEMPTY_ABSTRACT_LATTICE. Members are listed one by one on purpose:
+     rooting the whole module also extracts [gamma_ne]/[gamma_pe] snf and
+     dependencies. *)
   ZIntervalAPI.non_empty ZIntervalAPI.possibly_empty
   ZIntervalAPI.singleton ZIntervalAPI.is_included
   ZIntervalAPI.is_non_empty ZIntervalAPI.to_non_empty
-  ZIntervalAPI.equiv ZIntervalAPI.join ZIntervalAPI.meet.
+  ZIntervalAPI.equiv ZIntervalAPI.join ZIntervalAPI.meet
+
+  (* ZIntervalOps: interval forward transfer functions. *)
+  ZIntervalOps.interval_leb ZIntervalOps.nbinterval_leb
+  ZIntervalOps.interval_add ZIntervalOps.interval_sub
+  ZIntervalOps.interval_mul_opt ZIntervalOps.interval_eqb_opt
+  ZIntervalOps.interval_quot_opt.
+
+  
+  (* Transfer-functions with proper interface, on the nb_interval
+     carrier. Rooting the whole module is enough: it emits a flat top-level
+     API.ml, and every definition in API.v belongs to the exported interface. *)
+  (* API *)
+
+
