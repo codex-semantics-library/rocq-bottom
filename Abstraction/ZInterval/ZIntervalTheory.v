@@ -137,7 +137,18 @@ Lemma nbitv_gammaE c i:
 Proof.
   move: i => [[l h] P]. done.
 Qed.
-  
+
+(** Reading one bound off a γ-membership.  The other bound may be [Top], and
+    these never look at it — which is what keeps the arithmetic in the transfer
+    function proofs free of case splits on bounds they do not use. *)
+Lemma gamma_itv_low (l : Z) (h : WithTop.with_top Z) c :
+  c ∈ γ[itv] (WithTop.NotTop l, h) -> l <= c.
+Proof. by move=> [Hl _]; unfold_set in Hl. Qed.
+
+Lemma gamma_itv_high (l : WithTop.with_top Z) (h : Z) c :
+  c ∈ γ[itv] (l, WithTop.NotTop h) -> c <= h.
+Proof. by move=> [_ Hh]; unfold_set in Hh. Qed.
+
 (** Exact order. *)
 
 Global Instance z_leP (z2 z1:Z): (AutoReflect(z2 <= z1)(Z.leb z2 z1)).
