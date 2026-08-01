@@ -126,12 +126,22 @@ Section Interval_opp.
       exact: (best_abstraction_equiv _ _ _ Hba (propset_opp_involutive _)).
   Qed.
 
+  (** Negating a sign-definite interval flips its type.  Only the proofs need
+      this: in [ZIntervalOps.v] the [Program] coercion builds it inline. *)
+  Program Definition opp_neg_pos (i : neg_interval) : pos_interval :=
+    interval_opp i.
+  Next Obligation.
+    move: i => [[[|l] [|h]] [Hnb Hh]] //=; simpl in Hnb, Hh; split=> //; lia.
+  Qed.
+
   (** opp preserves non-bottom, so we can lift it to nb_interval. *)
   Lemma interval_opp_preserves_non_bottom i:
     non_bottom i -> non_bottom (interval_opp i).
   Proof. move: i => [[|l] [|h]] //=; lia. Qed.
 
-  Definition nb_interval_opp (i : nb_interval) : nb_interval :=
-    exist _ (interval_opp (`i)) (interval_opp_preserves_non_bottom _ (proj2_sig i)).
+  Program Definition nb_interval_opp (i : nb_interval) : nb_interval := interval_opp i.
+  Next Obligation.
+    move: i => [i Hnb]. simpl. by apply interval_opp_preserves_non_bottom.
+  Defined.
 
 End Interval_opp.
