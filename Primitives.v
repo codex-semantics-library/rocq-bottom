@@ -13,3 +13,10 @@ Definition quot_non_zero (x y : Z) (Hy : y <> 0) : Z := Z.quot x y.
 Lemma quot_non_zero_quot (x y : Z) (Hy : y <> 0) :
   quot_non_zero x y Hy = Z.quot x y.
 Proof. reflexivity. Qed.
+
+(** [simpl] must not step past the non-zero obligation.  Rocq's [Z.quot x 0] is
+    [0], OCaml's [Z.div x 0] raises, and [Hy] is the whole of what makes the
+    extraction sound — so a proof that silently rewrites [quot_non_zero x y Hy]
+    to [Z.quot x y] has dropped the only record of why the division is legal.
+    Going through [quot_non_zero_quot] keeps that step explicit and greppable. *)
+Arguments quot_non_zero : simpl never.
