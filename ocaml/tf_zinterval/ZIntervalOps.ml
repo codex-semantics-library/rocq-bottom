@@ -2,9 +2,9 @@ open AbstractionCombination
 open Quadrivalent
 open ZInterval
 
-(** val neg_bound : Z.t WithTop.with_top -> Z.t WithTop.with_top **)
+(** val bound_opp : Z.t WithTop.with_top -> Z.t WithTop.with_top **)
 
-let neg_bound = function
+let bound_opp = function
 | WithTop.Top -> WithTop.Top
 | WithTop.NotTop z -> WithTop.NotTop (Z.neg z)
 
@@ -99,9 +99,9 @@ let interval_quot i2 i1 =
    | DivAcross ->
      let filtered_var = classify i2 in
      (match filtered_var with
-      | Pos -> ((neg_bound h2), h2)
-      | Neg -> (l2, (neg_bound l2))
-      | Across -> join (l2, (neg_bound l2)) ((neg_bound h2), h2)))
+      | Pos -> ((bound_opp h2), h2)
+      | Neg -> (l2, (bound_opp l2))
+      | Across -> join (l2, (bound_opp l2)) ((bound_opp h2), h2)))
 
 (** val may_be_true_leb :
     Z.t WithTop.with_top -> Z.t WithTop.with_top -> bool **)

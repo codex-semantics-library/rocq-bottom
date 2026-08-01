@@ -2,7 +2,7 @@ open AbstractionCombination
 open Quadrivalent
 open ZInterval
 
-val neg_bound : Z.t WithTop.with_top -> Z.t WithTop.with_top
+val bound_opp : Z.t WithTop.with_top -> Z.t WithTop.with_top
 
 val interval_add : interval -> interval -> interval
 

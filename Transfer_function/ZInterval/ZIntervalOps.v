@@ -18,11 +18,11 @@ Open Scope Z_scope.
 
 (** * Z.opp. See [OppTheory.v]. *)
 
-Definition neg_bound (b : WithTop.with_top Z) : WithTop.with_top Z :=
+Definition bound_opp (b : WithTop.with_top Z) : WithTop.with_top Z :=
   match b with WithTop.Top => WithTop.Top | WithTop.NotTop z => WithTop.NotTop (-z) end.
 
 Definition interval_opp (i : interval) : interval :=
-  let (l, h) := i in (neg_bound h, neg_bound l).
+  let (l, h) := i in (bound_opp h, bound_opp l).
 
 (** * Z.add and Z.sub. See [AddTheory.v]. *)
 
@@ -144,9 +144,9 @@ Program Definition interval_quot (i2 : interval) (i1 : nb_interval) : interval :
       end
   | DivAcross _ _ =>
       match classify i2 with
-      | Pos    => (neg_bound h2, h2)
-      | Neg    => (l2, neg_bound l2)
-      | Across => ZInterval.join (l2, neg_bound l2) (neg_bound h2, h2)
+      | Pos    => (bound_opp h2, h2)
+      | Neg    => (l2, bound_opp l2)
+      | Across => ZInterval.join (l2, bound_opp l2) (bound_opp h2, h2)
       end
   end.
 
