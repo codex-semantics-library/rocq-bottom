@@ -187,11 +187,9 @@ Section Interval_mul.
       apply: is_glb_of_min.
       + by exists l2, l1; repeat split=> //; ring.
       + move=> z [c2 [c1 [Hc2 [Hc1 <-]]]].
-        have Hg1 := HS1 _ Hc1. have Hg2 := HS2 _ Hc2.
-        clear HS1 HS2 Hlub1 Hlub2 Ha1 Ha2 Hath1 Hath2 Hatl1 Hatl2.
-        move: Hg1 Hg2 Hnb1 Hnb2.
-        case: h1 => [|?]; case: h2 => [|?];
-          unfold_set; simpl => *; nia.
+        have /gamma_itv_low Hlo1 := HS1 _ Hc1.
+        have /gamma_itv_low Hlo2 := HS2 _ Hc2.
+        nia.
     - (* LUB: mul_inf of the high bounds *)
       move: Hnb1 Hnb2 Hath1 Hath2 Hlub1 Hlub2 Ha1 Ha2 HS1 HS2;
       case: h1 => [|h1']; case: h2 => [|h2'] /=
