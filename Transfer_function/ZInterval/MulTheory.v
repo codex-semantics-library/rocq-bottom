@@ -773,16 +773,14 @@ Section Interval_mul.
       move: (classify_Pos_inv _ _ Hcl2) => [l2' [Hl2e Hl2]].
       subst l1 l2.
       rewrite /interval_mul_math Hcl1 Hcl2.
-      exact: (interval_mul_pos_alpha_complete l1' l2' h1 h2 S2 S1
-                Hl1 Hl2 Hnb1 Hnb2 Hex2 Hex1 Ha2 Ha1).
+      apply: (interval_mul_pos_alpha_complete l1' l2' h1 h2 S2 S1); assumption.
     (* Pos,Neg *)
     - move: (classify_Pos_inv _ _ Hcl1) => [l1' [Hl1e Hl1]].
       move: (classify_Neg_inv _ _ Hcl2) => [h2' [Hh2e Hh2]].
       subst l1 h2.
       rewrite /interval_mul_math Hcl1 Hcl2.
       apply: alpha_mul_comm.
-      exact: (interval_mul_neg_pos_alpha_complete l1' h1 l2 h2' S1 S2
-                Hl1 Hh2 Hnb1 Hnb2 Hex1 Hex2 Ha1 Ha2).
+      apply: (interval_mul_neg_pos_alpha_complete l1' h1 l2 h2' S1 S2); assumption.
     (* Pos,Across *)
     - move: (classify_Pos_inv _ _ Hcl1) => [l1' [Hl1e Hl1]].
       subst l1.
@@ -791,23 +789,20 @@ Section Interval_mul.
               /interval_mul Hcl1 Hcl2.
       rewrite (bound_mul_comm h1 l2) (bound_mul_comm h1 h2).
       apply: alpha_mul_comm.
-      exact: (interval_mul_pos_across_closed l1' h1 l2 h2 S1 S2
-                Hl1 Hnb1 Hl2z Hh2z Hex1 Hex2 Ha1 Ha2).
+      apply: (interval_mul_pos_across_closed l1' h1 l2 h2 S1 S2); assumption.
     (* Neg,Pos *)
     - move: (classify_Neg_inv _ _ Hcl1) => [h1' [Hh1e Hh1]].
       move: (classify_Pos_inv _ _ Hcl2) => [l2' [Hl2e Hl2]].
       subst h1 l2.
       rewrite /interval_mul_math Hcl1 Hcl2.
-      exact: (interval_mul_neg_pos_alpha_complete l2' h2 l1 h1' S2 S1
-                Hl2 Hh1 Hnb2 Hnb1 Hex2 Hex1 Ha2 Ha1).
+      apply: (interval_mul_neg_pos_alpha_complete l2' h2 l1 h1' S2 S1); assumption.
     (* Neg,Neg *)
     - move: (classify_Neg_inv _ _ Hcl1) => [h1' [Hh1e Hh1]].
       move: (classify_Neg_inv _ _ Hcl2) => [h2' [Hh2e Hh2]].
       subst h1 h2.
       rewrite /interval_mul_math Hcl1 Hcl2 /=.
       replace (h1' * h2') with (- h1' * - h2') by ring.
-      exact: (interval_mul_neg_neg_alpha_complete l2 l1 h2' h1' S2 S1
-                Hh2 Hh1 Hnb2 Hnb1 Hex2 Hex1 Ha2 Ha1).
+      apply: (interval_mul_neg_neg_alpha_complete l2 l1 h2' h1' S2 S1); assumption.
     (* Neg,Across *)
     - move: (classify_Neg_inv _ _ Hcl1) => [h1' [Hh1e Hh1]].
       subst h1.
@@ -819,16 +814,14 @@ Section Interval_mul.
              = interval_opp (bound_mul l2 (bound_opp l1), bound_mul h2 (bound_opp l1)).
       { rewrite /interval_opp !bound_mul_neg_l !bound_mul_neg_neg
                 (bound_mul_comm h2 l1) (bound_mul_comm l2 l1). by []. }
-      exact: (interval_mul_neg_across_closed l1 h1' l2 h2 S1 S2
-                Hh1 Hnb1 Hl2z Hh2z Hex1 Hex2 Ha1 Ha2).
+      apply: (interval_mul_neg_across_closed l1 h1' l2 h2 S1 S2); assumption.
     (* Across,Pos *)
     - move: (classify_Pos_inv _ _ Hcl2) => [l2' [Hl2e Hl2]].
       subst l2.
       have [Hl1z Hh1z] := classify_Across_inv _ _ Hnb1 Hcl1.
       rewrite (interval_mul_math_eq (WithTop.NotTop l2',h2) (l1,h1) Hnb1 Hnb2)
               /interval_mul Hcl1 Hcl2.
-      exact: (interval_mul_pos_across_closed l2' h2 l1 h1 S2 S1
-                Hl2 Hnb2 Hl1z Hh1z Hex2 Hex1 Ha2 Ha1).
+      apply: (interval_mul_pos_across_closed l2' h2 l1 h1 S2 S1); assumption.
     (* Across,Neg *)
     - move: (classify_Neg_inv _ _ Hcl2) => [h2' [Hh2e Hh2]].
       subst h2.
@@ -838,8 +831,7 @@ Section Interval_mul.
       have ->: (bound_mul h1 l2, bound_mul l1 l2)
              = interval_opp (bound_mul l1 (bound_opp l2), bound_mul h1 (bound_opp l2)).
       { rewrite /interval_opp !bound_mul_neg_l !bound_mul_neg_neg. by []. }
-      exact: (interval_mul_neg_across_closed l2 h2' l1 h1 S2 S1
-                Hh2 Hnb2 Hl1z Hh1z Hex2 Hex1 Ha2 Ha1).
+      apply: (interval_mul_neg_across_closed l2 h2' l1 h1 S2 S1); assumption.
     (* Across,Across *)
     - have [Hl1z Hh1z] := classify_Across_inv _ _ Hnb1 Hcl1.
       have [Hl2z Hh2z] := classify_Across_inv _ _ Hnb2 Hcl2.
@@ -854,8 +846,7 @@ Section Interval_mul.
                 !bound_mul_neg_l !bound_mul_neg_neg
                 (bound_mul_comm h2 l1) (bound_mul_comm l2 h1)
                 (bound_mul_comm l2 l1) (bound_mul_comm h2 h1). by []. }
-      exact: (interval_mul_across_across_closed l1 h1 l2 h2 S1 S2
-                Hl1z Hh1z Hl2z Hh2z Hex1 Hex2 Ha1 Ha2).
+      apply: (interval_mul_across_across_closed l1 h1 l2 h2 S1 S2); assumption.
   Qed.
 
   (** Closed-form variant: α-completeness for [interval_mul]. *)
@@ -867,7 +858,7 @@ Section Interval_mul.
   Proof.
     move=> Hnb1 Hnb2 Hex2 Hex1.
     rewrite /binary_alpha_complete -(interval_mul_math_eq i2 i1 Hnb1 Hnb2) => Ha2 Ha1.
-    exact: (interval_mul_math_alpha_complete i2 i1 S2 S1 Hnb1 Hnb2 Hex2 Hex1 Ha2 Ha1).
+    apply: (interval_mul_math_alpha_complete i2 i1 S2 S1); assumption.
   Qed.
 
   (** [interval_mul] is the best abstraction, derived directly

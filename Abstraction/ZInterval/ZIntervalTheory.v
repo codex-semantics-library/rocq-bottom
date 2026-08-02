@@ -1140,10 +1140,9 @@ Proof.
   apply: (itv_attained_high_witness l2 h2 S2 Ha2 Hex2) => Hath2.
   apply: (itv_attained_low_witness  l1 h1 S1 Ha1 Hex1) => Hatl1.
   apply: (itv_attained_high_witness l1 h1 S1 Ha1 Hex1) => Hath1.
-  exact: (interval_lift2_monotone_alpha_complete
+  apply: (interval_lift2_monotone_alpha_complete
            Z.le Z.le Z.le z_is_unbounded z_is_unbounded_up z_le_antisymm
-           f Hmono Hrefl Hrefr l2 h2 l1 h1 S2 S1
-           Hatl2 Hath2 Hatl1 Hath1 Hrbl Hrbr Hral Hrar Ha2 Ha1).
+           f _ _ _ l2 h2 l1 h1 S2 S1); assumption.
 Qed.
 
 
