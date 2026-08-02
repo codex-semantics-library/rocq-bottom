@@ -559,6 +559,15 @@ Proof.
   move: Hnb => [c Hc]. exact: (Hempty c Hc).
 Qed.
 
+(** The [IsAlpha] reading of [non_bottom_MaximallyReduced]: a non-bottom
+    interval is the best abstraction of its own concretization.  This is the
+    form the α-completeness transfer function proofs want. *)
+Lemma non_bottom_is_alpha_gamma (i : interval) :
+  non_bottom i -> IsAlpha (A:=itv) i (γ[itv] i).
+Proof.
+  move=> Hnb; apply/is_alpha_iff_best_abstraction.
+  exact: non_bottom_MaximallyReduced.
+Qed.
 (** When the upper bound of a non-bottom positive interval is [Top],
     any concrete set [S] best-abstracted by it must be unbounded above
     on [Z]: any candidate finite upper bound [M] would witness
