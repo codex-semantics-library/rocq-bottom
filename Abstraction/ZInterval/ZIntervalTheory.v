@@ -568,6 +568,25 @@ Proof.
   move=> Hnb; apply/is_alpha_iff_best_abstraction.
   exact: non_bottom_MaximallyReduced.
 Qed.
+
+(** The best abstraction of a set pinned between two of its own elements: both
+    bounds are attained, so each is the glb (lub) of the set by
+    [is_glb_of_min] / [is_lub_of_max]. *)
+Lemma is_alpha_itv_attained (l h : Z) (S : ℘ Z) :
+  l ∈ S -> h ∈ S -> (forall c, c ∈ S -> l <= c <= h) ->
+  IsAlpha (A:=itv) (WithTop.NotTop l, WithTop.NotTop h) S.
+Proof.
+  move=> Hl Hh Hb; apply/Conjunction.is_alpha_pair_iff; split.
+  - apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_glbtop)).
+    constructor.
+    + by move=> z Hz; have := Hb _ Hz; lia.
+    + by move=> z Hz; exact: (Hz _ Hl).
+  - apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
+    constructor.
+    + by move=> z Hz; have := Hb _ Hz; lia.
+    + by move=> z Hz; exact: (Hz _ Hh).
+Qed.
+
 (** When the upper bound of a non-bottom positive interval is [Top],
     any concrete set [S] best-abstracted by it must be unbounded above
     on [Z]: any candidate finite upper bound [M] would witness
