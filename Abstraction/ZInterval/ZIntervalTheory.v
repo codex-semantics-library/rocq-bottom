@@ -1147,6 +1147,34 @@ Qed.
 
 
 
+(** * The sign-definite intervals smart constructors. *)
+
+(** Building a sign-definite interval from its bounds.  A lemma that fixes the
+    bounds and their sign states its operand this way. *)
+Definition pos_itv (l : Z) (h : WithTop.with_top Z)
+  (Hl : 0 < l) (Hnb : non_bottom (WithTop.NotTop l, h)) : pos_interval :=
+  exist _ (WithTop.NotTop l, h) (conj Hnb Hl).
+
+Definition neg_itv (l : WithTop.with_top Z) (h : Z)
+  (Hh : h < 0) (Hnb : non_bottom (l, WithTop.NotTop h)) : neg_interval :=
+  exist _ (l, WithTop.NotTop h) (conj Hnb Hh).
+
+(** An [across_interval] is non-bottom: its low bound is at most -1 and its
+    high bound at least 1. *)
+Lemma across_non_bottom (i : interval) :
+  low_neg (fst i) -> high_pos (snd i) -> non_bottom i.
+Proof. case: i => [[|l'] [|h']] //= Hl Hh; lia. Qed.
+
+(** The two halves an [across_interval] splits into at ∓1 are themselves
+    non-bottom, hence best abstractions of their own γ. *)
+Lemma across_neg_half_non_bottom (l : WithTop.with_top Z) :
+  low_neg l -> non_bottom (l, WithTop.NotTop (-1)).
+Proof. case: l => [|z] /= Hz //; unfold_set; simpl; lia. Qed.
+
+Lemma across_pos_half_non_bottom (h : WithTop.with_top Z) :
+  high_pos h -> non_bottom (WithTop.NotTop 1, h).
+Proof. case: h => [|z] /= Hz //; unfold_set; simpl; lia. Qed.
+
 Lemma classify_Pos_inv l h : classify (l, h) = Pos ->
   exists l', l = WithTop.NotTop l' /\ 0 <= l'.
 Proof.
