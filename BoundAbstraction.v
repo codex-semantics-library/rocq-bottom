@@ -188,6 +188,25 @@ Global Hint Unfold LUB.γ_lub : unfold_gamma.
 
 (** * GLB (or unbounded). *)
 
+(** * Minima and greatest lower bounds.
+
+    The two directions, and they are not symmetric in cost.
+
+    *Minimum ⇒ glb* ([is_glb_of_min] below) is free in any preorder: an element
+    of [S] that is below all of [S] is its glb.  Named because the "exhibit the
+    bound as a member" step otherwise gets re-proved at every best-abstraction
+    site.
+
+    *Glb ⇒ minimum* is [GlbsAreMins], further down: it is false in general (the
+    glb need not be attained), so it is a class, discharged per order. *)
+Lemma is_glb_of_min {A} (le : relation A) (S : ℘ A) (x : A) :
+  x ∈ S -> (forall z, z ∈ S -> le x z) -> GLB.is_glb le x S.
+Proof. move=> Hx Hlb; split; first exact: Hlb. move=> z Hz. exact: (Hz _ Hx). Qed.
+
+Lemma is_lub_of_max {A} (le : relation A) (S : ℘ A) (x : A) :
+  x ∈ S -> (forall z, z ∈ S -> le z x) -> LUB.is_lub le x S.
+Proof. move=> Hx Hub; split; first exact: Hub. move=> z Hz. exact: (Hz _ Hx). Qed.
+
 Module GLBUnbounded. Section GLBUnbounded.
 
   Context {A : Type} (le : relation A) {Hpre : PreOrder le}.
@@ -573,25 +592,6 @@ End IntervalUnbounded. End IntervalUnbounded.
    [IntervalUnbounded.ad] is [Conjunction.ad glbtop lubtop], where [glbtop] and
    [lubtop] adjoin a ⊤ (via [WithTop]) for sets with no lower / upper bound. *)
 
-
-(** * Minima and greatest lower bounds.
-
-    The two directions, and they are not symmetric in cost.
-
-    *Minimum ⇒ glb* ([is_glb_of_min] below) is free in any preorder: an element
-    of [S] that is below all of [S] is its glb.  Named because the "exhibit the
-    bound as a member" step otherwise gets re-proved at every best-abstraction
-    site.
-
-    *Glb ⇒ minimum* is [GlbsAreMins], further down: it is false in general (the
-    glb need not be attained), so it is a class, discharged per order. *)
-Lemma is_glb_of_min {A} (le : relation A) (S : ℘ A) (x : A) :
-  x ∈ S -> (forall z, z ∈ S -> le x z) -> GLB.is_glb le x S.
-Proof. move=> Hx Hlb; split; first exact: Hlb. move=> z Hz. exact: (Hz _ Hx). Qed.
-
-Lemma is_lub_of_max {A} (le : relation A) (S : ℘ A) (x : A) :
-  x ∈ S -> (forall z, z ∈ S -> le z x) -> LUB.is_lub le x S.
-Proof. move=> Hx Hub; split; first exact: Hub. move=> z Hz. exact: (Hz _ Hx). Qed.
 
 (** * "Glbs are mins" / "Lubs are maxs": universal attainment.
 
