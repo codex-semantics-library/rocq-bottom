@@ -268,8 +268,17 @@ Module GLBUnbounded. Section GLBUnbounded.
       relation that can prove, for some cases, that we have an
       IsAlpha, but may not prove this for every set and abstract
       element.  *)
-  Theorem no_lower_bound_implies_top_is_best (S: ℘ A):
-    no_lower_bound S -> IsAlpha (A:=ad) WithTop.Top S.
+  (** The double-negated form of [no_lower_bound]. It is the *weaker*
+      hypothesis, hence the stronger lemma, and it is the one available when
+      the witness is only reachable through a [Stable] continuation — which is
+      how every "this bound is [Top]" obligation extracted from an existing
+      [IsAlpha] arrives. The goal it has to reach is [False], so the double
+      negation is eliminable and nothing classical is used. *)
+  Definition no_lower_bound_nn (S:℘ A) :=
+    forall z, ~ ~ (exists z', z' ∈ S /\ z' ≤ z).
+
+  Theorem no_lower_bound_nn_implies_top_is_best (S: ℘ A):
+    no_lower_bound_nn S -> IsAlpha (A:=ad) WithTop.Top S.
   Proof using A Hpre antisym le unbounded.
     rewrite is_alpha_iff_best_abstraction.
     move=> HSunbounded.
@@ -281,15 +290,23 @@ Module GLBUnbounded. Section GLBUnbounded.
     to_set. unfold_set. move => //=. unfold GLB.γ_glb. unfold_set.
     (* Remains: (forall c : A, c ∈ S -> a ≤ c) -> False *)
     move=> Ha_lb_S.              (* Hypothesis: a is lower bound of S. *)
-    rewrite /no_lower_bound in HSunbounded.
+    rewrite /no_lower_bound_nn in HSunbounded.
     (* First: pick a' smaller than a, possible because the set is undounded. *)
     move: (unbounded a) => [a' [Ha'_le_a Ha'_ne_a]]. clear unbounded.
-    (* Now: pick a'' smaller than a in S, possible because S is unbounded. *)
-    move: (HSunbounded a') => [a'' [Ha''_in_S Ha''_le_a']].
+    (* Now: pick a'' smaller than a in S, possible because S is unbounded.
+       The goal is [False], so the double negation comes off here. *)
+    apply: (HSunbounded a') => -[a'' [Ha''_in_S Ha''_le_a']].
     have Ha''_le_a: a'' ≤ a by transitivity a'.
     move: (Ha_lb_S a'' Ha''_in_S) => Ha_le_a''.
     (* we have a <= a'' <= a' <=a, so by anisymettry a = a' = a'', which contradicts a <> a'. *)
     by firstorder.
+  Qed.
+
+  Theorem no_lower_bound_implies_top_is_best (S: ℘ A):
+    no_lower_bound S -> IsAlpha (A:=ad) WithTop.Top S.
+  Proof using A Hpre antisym le unbounded.
+    move=> H. apply: no_lower_bound_nn_implies_top_is_best.
+    move=> z Hn. apply: Hn. exact: H.
   Qed.
 
 
