@@ -88,7 +88,7 @@ Proof.
     move=> [c2 [c1 [Hc2 [Hc1 [Hne Heq]]]]];
     exists c2, (- c1); unfold_set;
     rewrite ?Z.opp_involutive (Z.quot_opp_r c2 c1 Hne);
-    by repeat split => //; lia.
+    by repeat split => //; rewrite /is_nonzero in Hne *; lia.
 Qed.
 
 (** Negating both operands is negating each in turn. *)
@@ -107,7 +107,7 @@ Qed.
     with [is_alpha_join_split].  Both are instances of the generic
     [collecting_binary_forward_partial_split_zero_{l,strict_r}]
     ([ZIntervalTheory.v]); each quot-named lemma below only instantiates the
-    partiality predicate [fun _ c1 => c1 <> 0] and — for the divisor — supplies
+    partiality predicate [is_nonzero] and — for the divisor — supplies
     the [c1 <> 0] covering premise that [P] gives it.
 
     The two are not symmetric, and the asymmetry is the whole reason division
@@ -127,7 +127,7 @@ Lemma collecting_quot_split_dividend (S2 S1 : propset Z) :
   collecting_quot {[ z | z ∈ S2 /\ z <= 0 ]} S1 ∪
   collecting_quot {[ z | z ∈ S2 /\ 0 <= z ]} S1.
 Proof.
-  exact: (collecting_binary_forward_partial_split_zero_l (fun _ c1 => c1 <> 0) Z.quot S2 S1).
+  exact: (collecting_binary_forward_partial_split_zero_l is_nonzero Z.quot S2 S1).
 Qed.
 
 (** The sign halves of a zero-crossing interval's γ *are* the γ of its ∓1-capped
@@ -388,7 +388,7 @@ Proof.
     move=> Hsub.
     apply: (is_alpha_lubtop_top_nn S2 (d * z + d) Hunb) => [[c2 [Hc2in Hc2gt]]].
     have Hmem : Z.quot c2 d ∈ collecting_quot S2 S1
-      by exists c2, d; repeat split; [exact: Hc2in | exact: Hdin | lia].
+      by exists c2, d; repeat split; [exact: Hc2in | exact: Hdin | rewrite /is_nonzero; lia].
     have Hle := Hsub _ Hmem; unfold_set in Hle.
     have Hlow : z + 1 <= Z.quot c2 d by apply: Z.quot_le_lower_bound; [lia | nia].
     lia.
@@ -442,7 +442,7 @@ Proof.
          have H0 : 0 ∈ collecting_quot S2 S1.
          { exists l2, c1; unfold_set.
            have -> : Z.quot l2 c1 = 0 by apply Z.quot_small; lia.
-           repeat split; [exact: Hatl2 | exact: Hc1 | lia]. }
+            repeat split; [exact: Hatl2 | exact: Hc1 | rewrite /is_nonzero; lia]. }
          have := Hz 0 H0; lia.
     * (* h1 = NotTop h1': the infimum is attained at (smallest dividend,
          largest divisor), so it is a *member* of the quotient set and below all
@@ -450,7 +450,7 @@ Proof.
       rewrite ?quot_bound_qb /=.
       simpl in Hnb1.
       apply: is_glb_of_min;
-        first by exists l2, h1'; unfold_set; repeat split => //; lia.
+        first by exists l2, h1'; unfold_set; repeat split => //; rewrite /is_nonzero; lia.
       (* [l2 ÷ h1' <= l2 ÷ c1 <= c2 ÷ c1]: antitone in the divisor, then
          monotone in the dividend.  Both operands' bounds are read off their γ,
          which also gives the divisor's positivity. *)
@@ -470,7 +470,7 @@ Proof.
          dividend, smallest divisor). *)
       apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
       rewrite ?quot_bound_qb /=.
-      apply: is_lub_of_max; first by exists h2', l1; unfold_set; repeat split=> //; lia.
+      apply: is_lub_of_max; first by exists h2', l1; unfold_set; repeat split=> //; rewrite /is_nonzero; lia.
       (* [c2 ÷ c1 <= c2 ÷ l1 <= h2' ÷ l1]. *)
       move=> z; unfold_set; move=> [c2 [c1 [Hc2 [Hc1 [_ <-]]]]].
       have /gamma_itv_low Hlo2 := HS2 _ Hc2.
@@ -1211,7 +1211,7 @@ Proof.
   { exists 8, 1.
     split; [by unfold_set; simpl; lia|].
     split; [by unfold_set; simpl; lia|].
-    by split; [lia | vm_compute]. }
+    by split; [rewrite /is_nonzero; lia | vm_compute]. }
   move: (Hsub _ H8) => Hmem; unfold_set in Hmem; simpl in Hmem; lia.
 Qed.
 

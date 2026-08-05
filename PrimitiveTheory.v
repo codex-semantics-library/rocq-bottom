@@ -21,12 +21,14 @@ Generalizable All Variables.
     divisor.  Their forward collecting semantics are all the same generic
     [collecting_binary_forward_partial] instance: the "divisor is non-zero"
     predicate, the one that makes [Primitives.quot_non_zero] extraction sound;
-    differing only in the concrete operation [f].  [collecting_non_zero_r]
-    packages that shared predicate, and the three primitives are its
-    instantiations. *)
+    differing only in the concrete operation [f].  [is_nonzero] names that
+    shared predicate, and [collecting_non_zero_r] packages it with the
+    collecting semantics; the three primitives are its instantiations. *)
+
+Definition is_nonzero (_ c1 : Z) : Prop := c1 <> 0.
 
 Definition collecting_non_zero_r (f : Z -> Z -> Z) (S2 S1 : propset Z) : propset Z :=
-  collecting_binary_forward_partial (fun _ c1 => c1 <> 0) f S2 S1.
+  collecting_binary_forward_partial is_nonzero f S2 S1.
 Hint Unfold collecting_non_zero_r: to_set.
 
 (** Truncating (C99) division [Z.quot]. *)
@@ -67,11 +69,12 @@ Lemma collecting_non_zero_split_zero_strict_r (f : Z -> Z -> Z) (S2 S1 : propset
 Proof.
   unfold collecting_non_zero_r.
   apply: (collecting_binary_forward_partial_split_r
-            (fun _ c1 => c1 <> 0) f S2 S1
+            is_nonzero f S2 S1
             {[ z | z ∈ S1 /\ z < 0 ]} {[ z | z ∈ S1 /\ 0 < z ]}).
   - move=> c2 c1 Hc2 Hc1 Hne.
     unfold_set.
-    case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //; lia.
+    case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //;
+      rewrite /is_nonzero in Hne *; lia.
   - unfold_set; by move=> c [Hc _].
   - unfold_set; by move=> c [Hc _].
 Qed.

@@ -717,7 +717,7 @@ Proof.
         exists (-k). lia.
       + unfold_set. unfold_set in Hb. case: Hb => [k Hk].
         exists 0. nia.
-      + lia.
+      + rewrite /is_nonzero in Hne *; lia.
       + by rewrite (Z.quot_opp_opp _ _ Hne).
     - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]].
       exists (-c2), (-c1).
@@ -726,8 +726,8 @@ Proof.
         exists (-k). lia.
       + unfold_set. unfold_set in Hb. case: Hb => [k Hk].
         exists 0. nia.
-      + lia.
-      + have Hne' : -c1 <> 0 by lia.
+      + rewrite /is_nonzero in Hne *; lia.
+      + have Hne' : -c1 <> 0 by rewrite /is_nonzero in Hne; lia.
         rewrite -(Z.quot_opp_opp (-c2) (-c1) Hne').
         by rewrite !Z.opp_involutive. }
   apply: best_abstraction_equiv; last by symmetry; exact: Hset.
@@ -796,7 +796,7 @@ Proof.
     + move=> c _. unfold_set. exact: Z.divide_1_l.
     + move=> [r' m'] HS.
       have H0_in : 0 ∈ collecting_binary_forward_partial
-                         (fun _ c1 => c1 <> 0) Z.quot
+                         is_nonzero Z.quot
                          (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2)).
       { exists c1_b, c2.
         split; [exact Hc1b_in|].
@@ -804,7 +804,7 @@ Proof.
         rewrite (Z.quot_div_nonneg _ _ (ltac:(lia) : 0 <= c1_b) Hc2_pos).
         apply: Z.div_small. lia. }
       have H1_in : 1 ∈ collecting_binary_forward_partial
-                         (fun _ c1 => c1 <> 0) Z.quot
+                         is_nonzero Z.quot
                          (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2)).
       { exists c1_a, c2.
         split; [exact Hc1a_in|].
@@ -939,7 +939,7 @@ Proof.
         exists (-k). lia.
       + unfold_set. unfold_set in Hb. case: Hb => [k Hk].
         exists 0. nia.
-      + lia.
+      + rewrite /is_nonzero in Hne *; lia.
       + by rewrite (Z.quot_opp_opp _ _ Hne).
     - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]].
       exists (-c2), (-c1).
@@ -948,8 +948,8 @@ Proof.
         exists (-k). lia.
       + unfold_set. unfold_set in Hb. case: Hb => [k Hk].
         exists 0. nia.
-      + lia.
-      + have Hne' : -c1 <> 0 by lia.
+      + rewrite /is_nonzero in Hne *; lia.
+      + have Hne' : -c1 <> 0 by rewrite /is_nonzero in Hne; lia.
         rewrite -(Z.quot_opp_opp (-c2) (-c1) Hne').
         by rewrite !Z.opp_involutive. }
   apply: best_abstraction_equiv; last by symmetry; exact: Hset.
