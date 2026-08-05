@@ -569,22 +569,86 @@ Proof.
   exact: non_bottom_MaximallyReduced.
 Qed.
 
+(** * Building a best abstraction, one bound at a time.
+
+    Instantiations at [Z] of the generic lemmas of [BoundAbstraction]: an
+    *attained* bound is the best one, an *unbounded* set is best abstracted by
+    [Top], and a *cofinal* subset shares the best abstraction of the whole
+    (uniformly in [Top] and [NotTop]). *)
+
+Lemma glbtop_of_min (l : Z) (S : ℘ Z) :
+  l ∈ S -> (forall z, z ∈ S -> l <= z) ->
+  IsAlpha (A:=glbtop) (WithTop.NotTop l) S.
+Proof.
+  exact: (BoundAbstraction.GLBUnbounded.min_is_best
+            Z.le z_is_unbounded z_le_antisymm l S).
+Qed.
+
+Lemma lubtop_of_max (h : Z) (S : ℘ Z) :
+  h ∈ S -> (forall z, z ∈ S -> z <= h) ->
+  IsAlpha (A:=lubtop) (WithTop.NotTop h) S.
+Proof.
+  exact: (BoundAbstraction.LUBUnbounded.max_is_best
+            Z.le z_is_unbounded_up z_le_antisymm h S).
+Qed.
+
+(** The [~~] forms are the primitive ones: their hypothesis is weaker, and it
+    is what a witness extracted through a [Stable] continuation (e.g. by
+    [is_alpha_glbtop_top_nn]) supplies. The plain forms are one line each. *)
+
+Lemma glbtop_top_of_unbounded_nn (S : ℘ Z) :
+  (forall M, ~ ~ (exists c, c ∈ S /\ c < M)) ->
+  IsAlpha (A:=glbtop) WithTop.Top S.
+Proof.
+  move=> H.
+  apply: (BoundAbstraction.GLBUnbounded.no_lower_bound_nn_implies_top_is_best
+            Z.le z_is_unbounded z_le_antisymm S).
+  move=> z Hn. apply: (H z) => -[c [Hc Hlt]].
+  apply: Hn. exists c. split=> //. lia.
+Qed.
+
+Lemma lubtop_top_of_unbounded_nn (S : ℘ Z) :
+  (forall M, ~ ~ (exists c, c ∈ S /\ M < c)) ->
+  IsAlpha (A:=lubtop) WithTop.Top S.
+Proof.
+  move=> H.
+  apply: (BoundAbstraction.LUBUnbounded.no_upper_bound_nn_implies_top_is_best
+            Z.le z_is_unbounded_up z_le_antisymm S).
+  move=> z Hn. apply: (H z) => -[c [Hc Hlt]].
+  apply: Hn. exists c. split=> //. rewrite /CRelationClasses.flip. lia.
+Qed.
+
+Lemma glbtop_top_of_unbounded (S : ℘ Z) :
+  (forall M, exists c, c ∈ S /\ c < M) -> IsAlpha (A:=glbtop) WithTop.Top S.
+Proof.
+  move=> H. apply: glbtop_top_of_unbounded_nn => M Hn. apply: Hn. exact: H.
+Qed.
+
+Lemma lubtop_top_of_unbounded (S : ℘ Z) :
+  (forall M, exists c, c ∈ S /\ M < c) -> IsAlpha (A:=lubtop) WithTop.Top S.
+Proof.
+  move=> H. apply: lubtop_top_of_unbounded_nn => M Hn. apply: Hn. exact: H.
+Qed.
+
+Lemma glbtop_cofinal (S S' : ℘ Z) (l : glbtop) :
+  S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z' <= z) ->
+  IsAlpha (A:=glbtop) l S' -> IsAlpha (A:=glbtop) l S.
+Proof. exact: (BoundAbstraction.GLBUnbounded.cofinal_below Z.le S S' l). Qed.
+
+Lemma lubtop_cofinal (S S' : ℘ Z) (h : lubtop) :
+  S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z <= z') ->
+  IsAlpha (A:=lubtop) h S' -> IsAlpha (A:=lubtop) h S.
+Proof. exact: (BoundAbstraction.LUBUnbounded.cofinal_above Z.le S S' h). Qed.
+
 (** The best abstraction of a set pinned between two of its own elements: both
-    bounds are attained, so each is the glb (lub) of the set by
-    [is_glb_of_min] / [is_lub_of_max]. *)
+    bounds are attained, so each is the glb (lub) of the set. *)
 Lemma is_alpha_itv_attained (l h : Z) (S : ℘ Z) :
   l ∈ S -> h ∈ S -> (forall c, c ∈ S -> l <= c <= h) ->
   IsAlpha (A:=itv) (WithTop.NotTop l, WithTop.NotTop h) S.
 Proof.
   move=> Hl Hh Hb; apply/Conjunction.is_alpha_pair_iff; split.
-  - apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_glbtop)).
-    constructor.
-    + by move=> z Hz; have := Hb _ Hz; lia.
-    + by move=> z Hz; exact: (Hz _ Hl).
-  - apply (weak_α_relation_spec (WeakAlphaRelation:=is_alpha_lubtop)).
-    constructor.
-    + by move=> z Hz; have := Hb _ Hz; lia.
-    + by move=> z Hz; exact: (Hz _ Hh).
+  - apply: glbtop_of_min => // z Hz. by have := Hb _ Hz; lia.
+  - apply: lubtop_of_max => // z Hz. by have := Hb _ Hz; lia.
 Qed.
 
 (** When the upper bound of a non-bottom positive interval is [Top],
