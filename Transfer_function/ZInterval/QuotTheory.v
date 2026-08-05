@@ -197,8 +197,7 @@ Lemma collecting_quot_split_divisor_set (S2 S1 : propset Z) :
   collecting_quot S2 {[ z | z ∈ S1 /\ z < 0 ]} ∪
   collecting_quot S2 {[ z | z ∈ S1 /\ 0 < z ]}.
 Proof.
-  exact: (collecting_binary_forward_partial_split_zero_strict_r
-            (fun _ c1 => c1 <> 0) Z.quot S2 S1 ltac:(by move=> c2 c1 _ _ Hne; exact Hne)).
+  exact: (collecting_non_zero_split_zero_strict_r Z.quot S2 S1).
 Qed.
 
 (** * The arithmetic core: positive dividend / strictly positive divisor.
@@ -366,6 +365,34 @@ Proof. by case: b => [|b]; case: a => [|a] //=; rewrite Zquot.Zquot_opp_r. Qed.
 
 Local Lemma qb_0_l (b : WithTop.with_top Z) : qb (WithTop.NotTop 0) b = WithTop.NotTop 0.
 Proof. by case: b => [|b] //=; rewrite Zquot.Zquot_0_l. Qed.
+
+(** Unboundedness of the quotient set: when the dividend set is unbounded
+    above and the divisor set has a strictly positive element [d], the
+    quotients are unbounded above — a dividend beyond [d * (z + 1)] has a
+    quotient beyond [z].  Stated as [IsAlpha] directly rather than through
+    [weak_α_relation_spec]: the weak relation asks for the witness
+    constructively, whereas [IsAlpha]'s [NotTop] case reduces to [False],
+    which is [Stable] and so admits the ¬¬-witness of
+    [is_alpha_lubtop_top_nn].  The [Z]-level sibling of
+    [MulTheory.IsAlpha_lubtop_top_product_r], used below by
+    [interval_quot_pos_alpha_complete]'s [h2 = Top] branch. *)
+Lemma IsAlpha_lubtop_top_quot (S2 S1 : ℘ Z) (d : Z) :
+  IsAlpha (A:=lubtop) WithTop.Top S2 ->
+  0 < d -> d ∈ S1 ->
+  IsAlpha (A:=lubtop) WithTop.Top (collecting_quot S2 S1).
+Proof.
+  move=> Hunb Hd Hdin.
+  rewrite /IsAlpha => a; case: a => [|z] /=.
+  - by unfold_set; split.
+  - unfold_set; split; [|by []].
+    move=> Hsub.
+    apply: (is_alpha_lubtop_top_nn S2 (d * z + d) Hunb) => [[c2 [Hc2in Hc2gt]]].
+    have Hmem : Z.quot c2 d ∈ collecting_quot S2 S1
+      by exists c2, d; repeat split; [exact: Hc2in | exact: Hdin | lia].
+    have Hle := Hsub _ Hmem; unfold_set in Hle.
+    have Hlow : z + 1 <= Z.quot c2 d by apply: Z.quot_le_lower_bound; [lia | nia].
+    lia.
+Qed.
 
 Lemma interval_quot_pos_alpha_complete
     (l2 : Z) (h2 : WithTop.with_top Z) (i1 : pos_interval) (S2 S1 : ℘ Z) :
