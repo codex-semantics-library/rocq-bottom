@@ -75,3 +75,42 @@ Proof.
   - unfold_set; by move=> c [Hc _].
   - unfold_set; by move=> c [Hc _].
 Qed.
+
+
+(** * Splitting the collecting semantics at zero.
+
+    Z-level set equivalences that cut a collecting set at [0] in the left
+    operand, on arbitrary (total or partial) binary operations.  These are
+    exactly [collecting_binary_forward_partial_split_l] ([Abstraction.v]) with
+    the covering condition discharged against Z's total order. *)
+
+(** Split the left operand at [<= 0] / [0 <=]. *)
+Lemma collecting_binary_forward_partial_split_zero_l
+  (P : Z -> Z -> Prop) (f : Z -> Z -> Z) (S2 S1 : propset Z) :
+  collecting_binary_forward_partial P f S2 S1 ⊆⊇
+  collecting_binary_forward_partial P f {[ z | z ∈ S2 /\ z <= 0 ]} S1 ∪
+  collecting_binary_forward_partial P f {[ z | z ∈ S2 /\ 0 <= z ]} S1.
+Proof.
+  apply: (collecting_binary_forward_partial_split_l P f S2
+            {[ z | z ∈ S2 /\ z <= 0 ]} {[ z | z ∈ S2 /\ 0 <= z ]} S1).
+  - move=> c2 c1 Hc2 _ _; unfold_set.
+    case: (Z.le_ge_cases c2 0) => Hc2z; [left | right]; split=> //; simpl; lia.
+  - unfold_set; by move=> c [Hc _].
+  - unfold_set; by move=> c [Hc _].
+Qed.
+
+(** The total (non-partial) collector [collecting_binary_forward f] splits the
+    same way in its left operand. *)
+Lemma collecting_binary_forward_split_zero_l
+  (f : Z -> Z -> Z) (S2 S1 : propset Z) :
+  collecting_binary_forward f S2 S1 ⊆⊇
+  collecting_binary_forward f {[ z | z ∈ S2 /\ z <= 0 ]} S1 ∪
+  collecting_binary_forward f {[ z | z ∈ S2 /\ 0 <= z ]} S1.
+Proof.
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
+    case: (Z.le_ge_cases c2 0) => Hc2z; [left | right];
+      exists c2, c1; (repeat split=> //); unfold_set; by split=> //; lia.
+  - move=> [ [c2 [c1 [Hc2 [Hc1 Heq]]]] | [c2 [c1 [Hc2 [Hc1 Heq]]]] ];
+      exists c2, c1; (repeat split=> //); by move: Hc2 => [Hc2 _].
+Qed.
