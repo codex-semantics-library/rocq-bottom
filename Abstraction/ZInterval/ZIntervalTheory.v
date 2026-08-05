@@ -9,6 +9,8 @@
      opp:  exact                      -- OppTheory.v
      add:  sound + best (α-complete)  -- AddTheory.v
      sub:  sound + exact (non-bottom) -- AddTheory.v
+     backward add/sub: exact          -- AddBackwardTheory.v
+     backward mul:  sound             -- MulBackwardTheory.v
      quot: best, all 9 sign cases     -- QuotTheory.v
      mul:  sound + best (α-complete)  -- MulTheory.v
      leb:  exact                      -- LeTheory.v
