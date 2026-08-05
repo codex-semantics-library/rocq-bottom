@@ -353,6 +353,42 @@ Module GLBUnbounded. Section GLBUnbounded.
     c1 ∈ γ[ad] b -> c1 ≤ c2 -> c2 ∈ γ[ad] b.
   Proof. destruct b; simpl; [done | exact: GLB.gamma_upward]. Qed.
 
+  (** ** Establishing and transporting best abstraction.
+
+      [min_is_best] *establishes* an [IsAlpha]: a lower bound that lies *in* the
+      set is automatically the greatest one, so attainment is all that has to be
+      shown. Pairing it with its [LUBUnbounded] dual gives the
+      two-witnesses-and-a-bracket entry point that interval proofs use
+      throughout.
+
+      [cofinal_below] *transports* an existing [IsAlpha] rather than
+      establishing one. Think of [S'] as a set of *representative elements* of
+      [S] ([S'] ⊆ [S]) that *preserve the bound*: then, we don't need to
+      consider all of [S] to prove that the bound is attained, but only the
+      elements in [S']. But instead of proving that [S] and [S'] have the same
+      bound, we ask only that [S'] is cofinal, i.e. each element in [S] is
+      bounded by an element in [S']. *)
+
+  Lemma min_is_best (l : A) (S : ℘ A) :
+    l ∈ S -> (forall z, z ∈ S -> l ≤ z) ->
+    IsAlpha (A:=ad) (WithTop.NotTop l) S.
+  Proof using A Hpre antisym le unbounded.
+    move=> Hl Hlb.
+    apply (weak_α_relation_spec (WeakAlphaRelation:=galoisW)).
+    exact: is_glb_of_min.
+  Qed.
+
+  Lemma cofinal_below (S S' : ℘ A) (bnd : ad) :
+    S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z' ≤ z) ->
+    IsAlpha (A:=ad) bnd S' -> IsAlpha (A:=ad) bnd S.
+  Proof using A Hpre le.
+    move=> Hsub Hcof Ha c; split.
+    - move=> HS. apply: (proj1 (Ha c)) => z Hz. exact: HS (Hsub _ Hz).
+    - move=> Hle z Hz.
+      have [z' [Hz' Hzz']] := Hcof z Hz.
+      exact: gamma_upward (proj2 (Ha c) Hle z' Hz') Hzz'.
+  Qed.
+
   (** GLBUnbounded is also an exact order. This depends on unbounded:
       if Top was equivalent to "greater than the lower bound", then we
       Top and <= glb would be equivalent in the concrete,
@@ -448,6 +484,23 @@ Module LUBUnbounded. Section LUBUnbounded.
     - exact: antisym_flip.
   Qed.
 
+  (** Dual of [GLBUnbounded.no_lower_bound_nn_implies_top_is_best]: the
+      weaker, double-negated hypothesis, which is what a witness extracted
+      through a [Stable] continuation supplies. *)
+  Definition no_upper_bound_nn (S:℘ A) :=
+    forall z, ~ ~ (exists z', z' ∈ S /\ z' ≥ z).
+
+  Theorem no_upper_bound_nn_implies_top_is_best (S: ℘ A):
+    no_upper_bound_nn S -> IsAlpha (A:=ad) WithTop.Top S.
+  Proof using A Hpre antisym le unbounded.
+    have H: no_upper_bound_nn S <-> GLBUnbounded.no_lower_bound_nn (≥) S.
+    by firstorder.
+    rewrite H.
+    apply: (GLBUnbounded.no_lower_bound_nn_implies_top_is_best (≥)).
+    - exact: unbounded.
+    - exact: antisym_flip.
+  Qed.
+
   Definition galois_lub : StrongAlphaRelation lub := (LUB.galois le).
   
   Definition is_α (αS:ad) (S:propset A) :=
@@ -475,6 +528,29 @@ Module LUBUnbounded. Section LUBUnbounded.
   Lemma gamma_downward (b : WithTop.with_top A) (c1 c2 : A) :
     c1 ∈ γ[ad] b -> c2 ≤ c1 -> c2 ∈ γ[ad] b.
   Proof. destruct b; simpl; [done | exact: LUB.gamma_downward]. Qed.
+
+  (** Duals of [GLBUnbounded.min_is_best] and [GLBUnbounded.cofinal_below];
+      see the commentary there. *)
+
+  Lemma max_is_best (h : A) (S : ℘ A) :
+    h ∈ S -> (forall z, z ∈ S -> z ≤ h) ->
+    IsAlpha (A:=ad) (WithTop.NotTop h) S.
+  Proof using A Hpre antisym le unbounded.
+    move=> Hh Hub.
+    apply (weak_α_relation_spec (WeakAlphaRelation:=galoisW)).
+    exact: is_lub_of_max.
+  Qed.
+
+  Lemma cofinal_above (S S' : ℘ A) (bnd : ad) :
+    S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z ≤ z') ->
+    IsAlpha (A:=ad) bnd S' -> IsAlpha (A:=ad) bnd S.
+  Proof using A Hpre le.
+    move=> Hsub Hcof Ha c; split.
+    - move=> HS. apply: (proj1 (Ha c)) => z Hz. exact: HS (Hsub _ Hz).
+    - move=> Hle z Hz.
+      have [z' [Hz' Hzz']] := Hcof z Hz.
+      exact: gamma_downward (proj2 (Ha c) Hle z' Hz') Hzz'.
+  Qed.
 
   Instance lubunbounded_is_included_exact : ExactOrder ad.
   Proof using A Hpre antisym le unbounded.
