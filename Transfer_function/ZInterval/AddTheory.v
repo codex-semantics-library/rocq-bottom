@@ -203,13 +203,6 @@ Section Interval_sub.
 End Interval_sub.
 
 
-Require Import Extraction.
-Extraction Language OCaml.
-Require Import ExtrOcamlBasic.
 
-Extraction Inline non_bottom_lift_total_binary.
-(* Extraction Inline ad_car abs_car abstract_domain_to_abstraction. *)
-(* Extraction Inline WithTop.lift2. *)
 
-Separate Extraction interval_add nb_interval_add.
 
