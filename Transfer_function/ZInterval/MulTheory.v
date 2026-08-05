@@ -618,16 +618,13 @@ Section Interval_mul.
     have Hpr := interval_mul_pos_across_closed p h1 l2 h2
                   {[ z | z ∈ S1 /\ 0 <= z ]} S2
                   Hp Hnbp Hl2 Hh2 (nonempty_of_mem _ _ Hmemp) Hex2 Hap Ha2.
+    (* The split [S1 = S1⁻ ∪ S1⁺] is the total-collector instance of the
+       generic [collecting_binary_forward_split_zero_l] ([ZIntervalTheory.v]). *)
     have HEQ :
       (collecting_binary_forward Z.mul {[ z | z ∈ S1 /\ z <= 0 ]} S2
        ∪ collecting_binary_forward Z.mul {[ z | z ∈ S1 /\ 0 <= z ]} S2)
       ⊆⊇ collecting_binary_forward Z.mul S1 S2.
-    { split=> z; unfold_set.
-      - move=> [ [c1 [c2 [Hc1 [Hc2 Heq]]]] | [c1 [c2 [Hc1 [Hc2 Heq]]]] ];
-          move: Hc1; unfold_set => -[Hc1 _]; by exists c1, c2.
-      - move=> [c1 [c2 [Hc1 [Hc2 Heq]]]].
-        case: (Z.le_ge_cases c1 0) => Hsgn; [left | right];
-          exists c1, c2; (repeat split) => //; unfold_set; by split. }
+    { exact: (symmetry (collecting_binary_forward_split_zero_l Z.mul S1 S2)). }
     exact: (is_alpha_join_split _ _ _ _ _ _ (symmetry HEQ) Hn Hpr).
   Qed.
 
