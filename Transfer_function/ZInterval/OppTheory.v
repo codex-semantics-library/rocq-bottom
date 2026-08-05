@@ -30,21 +30,33 @@ Section Interval_opp.
 
   (** * Negation and best abstraction transfer. *)
 
-  (** Opp is exact, even when the interval is bottom. *)
+  (** The bound-level involution. *)
+  Lemma bound_opp_involutive (a : WithTop.with_top Z) : bound_opp (bound_opp a) = a.
+  Proof. by case: a => [|a] //=; rewrite Z.opp_involutive. Qed.
+
+  Lemma interval_opp_involutive (i : interval) :
+    interval_opp (interval_opp i) = i.
+  Proof.
+    case: i => [l h] /=. by repeat rewrite -> bound_opp_involutive.
+  Qed.
+
+  (** Soundness: [opp] of a point of the input interval lands in the output
+      interval, by antitonicity of [Z.opp]. *)
+  Lemma interval_opp_sound :
+    unary_overapproximation itv itv interval_opp (collecting_forward Z.opp).
+  Proof.
+    move=> a c. unfold_set. move=> [c0 [Hc0 <-]].
+    move: a Hc0 => [[|l] [|h]] /=; unfold_set => Hc0; unfold_set; split => //=.
+    all: lia.
+  Qed.
+
+  (** Opp is sound and and involution in the abstract, so exact. *)
   Lemma interval_opp_exact:
     unary_exact itv itv interval_opp
       (collecting_forward Z.opp).
   Proof.
-    move=> a1. unfold interval_opp.
-    have HU:= unfold_set_equiv.
-    unfold ExactlyRepresents, collecting_forward; unfold_set.
-    move=> c; unfold_set.
-    split.
-    - move=> H.
-      exists (-c); move: a1 H => [[|l] [|h]] H; unfold bound_opp in *;
-                           unfold_set in H; unfold_set; simpl in *; lia.
-    - move=> [c0 [H1 <-]].
-      move: a1 H1 => [[|l] [|h]] H1; unfold_set in *; simpl in *; lia.
+    apply: (sound_involutive_exact itv Z.opp interval_opp
+              Z.opp_involutive interval_opp_involutive interval_opp_sound).
   Qed.
 
   (** Best abstraction transfers through Z.opp:
@@ -70,16 +82,6 @@ Section Interval_opp.
       move: (Hopt _ Hb') => {Hsound Hopt Hb Hb'}.
       move: a b => [[|la] [|ha]] [[|lb] [|hb]] //=; try lia.
       all: rewrite /GLB.glb_is_included; lia.
-  Qed.
-
-  (** The bound-level involution, on which [interval_opp_involutive] rests. *)
-  Lemma bound_opp_involutive (a : WithTop.with_top Z) : bound_opp (bound_opp a) = a.
-  Proof. by case: a => [|a] //=; rewrite Z.opp_involutive. Qed.
-
-  Lemma interval_opp_involutive (i : interval) :
-    interval_opp (interval_opp i) = i.
-  Proof.
-    case: i => [l h] /=. repeat rewrite -> bound_opp_involutive. done.
   Qed.
 
   Lemma propset_opp_involutive (S : ℘ Z) :
