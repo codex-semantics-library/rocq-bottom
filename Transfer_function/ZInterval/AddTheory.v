@@ -203,6 +203,35 @@ Section Interval_sub.
 End Interval_sub.
 
 
+(** ** Exactness on the raw carrier.
 
+    [nb_interval_add_exact] / [nb_interval_sub_exact] are stated on [nbitv],
+    where the non-emptiness side condition is carried by the subset type. The
+    backward transfer functions cannot live in [nbitv], so they consume the same
+    results restated on the raw [interval] carrier with explicit hypotheses. *)
+Local Lemma raw_of_nb_exact
+  (f_itv : interval -> interval -> interval) (f_z : Z -> Z -> Z)
+  (Hsound : binary_overapproximation itv itv itv f_itv
+              (collecting_binary_forward f_z)) :
+  binary_exact nbitv nbitv nbitv
+    (non_bottom_lift_total_binary f_itv f_z (Hsound:=Hsound))
+    (collecting_binary_forward f_z) ->
+  forall i2 i1 : interval, non_bottom i2 -> non_bottom i1 ->
+  γ[itv] (f_itv i2 i1) ⊆⊇ collecting_binary_forward f_z (γ[itv] i2) (γ[itv] i1).
+Proof.
+  move=> Hexact i2 i1 H2 H1.
+  have := Hexact (exist _ i2 H2) (exist _ i1 H1).
+  by rewrite /ExactlyRepresents !gamma_nbitv_gamma_itv_set.
+Qed.
 
+Lemma interval_add_exact (i2 i1 : interval) :
+  non_bottom i2 -> non_bottom i1 ->
+  γ[itv] (interval_add i2 i1) ⊆⊇
+    collecting_binary_forward Z.add (γ[itv] i2) (γ[itv] i1).
+Proof. exact: (raw_of_nb_exact _ _ interval_add_sound nb_interval_add_exact). Qed.
 
+Lemma interval_sub_exact (i2 i1 : interval) :
+  non_bottom i2 -> non_bottom i1 ->
+  γ[itv] (interval_sub i2 i1) ⊆⊇
+    collecting_binary_forward Z.sub (γ[itv] i2) (γ[itv] i1).
+Proof. exact: (raw_of_nb_exact _ _ interval_sub_sound nb_interval_sub_exact). Qed.
