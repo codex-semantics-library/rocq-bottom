@@ -21,6 +21,7 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
+Require Import PrimitiveTheory.
 Require Import ZCongruenceTheory.
 Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
@@ -45,7 +46,7 @@ Generalizable All Variables.
 
 Lemma cong_div_sound:
   binary_overapproximation cong_ad cong_ad (WithBottom.ad cong_ad) cong_div
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div).
+    (collecting_div).
 Proof.
   move=> a2 a1 c0 [c2 [c1 [Hc2_in_a2 [Hc1_in_a1 [Hc1_ne Hc0]]]]].
   move: a2 a1 Hc2_in_a2 Hc1_in_a1 => [ra ma] [rb mb] Ha Hb.
@@ -395,7 +396,7 @@ Qed.
 Lemma collecting_div_partial_total_nz (S2 S1 : propset Z) :
   (forall c, c ∈ S1 -> c <> 0) ->
   collecting_binary_forward Z.div S2 S1 ⊆⊇
-  collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div S2 S1.
+  collecting_div S2 S1.
 Proof.
   move=> Hnz. split.
   - move=> c [c2 [c1 [Hc2 [Hc1 Hd]]]].
@@ -407,7 +408,7 @@ Qed.
 
 Lemma cong_div_best_divisor_zero (r1 m1 : Z) :
   BestAbstraction (A:=WithBottom.ad cong_ad) WithBottom.Bot
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (0, 0))).
 Proof.
   apply: WithBottom.BestAbstraction_Bot.
@@ -420,7 +421,7 @@ Qed.
 (** Shared witness that r1/r2 is in the partial set when r2 ≠ 0. *)
 Local Lemma const_divisor_elem r1 m1 r2 :
   r2 <> 0 ->
-  (r1 / r2) ∈ collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+  (r1 / r2) ∈ collecting_div
                 (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0)).
 Proof.
   move=> Hr2. exists r1, r2.
@@ -432,7 +433,7 @@ Qed.
 Lemma cong_div_best_const_divides (r1 m1 r2 : Z) :
   r2 <> 0 -> (r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (r1 / r2, m1 / r2))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hdiv.
@@ -447,7 +448,7 @@ Qed.
 Lemma cong_div_best_const_pos (r1 m1 r2 : Z) :
   0 < r2 -> ~(r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hnd.
@@ -463,7 +464,7 @@ Qed.
 Lemma cong_div_best_const_neg (r1 m1 r2 : Z) :
   r2 < 0 -> ~(r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hnd.
@@ -482,7 +483,7 @@ Qed.
 Lemma cong_div_best_dividend_zero (r2 m2 : Z) :
   m2 <> 0 ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 0))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (0, 0)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2.
@@ -495,7 +496,7 @@ Proof.
       unfold_set. by exists 0; lia. }
   have Heq : collecting_binary_forward Z.div (γ[cong_ad] (0, 0)) (γ[cong_ad] (r2, m2))
              ⊆⊇
-             collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+             collecting_div
                (γ[cong_ad] (0, 0)) (γ[cong_ad] (r2, m2)).
   { split.
     - move=> c [c2 [c1' [Ha [Hb Hd]]]].
@@ -522,7 +523,7 @@ Qed.
 Lemma cong_div_d2_partial_total r1 m1 r2 m2 :
   m2 <> 0 ->
   collecting_binary_forward Z.div (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2)) ⊆⊇
-  collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+  collecting_div
     (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2)).
 Proof.
   move=> Hm2.
@@ -569,7 +570,7 @@ Qed.
 Lemma cong_div_best_nonconstant_divisor (r1 m1 r2 m2 : Z) :
   m2 <> 0 -> (r1 <> 0 \/ m1 <> 0) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div
+    (collecting_div
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2 Hne.
@@ -587,7 +588,7 @@ Qed.
     partial semantics (divisor ≠ 0). Dispatches on the [if]-structure. *)
 Lemma cong_div_best :
   binary_best cong_ad cong_ad (WithBottom.ad cong_ad) cong_div
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.div).
+    (collecting_div).
 Proof.
   move=> a2 a1.
   move: a2 a1 => [r1 m1] [r2 m2].

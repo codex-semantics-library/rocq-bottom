@@ -314,7 +314,7 @@ Qed.
 
 Lemma cong_quot_sound:
   binary_overapproximation cong_ad cong_ad (WithBottom.ad cong_ad) cong_quot
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot).
+    (collecting_quot).
 Proof.
   move=> a2 a1 c0 [c2 [c1 [Hc2_in_a2 [Hc1_in_a1 [Hc1_ne Hc0]]]]].
   move: a2 a1 Hc2_in_a2 Hc1_in_a1 => [ra ma] [rb mb] Ha Hb.
@@ -357,7 +357,7 @@ Qed.
 
 Lemma cong_quot_best_divisor_zero (r1 m1 : Z) :
   BestAbstraction (A:=WithBottom.ad cong_ad) WithBottom.Bot
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (0, 0))).
 Proof.
   apply: WithBottom.BestAbstraction_Bot.
@@ -371,7 +371,7 @@ Qed.
 Lemma cong_quot_exact_dividend_zero r2 m2 :
   m2 <> 0 ->
   ExactlyRepresents (A:=cong_ad) (0, 0)
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (0, 0)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2.
@@ -398,7 +398,7 @@ Qed.
 Lemma cong_quot_best_dividend_zero r2 m2 :
   m2 <> 0 ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 0))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (0, 0)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2.
@@ -422,7 +422,7 @@ Lemma cong_quot_exact_const_divides r1 m1 r2 :
   r2 <> 0 ->
   (m1 = 0 \/ ((r2 | m1) /\ (r2 | r1))) ->
   ExactlyRepresents (A:=cong_ad) (Z.quot r1 r2, Z.quot m1 r2)
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hdivs.
@@ -448,7 +448,7 @@ Lemma cong_quot_best_const_divides r1 m1 r2 :
   (m1 = 0 \/ ((r2 | m1) /\ (r2 | r1))) ->
   BestAbstraction (A:=WithBottom.ad cong_ad)
     (WithBottom.NotBot (Z.quot r1 r2, Z.quot m1 r2))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hdivs.
@@ -472,7 +472,7 @@ Qed.
 Lemma cong_quot_best_const_pos_m1_pos r1 m1 r2 :
   0 < r2 -> 0 < m1 -> ~(r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hm1 Hnd.
@@ -519,10 +519,10 @@ Qed.
     in the dividend set, for any fixed divisor set. *)
 Local Lemma collecting_quot_gamma_cong_l r1 m1 m1' (S1 : propset Z) :
   γ[cong_ad] (r1, m1) ⊆⊇ γ[cong_ad] (r1, m1') ->
-  collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+  collecting_quot
     (γ[cong_ad] (r1, m1)) S1
   ⊆⊇
-  collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+  collecting_quot
     (γ[cong_ad] (r1, m1')) S1.
 Proof.
   move=> [Hsub1 Hsub2]. split.
@@ -537,7 +537,7 @@ Qed.
 Lemma cong_quot_best_const_pos r1 m1 r2 :
   0 < r2 -> ~(r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hnd.
@@ -584,7 +584,7 @@ Qed.
 Lemma cong_quot_best_const_divides_ndr1_m1_pos r1 m1 r2 :
   0 < r2 -> 0 < m1 -> (r2 | m1) -> ~(r2 | r1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hm1 Hr2_divs_m1 Hnd.
@@ -676,7 +676,7 @@ Qed.
 Lemma cong_quot_best_const_divides_ndr1_pos r1 m1 r2 :
   0 < r2 -> m1 <> 0 -> (r2 | m1) -> ~(r2 | r1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hm1 Hdiv Hnd.
@@ -694,7 +694,7 @@ Qed.
 Lemma cong_quot_best_const_divides_ndr1_neg r1 m1 r2 :
   r2 < 0 -> m1 <> 0 -> (r2 | m1) -> ~(r2 | r1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hm1 Hdiv Hnd.
@@ -704,10 +704,10 @@ Proof.
   have Hnd' : ~(-r2 | -r1).
   { move=> [k Hk]. apply: Hnd. by exists k; lia. }
   have Hset :
-    collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    collecting_quot
       (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))
     ⊆⊇
-    collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    collecting_quot
       (γ[cong_ad] (-r1, m1)) (γ[cong_ad] (-r2, 0)).
   { split.
     - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]].
@@ -744,7 +744,7 @@ Qed.
 Lemma cong_quot_best_nonconstant_divisor_m1_pos r1 m1 r2 m2 :
   m2 <> 0 -> 0 < m1 ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2 Hm1.
@@ -824,7 +824,7 @@ Qed.
 Lemma cong_quot_best_nonconstant_divisor_m1_nz (r1 m1 r2 m2 : Z) :
   m2 <> 0 -> m1 <> 0 ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2 Hm1.
@@ -841,7 +841,7 @@ Qed.
     Z.quot r1 c2 = 0. *)
 Lemma zero_in_quot_set_m1_zero r1 r2 m2 :
   m2 <> 0 ->
-  0 ∈ collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+  0 ∈ collecting_quot
         (γ[cong_ad] (r1, 0)) (γ[cong_ad] (r2, m2)).
 Proof.
   move=> Hm2.
@@ -874,7 +874,7 @@ Lemma cong_quot_best_m1_zero r1 r2 m2 :
   m2 <> 0 ->
   BestAbstraction (A:=WithBottom.ad cong_ad)
     (WithBottom.NotBot (0, quot_gcd_compute r1 r2 m2))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, 0)) (γ[cong_ad] (r2, m2))).
 Proof.
   move=> Hm2.
@@ -901,7 +901,7 @@ Proof.
         apply: quot_gcd_compute_optimal => //.
         move=> c Hc_in Hc_nz.
         have Hin : Z.quot r1 c ∈
-          collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+          collecting_quot
             (γ[cong_ad] (r1, 0)) (γ[cong_ad] (r2, m2)).
         { exists r1, c. split; [by exists 0; lia|].
           split; [exact Hc_in|]. split; [exact Hc_nz | reflexivity]. }
@@ -916,7 +916,7 @@ Qed.
 Lemma cong_quot_best_const_neg r1 m1 r2 :
   r2 < 0 -> ~(r2 | m1) ->
   BestAbstraction (A:=WithBottom.ad cong_ad) (WithBottom.NotBot (0, 1))
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    (collecting_quot
        (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))).
 Proof.
   move=> Hr2 Hnd.
@@ -926,10 +926,10 @@ Proof.
   { move=> [k Hk]. apply: Hnd. by exists (-k); lia. }
   (* Build set equivalence: divisor r2 ↔ dividend-flip to -r2. *)
   have Hset :
-    collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    collecting_quot
       (γ[cong_ad] (r1, m1)) (γ[cong_ad] (r2, 0))
     ⊆⊇
-    collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot
+    collecting_quot
       (γ[cong_ad] (-r1, m1)) (γ[cong_ad] (-r2, 0)).
   { split.
     - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]].
@@ -967,7 +967,7 @@ Qed.
     - nonconstant_divisor (m2 ≠ 0, otherwise) → top (stub) *)
 Lemma cong_quot_best :
   binary_best cong_ad cong_ad (WithBottom.ad cong_ad) cong_quot
-    (collecting_binary_forward_partial (fun _ c1 => c1 <> 0) Z.quot).
+    (collecting_quot).
 Proof.
   move=> a2 a1.
   move: a2 a1 => [r1 m1] [r2 m2].

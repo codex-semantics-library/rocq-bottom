@@ -42,6 +42,7 @@ Require Import
   AbstractionCombination
   ZInterval ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruence ZIntervalCongruenceTheory
+  PrimitiveTheory
   Transfer_function.ZIntervalCongruence.ZIntervalCongruenceOps.
 
 Open Scope Z_scope.
@@ -135,7 +136,7 @@ Lemma rem_collecting_identity (a2 a1 : collapsed_ad) :
   (exists c1, c1 ∈ γ[collapsed_ad] a1 /\ c1 <> 0) ->
   (forall c2, c2 ∈ γ[collapsed_ad] a2 ->
    forall c1, c1 ∈ γ[collapsed_ad] a1 -> c1 <> 0 -> Z.abs c2 < Z.abs c1) ->
-  collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+  collecting_rem
     (γ[collapsed_ad] a2) (γ[collapsed_ad] a1) ⊆⊇ γ[collapsed_ad] a2.
 Proof.
   move=> [d1 [Hd1 Hd1ne]] Hnarrow.
@@ -159,7 +160,7 @@ Lemma rem_itv_identity_best (a2 a1 : collapsed_ad) :
   (forall c2, c2 ∈ γ[collapsed_ad] a2 ->
    forall c1, c1 ∈ γ[collapsed_ad] a1 -> c1 <> 0 -> Z.abs c2 < Z.abs c1) ->
   BestAbstraction (A:=itv) (fst a2)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   case: a2 => i2 c2 /= Hred Hne2 Hne1 Hnarrow.
@@ -213,7 +214,7 @@ Lemma rem_collecting_const_block (a2 a1 : collapsed_ad) (n q : Z) :
   (exists c1, c1 ∈ γ[collapsed_ad] a1) ->
   (forall c1, c1 ∈ γ[collapsed_ad] a1 -> c1 = n) ->
   (forall c2, c2 ∈ γ[collapsed_ad] a2 -> Z.quot c2 n = q) ->
-  collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+  collecting_rem
     (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)
   ⊆⊇ collecting_binary_forward Z.add (γ[collapsed_ad] a2) {[ x | x = - (n * q) ]}.
 Proof.
@@ -319,7 +320,7 @@ Lemma rem_itv_const_block_best (a2 a1 : collapsed_ad) (n q : Z) :
   (forall c1, c1 ∈ γ[collapsed_ad] a1 -> c1 = n) ->
   (forall c2, c2 ∈ γ[collapsed_ad] a2 -> Z.quot c2 n = q) ->
   BestAbstraction (A:=itv) (itv_add_const (- (n * q)) (fst a2))
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   case: a2 => i2 c2 /= Hred Hne2 Hn Hne1 Hconst Hblock.
@@ -555,7 +556,7 @@ Lemma rem_collecting_const_residue (a2 a1 : collapsed_ad) (rho : Z) :
   const_residue a2 a1 = Some rho ->
   (exists c2, c2 ∈ γ[collapsed_ad] a2) ->
   (exists c1, c1 ∈ γ[collapsed_ad] a1) ->
-  collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+  collecting_rem
     (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)
   ⊆⊇ {[ x | x = rho ]}.
 Proof.
@@ -602,7 +603,7 @@ Qed.
     otherwise the top interval. *)
 Lemma rem_itv_envelope_sound (a2 a1 : collapsed_ad) :
   Overapproximates (A:=itv) (rem_itv_envelope a2 a1)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   rewrite /rem_itv_envelope.
@@ -637,7 +638,7 @@ Lemma rem_itv_envelope_narrow_best (a2 a1 : collapsed_ad) :
   (exists c2, c2 ∈ γ[collapsed_ad] a2) ->
   (exists c1, c1 ∈ γ[collapsed_ad] a1) ->
   BestAbstraction (A:=itv) (rem_itv_envelope a2 a1)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   move=> Hcb Hnb Hred Hne2 [c1 Hc1].
@@ -659,7 +660,7 @@ Lemma rem_itv_envelope_const_residue_best (a2 a1 : collapsed_ad) (rho : Z) :
   (exists c2, c2 ∈ γ[collapsed_ad] a2) ->
   (exists c1, c1 ∈ γ[collapsed_ad] a1) ->
   BestAbstraction (A:=itv) (rem_itv_envelope a2 a1)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   move=> Hcb Hnb Hcr Hne2 Hne1.
@@ -689,7 +690,7 @@ Lemma rem_itv_envelope_const_block_best (a2 a1 : collapsed_ad) (n q : Z) :
   (exists c2, c2 ∈ γ[collapsed_ad] a2) ->
   (exists c1, c1 ∈ γ[collapsed_ad] a1) ->
   BestAbstraction (A:=itv) (rem_itv_envelope a2 a1)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   move=> Hcb Hred Hne2 Hne1.
@@ -707,7 +708,7 @@ Definition rem_itv (a2 a1 : collapsed_ad) : WithBottom.with_bottom interval :=
     condition holds. *)
 Lemma rem_collecting_empty (a2 a1 : collapsed_ad) :
   is_bottomb a2 || is_bottomb a1 || divisor_trivialb a1 ->
-  forall c, c ∈ collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+  forall c, c ∈ collecting_rem
                  (γ[collapsed_ad] a2) (γ[collapsed_ad] a1) -> False.
 Proof.
   move=> Hcond c [c2 [c1 [Hc2 [Hc1 [Hc1ne Heq]]]]].
@@ -724,7 +725,7 @@ Qed.
     [const_block] case and the top interval otherwise. *)
 Lemma rem_itv_sound (a2 a1 : collapsed_ad) :
   Overapproximates (A:=WithBottom.ad itv) (rem_itv a2 a1)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   move=> c Hc. rewrite /rem_itv.
@@ -739,7 +740,7 @@ Qed.
 Lemma rem_itv_bot_best (a2 a1 : collapsed_ad) :
   is_bottomb a2 || is_bottomb a1 || divisor_trivialb a1 ->
   BestAbstraction (A:=WithBottom.ad itv) WithBottom.Bot
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[collapsed_ad] a2) (γ[collapsed_ad] a1)).
 Proof.
   move=> Hcond. apply: WithBottom.BestAbstraction_Bot.
@@ -848,7 +849,7 @@ Qed.
     exactly when the divisor is trivial. *)
 Lemma rem_final_empty (x y : non_bottom_zic) :
   divisor_trivialb_nb (rd_car y) ->
-  forall c, c ∈ collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+  forall c, c ∈ collecting_rem
                  (γ[non_bottom_zic] x) (γ[non_bottom_zic] y) -> False.
 Proof.
   move=> Ht c [c2 [c1 [_ [Hc1 [Hc1ne _]]]]].
@@ -858,7 +859,7 @@ Qed.
 
 Lemma rem_final_sound (x y : non_bottom_zic) :
   Overapproximates (A:=zic) (rem_final x y)
-    (collecting_binary_forward_partial (fun _ d => d <> 0) Z.rem
+    (collecting_rem
        (γ[non_bottom_zic] x) (γ[non_bottom_zic] y)).
 Proof.
   move=> c Hc. rewrite /rem_final.
