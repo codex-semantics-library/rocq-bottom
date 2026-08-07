@@ -119,6 +119,7 @@ Extract Inlined Constant Z.eq_dec => "Z.equal".
     [Z_lt_dec] is reached by [classify_divisor], which decides rather than
     tests so each branch carries its constructor's order fact. *)
 Extract Inlined Constant Z_lt_dec => "Z.lt".
+Extract Inlined Constant Z_lt_le_dec => "Z.lt".
 Extract Inlined Constant Z.leb => "Z.leq".
 Extract Inlined Constant Z.ltb => "Z.lt".
 Extract Inlined Constant Z.geb => "Z.geq".
