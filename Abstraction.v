@@ -1090,6 +1090,10 @@ Qed.
 
 (** * Set operations and transformations. *)
 
+(* TODO: This section is beginning to be large. We could split it from
+   Abstraction.v in a new file called collecting.v; theoremes specific to Z,
+   e.g. about division in positive/negative sets, could go in zcollecting. *)
+
 (** ** Numbering of operands.
 
     Operands are numbered *downwards*, ending at [0] for the result: a binary [f
@@ -1230,6 +1234,376 @@ Proof.
   unfold_set_equiv => c0; unfold_set; split;
     move=> [ca [cb [Hca [Hcb Heq]]]]; by exists cb, ca.
 Qed.
+
+(** ** Calculational design of backward transfer functions.
+
+    In the calculational design of abstract interpretation, a transfer function
+    is computed from the collecting semantics by symbolic rewriting, and the
+    derivation itself proves it optimal.
+
+    For backward (refinement) transfer functions, a typical step is to
+    intersect, in the concrete, the incoming set with the set of *solutions* of
+    the equation [f c2 c1 = c0] over the other two operands. Read on the right
+    argument:
+<<
+      {[ c1 | ∃ c2 c0, c2 ∈ S2 ∧ c1 ∈ S1 ∧ c0 ∈ S0 ∧ f c2 c1 = c0 ]}
+    = S1 ∩ {[ c1 | ∃ c2 c0, c2 ∈ S2 ∧ c0 ∈ S0 ∧ f c2 c1 = c0 ]} 
+    = S1 ∩ collecting_binary_solve_right f S2 S0 
+>>
+    ([collecting_binary_backward_{left,right}_split] below.) All the
+    domain-specific work is therefore concentrated in one place: finding an
+    abstract operation that over-approximates — ideally, exactly represents —
+    the *solve* set. The rest is a meet.
+
+  Three possibilities arise:
+
+    - [f] is *invertible* in that argument, i.e. [f c2 c1 = c0 <-> g c0 c2 =
+      c1]. Then the solve set is just the forward collecting semantics of [g]
+      ([collecting_binary_solve_right_inverse]), and an exact forward transfer
+      function for [g] plus an exact meet give an *exact* backward transfer
+      function ([backward_binary_right_exact_of_inverse]). This is the situation
+      of [Z.add] and [Z.sub], whose inverses are again [Z.sub]/[Z.add].
+
+
+    - [f] is not invertible, and the domain only has an over-approximation of
+      the *solve set* in hand. Then the meet with the incoming operand
+      re-approximates the intersection, and the result is soundness rather than
+      exactness ([backward_binary_right_sound_of_solver]). This is the
+      *solve-then-meet* shape, and it is only sound.
+
+    - [f] is not invertible, but the domain can abstract the *intersection*
+      [S_operand ∩ solve_set] directly, i.e. intersecting and computing backward
+      in one go, rather than approximating the solve set and meeting after. The
+      split above ([collecting_binary_backward_right_split]) is still the entry
+      point, but the approximation is taken of [S1 ∩ solve_right …], not of
+      [solve_right …] alone. This allows reaching a best result, not merely a
+      sound one. *)
+
+(** The set of solutions of [f c2 c1 = c0] in the left (resp. right)
+    argument, as [c1]/[c0] (resp. [c2]/[c0]) range over the two other
+    operand sets. *)
+Definition collecting_binary_solve_left
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) : setop2 C1 C0 C2 :=
+  λ S1 S0, {[c2 | ∃ c1 c0, c1 ∈ S1 ∧ c0 ∈ S0 ∧ f c2 c1 = c0]}.
+
+Definition collecting_binary_solve_right
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) : setop2 C2 C0 C1 :=
+  λ S2 S0, {[c1 | ∃ c2 c0, c2 ∈ S2 ∧ c0 ∈ S0 ∧ f c2 c1 = c0]}.
+
+Global Hint Unfold
+  collecting_binary_solve_left collecting_binary_solve_right : to_set.
+
+(** The split. Unconditional — it is only a reordering of conjuncts —
+    and the entry point of many backward derivation. *)
+Lemma collecting_binary_backward_left_split
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_left f S2 S1 S0 ⊆⊇
+  S2 ∩ collecting_binary_solve_left f S1 S0.
+Proof.
+  unfold_set_equiv => c2; unfold_set; split.
+  - move=> [c1 [c0 [Hc2 [Hc1 [Hc0 Heq]]]]]. split; [exact: Hc2 | by exists c1, c0].
+  - move=> [Hc2 [c1 [c0 [Hc1 [Hc0 Heq]]]]]. by exists c1, c0.
+Qed.
+
+Lemma collecting_binary_backward_right_split
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_right f S2 S1 S0 ⊆⊇
+  S1 ∩ collecting_binary_solve_right f S2 S0.
+Proof.
+  unfold_set_equiv => c1; unfold_set; split.
+  - move=> [c2 [c0 [Hc2 [Hc1 [Hc0 Heq]]]]]. split; [exact: Hc1 | by exists c2, c0].
+  - move=> [Hc1 [c2 [c0 [Hc2 [Hc0 Heq]]]]]. by exists c2, c0.
+Qed.
+
+(** A commutative operation needs only one of the two backward transfer
+    functions: the other is the same with the operands swapped. *)
+Lemma collecting_binary_backward_left_comm
+  {C C0: Type} (f: C -> C -> C0) (Hcomm: forall a b, f a b = f b a)
+  (S2 S1: ℘ C) (S0: ℘ C0) :
+  collecting_binary_backward_left f S2 S1 S0 ⊆⊇
+  collecting_binary_backward_right f S1 S2 S0.
+Proof.
+  unfold_set_equiv => c; unfold_set; split;
+    move=> [ca [c0 [H2 [H1 [H0 Heq]]]]]; exists ca, c0;
+    (do 3 (split=> //)); by rewrite Hcomm.
+Qed.
+
+(** *** The invertible case: the solve set is a forward image. *)
+
+Lemma collecting_binary_solve_left_inverse
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (g: C0 -> C1 -> C2)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c1 = c2)
+  (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_solve_left f S1 S0 ⊆⊇ collecting_binary_forward g S0 S1.
+Proof.
+  unfold_set_equiv => c2; unfold_set; split.
+  - move=> [c1 [c0 [Hc1 [Hc0 Heq]]]].
+    exists c0, c1. do 2 (split=> //). exact: (proj1 (Hinv _ _ _) Heq).
+  - move=> [c0 [c1 [Hc0 [Hc1 Heq]]]].
+    exists c1, c0. do 2 (split=> //). exact: (proj2 (Hinv _ _ _) Heq).
+Qed.
+
+Lemma collecting_binary_solve_right_inverse
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (g: C0 -> C2 -> C1)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c2 = c1)
+  (S2: ℘ C2) (S0: ℘ C0) :
+  collecting_binary_solve_right f S2 S0 ⊆⊇ collecting_binary_forward g S0 S2.
+Proof.
+  unfold_set_equiv => c1; unfold_set; split.
+  - move=> [c2 [c0 [Hc2 [Hc0 Heq]]]].
+    exists c0, c2. do 2 (split=> //). exact: (proj1 (Hinv _ _ _) Heq).
+  - move=> [c0 [c2 [Hc0 [Hc2 Heq]]]].
+    exists c2, c0. do 2 (split=> //). exact: (proj2 (Hinv _ _ _) Heq).
+Qed.
+
+(** The two steps composed: split, then replace the solve set by the
+    forward image of the inverse. *)
+Lemma collecting_binary_backward_left_inverse
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (g: C0 -> C1 -> C2)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c1 = c2)
+  (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_left f S2 S1 S0 ⊆⊇
+  S2 ∩ collecting_binary_forward g S0 S1.
+Proof.
+  rewrite (collecting_binary_backward_left_split f).
+  rewrite (collecting_binary_solve_left_inverse f g Hinv). reflexivity.
+Qed.
+
+Lemma collecting_binary_backward_right_inverse
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (g: C0 -> C2 -> C1)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c2 = c1)
+  (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_right f S2 S1 S0 ⊆⊇
+  S1 ∩ collecting_binary_forward g S0 S2.
+Proof.
+  rewrite (collecting_binary_backward_right_split f).
+  rewrite (collecting_binary_solve_right_inverse f g Hinv). reflexivity.
+Qed.
+
+(** The abstract half of the same calculation, stated once and for all.
+
+    Given an *exact forward* transfer function [gA] for the inverse [g]
+    and an *exact meet*, the backward transfer function [λ a2 a1 a0,
+    meet a2 (gA a0 a1)] is exact — and the proof is literally the chain
+    of rewrites of the derivation. Nothing here is specific to
+    intervals: any domain with an exact meet and an exact forward
+    transfer function for the inverse gets its backward transfer
+    function for free.
+
+    The exactness hypothesis [Hg] is pointwise (at this [a0], [a1]), so
+    domains whose forward operation is exact only under side conditions
+    (e.g. intervals, where [interval_sub] is exact only on non-empty
+    operands) can still use it. *)
+Lemma backward_binary_left_exact_of_inverse
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (f: C2 -> C1 -> C0) (g: C0 -> C1 -> C2)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c1 = c2)
+  (gA: A0 -> A1 -> A2) (meet: A2 -> A2 -> A2)
+  (Hmeet: forall a b : A2, γ[A2] (meet a b) ⊆⊇ γ[A2] a ∩ γ[A2] b)
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hg: ExactlyRepresents (gA a0 a1)
+         (collecting_binary_forward g (γ[A0] a0) (γ[A1] a1))) :
+  ExactlyRepresents (meet a2 (gA a0 a1))
+    (collecting_binary_backward_left f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /ExactlyRepresents.
+  have Hg' : γ[A2] (gA a0 a1) ⊆⊇ collecting_binary_forward g (γ[A0] a0) (γ[A1] a1)
+    := Hg.
+  rewrite (collecting_binary_backward_left_inverse f g Hinv).
+  rewrite Hmeet Hg'. reflexivity.
+Qed.
+
+Lemma backward_binary_right_exact_of_inverse
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (f: C2 -> C1 -> C0) (g: C0 -> C2 -> C1)
+  (Hinv: forall c2 c1 c0, f c2 c1 = c0 <-> g c0 c2 = c1)
+  (gA: A0 -> A2 -> A1) (meet: A1 -> A1 -> A1)
+  (Hmeet: forall a b : A1, γ[A1] (meet a b) ⊆⊇ γ[A1] a ∩ γ[A1] b)
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hg: ExactlyRepresents (gA a0 a2)
+         (collecting_binary_forward g (γ[A0] a0) (γ[A2] a2))) :
+  ExactlyRepresents (meet a1 (gA a0 a2))
+    (collecting_binary_backward_right f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /ExactlyRepresents.
+  have Hg' : γ[A1] (gA a0 a2) ⊆⊇ collecting_binary_forward g (γ[A0] a0) (γ[A2] a2)
+    := Hg.
+  rewrite (collecting_binary_backward_right_inverse f g Hinv).
+  rewrite Hmeet Hg'. reflexivity.
+Qed.
+
+(** *** The non-invertible case: a merely sound solve set.
+
+    When [f] has no inverse, the best one can do is over-approximate the
+    solve set; the backward transfer function is then sound but not
+    exact. The meet hypothesis is correspondingly weakened to "the meet
+    over-approximates the intersection". *)
+Lemma backward_binary_left_sound_of_solver
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (f: C2 -> C1 -> C0)
+  (solveA: A1 -> A0 -> A2) (meet: A2 -> A2 -> A2)
+  (Hmeet: forall a b : A2, γ[A2] a ∩ γ[A2] b ⊆ γ[A2] (meet a b))
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hsolve: Overapproximates (A:=A2) (solveA a1 a0)
+             (collecting_binary_solve_left f (γ[A1] a1) (γ[A0] a0))) :
+  Overapproximates (A:=A2) (meet a2 (solveA a1 a0))
+    (collecting_binary_backward_left f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /Overapproximates (collecting_binary_backward_left_split f).
+  transitivity (γ[A2] a2 ∩ γ[A2] (solveA a1 a0)); last exact: Hmeet.
+  apply: propset_intersection_mono; [reflexivity | exact: Hsolve].
+Qed.
+
+Lemma backward_binary_right_sound_of_solver
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (f: C2 -> C1 -> C0)
+  (solveA: A2 -> A0 -> A1) (meet: A1 -> A1 -> A1)
+  (Hmeet: forall a b : A1, γ[A1] a ∩ γ[A1] b ⊆ γ[A1] (meet a b))
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hsolve: Overapproximates (A:=A1) (solveA a2 a0)
+             (collecting_binary_solve_right f (γ[A2] a2) (γ[A0] a0))) :
+  Overapproximates (A:=A1) (meet a1 (solveA a2 a0))
+    (collecting_binary_backward_right f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /Overapproximates (collecting_binary_backward_right_split f).
+  transitivity (γ[A1] a1 ∩ γ[A1] (solveA a2 a0)); last exact: Hmeet.
+  apply: propset_intersection_mono; [reflexivity | exact: Hsolve].
+Qed.
+
+(** *** Partial operations.
+
+    [Z.quot] is only defined for a non-zero divisor, so its collecting
+    semantics — forward and backward alike — is guarded by a predicate
+    [P] on the operands ([collecting_binary_forward_partial] is the
+    forward counterpart). The split and the sound abstract step are
+    unchanged; only the guard is threaded through. *)
+
+Definition collecting_binary_backward_left_partial
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0) : setop3 C2 C1 C0 C2 :=
+  λ S2 S1 S0, {[c2 | ∃ c1 c0, c2 ∈ S2 ∧ c1 ∈ S1 ∧ c0 ∈ S0 ∧ P c2 c1 ∧ f c2 c1 = c0]}.
+
+Definition collecting_binary_backward_right_partial
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0) : setop3 C2 C1 C0 C1 :=
+  λ S2 S1 S0, {[c1 | ∃ c2 c0, c2 ∈ S2 ∧ c1 ∈ S1 ∧ c0 ∈ S0 ∧ P c2 c1 ∧ f c2 c1 = c0]}.
+
+Definition collecting_binary_solve_left_partial
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0) : setop2 C1 C0 C2 :=
+  λ S1 S0, {[c2 | ∃ c1 c0, c1 ∈ S1 ∧ c0 ∈ S0 ∧ P c2 c1 ∧ f c2 c1 = c0]}.
+
+Definition collecting_binary_solve_right_partial
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0) : setop2 C2 C0 C1 :=
+  λ S2 S0, {[c1 | ∃ c2 c0, c2 ∈ S2 ∧ c0 ∈ S0 ∧ P c2 c1 ∧ f c2 c1 = c0]}.
+
+Global Hint Unfold
+  collecting_binary_backward_left_partial collecting_binary_backward_right_partial
+  collecting_binary_solve_left_partial collecting_binary_solve_right_partial : to_set.
+
+(** Restricting an operand to a subset the partiality already forces is a
+    no-op: the collecting set never looked at the elements dropped. The
+    counterpart of [collecting_binary_forward_partial_split_r] — that one
+    covers the admitted pairs by two subsets, this one by a single one — and
+    the reason a transfer function may be *stated* on a sanitized operand
+    (division by a divisor set with [0] removed) while remaining a theorem
+    about the original one.
+
+    Which subset is available is a property of the *abstraction*, not of the
+    operation: an interval can only remove a [0] sitting on a bound, a
+    congruence or a known-bits component can remove more. So the sanitized
+    operand is best taken as an input rather than computed. *)
+Lemma collecting_binary_solve_left_partial_restrict
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S1 S1': ℘ C1) (S0: ℘ C0) :
+  S1' ⊆ S1 -> (forall c2 c1, c1 ∈ S1 -> P c2 c1 -> c1 ∈ S1') ->
+  collecting_binary_solve_left_partial P f S1 S0 ⊆⊇
+  collecting_binary_solve_left_partial P f S1' S0.
+Proof.
+  move=> Hsub Hforced.
+  unfold_set_equiv => c2; unfold_set; split.
+  - move=> [c1 [c0 [Hc1 [Hc0 [HP Heq]]]]].
+    exists c1, c0. split; first exact: Hforced Hc1 HP. by repeat split.
+  - move=> [c1 [c0 [Hc1 [Hc0 [HP Heq]]]]].
+    exists c1, c0. split; first exact: Hsub _ Hc1. by repeat split.
+Qed.
+
+(** Covering the admitted operand by *two* subsets rather than one: the
+    two-sided [collecting_binary_solve_left_partial_restrict], and the
+    solve-side counterpart of [collecting_binary_forward_partial_split_r],
+    whose comment explains why the hypothesis is guarded by [P] rather than
+    being a [∪] of the halves. *)
+Lemma collecting_binary_solve_left_partial_split
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S1 S1_a S1_b: ℘ C1) (S0: ℘ C0) :
+  (forall c2 c1, c1 ∈ S1 -> P c2 c1 -> c1 ∈ S1_a \/ c1 ∈ S1_b) ->
+  S1_a ⊆ S1 -> S1_b ⊆ S1 ->
+  collecting_binary_solve_left_partial P f S1 S0 ⊆⊇
+  collecting_binary_solve_left_partial P f S1_a S0 ∪
+  collecting_binary_solve_left_partial P f S1_b S0.
+Proof.
+  move=> Hcover Hsuba Hsubb.
+  unfold_set_equiv => c2; unfold_set; split.
+  - move=> [c1 [c0 [Hc1 [Hc0 [HP Heq]]]]].
+    case: (Hcover _ _ Hc1 HP) => Hhalf; [left | right]; by exists c1, c0.
+  - move=> [[c1 [c0 [Hc1 [Hc0 [HP Heq]]]]] | [c1 [c0 [Hc1 [Hc0 [HP Heq]]]]]];
+      exists c1, c0; (repeat split=> //);
+      by first [exact: (Hsuba _ Hc1) | exact: (Hsubb _ Hc1)].
+Qed.
+
+Lemma collecting_binary_backward_left_partial_split
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_left_partial P f S2 S1 S0 ⊆⊇
+  S2 ∩ collecting_binary_solve_left_partial P f S1 S0.
+Proof.
+  unfold_set_equiv => c2; unfold_set; split.
+  - move=> [c1 [c0 [Hc2 [Hc1 [Hc0 [HP Heq]]]]]].
+    split; [exact: Hc2 | by exists c1, c0].
+  - move=> [Hc2 [c1 [c0 [Hc1 [Hc0 [HP Heq]]]]]]. by exists c1, c0.
+Qed.
+
+Lemma collecting_binary_backward_right_partial_split
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_right_partial P f S2 S1 S0 ⊆⊇
+  S1 ∩ collecting_binary_solve_right_partial P f S2 S0.
+Proof.
+  unfold_set_equiv => c1; unfold_set; split.
+  - move=> [c2 [c0 [Hc2 [Hc1 [Hc0 [HP Heq]]]]]].
+    split; [exact: Hc1 | by exists c2, c0].
+  - move=> [Hc1 [c2 [c0 [Hc2 [Hc0 [HP Heq]]]]]]. by exists c2, c0.
+Qed.
+
+Lemma backward_binary_left_partial_sound_of_solver
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (solveA: A1 -> A0 -> A2) (meet: A2 -> A2 -> A2)
+  (Hmeet: forall a b : A2, γ[A2] a ∩ γ[A2] b ⊆ γ[A2] (meet a b))
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hsolve: Overapproximates (A:=A2) (solveA a1 a0)
+             (collecting_binary_solve_left_partial P f (γ[A1] a1) (γ[A0] a0))) :
+  Overapproximates (A:=A2) (meet a2 (solveA a1 a0))
+    (collecting_binary_backward_left_partial P f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /Overapproximates (collecting_binary_backward_left_partial_split P f).
+  transitivity (γ[A2] a2 ∩ γ[A2] (solveA a1 a0)); last exact: Hmeet.
+  apply: propset_intersection_mono; [reflexivity | exact: Hsolve].
+Qed.
+
+Lemma backward_binary_right_partial_sound_of_solver
+  `(A2: abstraction C2) `(A1: abstraction C1) `(A0: abstraction C0)
+  (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (solveA: A2 -> A0 -> A1) (meet: A1 -> A1 -> A1)
+  (Hmeet: forall a b : A1, γ[A1] a ∩ γ[A1] b ⊆ γ[A1] (meet a b))
+  (a2: A2) (a1: A1) (a0: A0)
+  (Hsolve: Overapproximates (A:=A1) (solveA a2 a0)
+             (collecting_binary_solve_right_partial P f (γ[A2] a2) (γ[A0] a0))) :
+  Overapproximates (A:=A1) (meet a1 (solveA a2 a0))
+    (collecting_binary_backward_right_partial P f (γ[A2] a2) (γ[A1] a1) (γ[A0] a0)).
+Proof.
+  rewrite /Overapproximates (collecting_binary_backward_right_partial_split P f).
+  transitivity (γ[A1] a1 ∩ γ[A1] (solveA a2 a0)); last exact: Hmeet.
+  apply: propset_intersection_mono; [reflexivity | exact: Hsolve].
+Qed.
+
 (** * Soundness theorems. *)
 Section Unary.
 
@@ -1251,11 +1625,78 @@ Section Unary.
 
 End Unary.
 
+(** A *sound* transfer function of a concrete *involution* [f] that is itself
+    an *involution* in the abstract is *exact*. Soundness gives
+    [f (γ a) ⊆ γ (fA a)]; applying soundness at [fA a] and the abstract
+    involution give [f x ∈ γ a] for [x ∈ γ (fA a)], whence the concrete
+    involution gives [x ∈ f (γ a)] — the missing inclusion. No monotonicity
+    is needed. *)
+Lemma sound_involutive_exact {C : Type} (A : abstract_domain C)
+  (f : C -> C) (fA : A -> A) :
+  (forall x, f (f x) = x) ->
+  (forall a, fA (fA a) = a) ->
+  unary_overapproximation A A fA (collecting_forward f) ->
+  unary_exact A A fA (collecting_forward f).
+Proof.
+  move=> Hf_inv HfA_inv Hsound a. split.
+  - move=> x Hx. unfold_set.
+    have Hfx : f x ∈ γ[A] a.
+    { have Hfx' : f x ∈ collecting_forward f (γ[A] (fA a)) by unfold_set; exists x.
+      move: (Hsound (fA a) _ Hfx') => H. by rewrite HfA_inv in H. }
+    unfold_set. exists (f x). by rewrite Hf_inv.
+  - exact: Hsound.
+  Qed.
+
 (* best means something only if we have an abstract order. *)
 Definition unary_best
   {C1 : Type} (A1 : abstract_domain C1)
   {C0 : Type} (A0 : abstract_domain C0) (fA : A1 -> A0) (fC: setop1 C1 C0)
   := forall a1, BestAbstraction (fA a1) (fC ( γ[A1] a1)).
+
+(** α-completeness of a unary transfer function, at a given abstract element
+    and concrete set: if [a1] is the best abstraction of [S1], then [fA a1] is
+    the best abstraction of [fC S1].  The unary analogue of
+    [binary_alpha_complete]. *)
+Definition unary_alpha_complete
+  {C1 : Type} (A1 : abstract_domain C1) {C0 : Type} (A0 : abstract_domain C0)
+  (fA : A1 -> A0) (fC : setop1 C1 C0)
+  (a1 : A1) (S1 : propset C1)
+  := IsAlpha (A:=A1) a1 S1 -> IsAlpha (A:=A0) (fA a1) (fC S1).
+
+(** Pointwise bridge from [unary_alpha_complete] (stated with [IsAlpha]) to
+    [BestAbstraction].  The operand witness is supplied as a [MaximallyReduced]
+    instance — i.e. the operand is the best abstraction of its own
+    concretization.  No [ExactOrder] is needed, so this remains usable on
+    domains (like raw [itv]) where [ExactOrder] fails but the operand at hand
+    happens to be maximally reduced.  Unary analogue of
+    [binary_alpha_complete_to_best]. *)
+Lemma unary_alpha_complete_to_best
+  `(A1: abstract_domain C1) `(A0: abstract_domain C0)
+  (fA : A1 -> A0) (fC : setop1 C1 C0)
+  (a1 : A1) `{!MaximallyReduced (A:=A1) a1} :
+  unary_alpha_complete A1 A0 fA fC a1 (γ[A1] a1) ->
+  BestAbstraction (A:=A0) (fA a1) (fC (γ[A1] a1)).
+Proof.
+  move=> Hac.
+  have Hα1 : IsAlpha a1 (γ[A1] a1) by apply: best_abstraction_is_is_alpha.
+  exact: is_alpha_is_best_abstraction (Hac Hα1).
+Qed.
+
+(** [ExactOrder] corollary: when the operand domain has [ExactOrder], every
+    element is maximally reduced, so pointwise [unary_alpha_complete] at all
+    [γ]-pairs lifts to the universal [unary_best].  Unary analogue of
+    [binary_alpha_complete_to_binary_best]. *)
+Lemma unary_alpha_complete_to_unary_best
+  `(A1: abstract_domain C1) `(A0: abstract_domain C0) `{!ExactOrder A1}
+  (fA : A1 -> A0) (fC : setop1 C1 C0) :
+  (forall a1, unary_alpha_complete A1 A0 fA fC a1 (γ[A1] a1)) ->
+  unary_best A1 A0 fA fC.
+Proof.
+  move=> Hac a1.
+  have MR1 : MaximallyReduced (A:=A1) a1
+    by apply exact_order_is_all_maximally_reduced.
+  exact: (unary_alpha_complete_to_best A1 A0 fA fC a1 (Hac a1)).
+Qed.
 
 
 Section Binary.
@@ -1368,30 +1809,59 @@ Global Hint Unfold
 
 (** Our current interface for single-value abstraction: return None if
     no improvement, or Some a1' if we improved it.
-    TODO: this interface cannot say that the refinement is empty; it should be
-    able to report bottom as well. *)
+
+    An operand and its refinement do not have to live in the same
+    domain. A backward step is applied to the elements the analyzer
+    holds, which are typically known non-empty — a [NonEmpty.ad] subset
+    carrier — while its result must be able to say that the refinement
+    is empty, which that carrier by construction cannot hold. So the
+    operand type is a parameter of its own and [emb] embeds it into the
+    domain [R] its refinement lives in: [proj1_sig] for a [Subset] /
+    [NonEmpty] carrier, [id] when the two coincide. It is the same split
+    the γ-level specs already have, where the result domain is a
+    separate argument ([binary_exact nbitv nbitv qv],
+    [ternary_exact nbitv nbitv nbitv itv]). *)
 Definition backward_unary_function_correct
-  `{A1:abstract_domain C1} `{A0:abstraction C0} `{Equiv A1} f' (f: A1 -> A0 -> A1) :=
+  `{R1:abstract_domain C1} `{A0:abstraction C0} `{Equiv R1} {A1: Type}
+  (emb1: A1 -> R1) f' (f: A1 -> A0 -> R1) :=
   forall a1 a0, match f' a1 a0 with
-           | None => f a1 a0 ≡ a1
-           | Some a1' => f a1 a0 = a1' ∧ a1' ⊑[A1] a1 /\ a1' ≢ a1
+           | None => f a1 a0 ≡ emb1 a1
+           | Some a1' => f a1 a0 = a1' ∧ a1' ⊑[R1] emb1 a1 /\ a1' ≢ emb1 a1
            end.
 
 Definition backward_binary_function_correct
-  `{A2: abstract_domain C2} `{A1: abstract_domain C1} `{A0: abstraction C0} `{Equiv A2} `{Equiv A1}
-  f' (fleft: A2 -> A1 -> A0 -> A2) (fright: A2 -> A1 -> A0 -> A1) :=
+  `{R2: abstract_domain C2} `{R1: abstract_domain C1} `{A0: abstraction C0} `{Equiv R2} `{Equiv R1}
+  {A2 A1: Type} (emb2: A2 -> R2) (emb1: A1 -> R1)
+  f' (fleft: A2 -> A1 -> A0 -> R2) (fright: A2 -> A1 -> A0 -> R1) :=
   forall a2 a1 a0,
-    match f' a2 a1 a0 with
-    | (r2, r1) =>
-          (match r2 with 
-           | None => fleft a2 a1 a0 ≡ a2
-           | Some a2' => fleft a2 a1 a0 = a2' ∧ a2' ⊑[A2]  a2 /\ a2' ≢ a2
-           end) /\
-            (match r1 with 
-             | None => fright a2 a1 a0 ≡ a1
-             | Some a1' => fright a2 a1 a0 = a1' ∧ a1' ⊑[A1]  a1 /\ a1' ≢ a1
-             end)
-    end.
+    let '(r2,r1) := f' a2 a1 a0 in
+    (match r2 with
+     | None => fleft a2 a1 a0 ≡ emb2 a2
+     | Some a2' => fleft a2 a1 a0 = a2' ∧ a2' ⊑[R2]  emb2 a2 /\ a2' ≢ emb2 a2
+     end) /\
+      (match r1 with
+       | None => fright a2 a1 a0 ≡ emb1 a1
+       | Some a1' => fright a2 a1 a0 = a1' ∧ a1' ⊑[R1]  emb1 a1 /\ a1' ≢ emb1 a1
+       end).
+
+(** TODO: improve this interface. [option] has two cases, so the one
+    thing a refinement cannot report is that it is empty — which is why
+    the refined value has to leave the operand's domain, and why [emb]
+    exists at all. An inductive with the three cases the answer actually
+    has,
+
+<<
+      Unchanged | Bottom | Refined (a' : A)
+>>
+
+    says it directly: [Bottom] is the empty refinement, [Refined] carries
+    a value of the operand's own domain, and [emb] disappears along with
+    the distinction between operand and result domains.
+
+    The per-operation left and right backward transfer functions, and
+    their soundness, are the primary results; packaging the two into a
+    single call is secondary and expected to change with the above. *)
+
 
 
 (** * AbstractionSetoid: Abstraction with an equality relation.  *)
