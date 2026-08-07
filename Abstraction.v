@@ -1220,6 +1220,16 @@ Proof.
       by first [exact: (Hsuba _ Hc1) | exact: (Hsubb _ Hc1)].
 Qed.
 
+(** Swapping the two arguments of a binary operation swaps the two
+    operand sets of its forward collecting semantics. *)
+Lemma collecting_binary_forward_flip
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (S2: ℘ C2) (S1: ℘ C1) :
+  collecting_binary_forward (fun c1 c2 => f c2 c1) S1 S2 ⊆⊇
+  collecting_binary_forward f S2 S1.
+Proof.
+  unfold_set_equiv => c0; unfold_set; split;
+    move=> [ca [cb [Hca [Hcb Heq]]]]; by exists cb, ca.
+Qed.
 (** * Soundness theorems. *)
 Section Unary.
 
