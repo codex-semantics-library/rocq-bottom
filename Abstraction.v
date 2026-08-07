@@ -638,6 +638,31 @@ Lemma is_alpha_set_equiv `{A : abstract_domain C} (a : A) (S S' : ℘ C) :
   S ⊆⊇ S' -> IsAlpha a S -> IsAlpha a S'.
 Proof. move=> /propset_equiv_iff; exact: IsAlpha_set_equiv. Qed.
 
+(** The two sets need not be equal — only indistinguishable by the
+    abstraction. If [S'] ⊆ [S], and every abstract element sound for [S'] is
+    sound for [S]: then α is the same on both, since [IsAlpha] reads a set only
+    through its sound abstractions.
+
+    Weaker than [is_alpha_set_equiv] and used the other way round. The typical
+    [S] is a *relaxation* of the set of interest [S'] (e.g. with one guard
+    removed), and the conclusion carries that α back onto [S'].
+
+    Example: [S' = {4,6,7}] and [S = [4,7]] (the interval hull).  [S'] ⊆ [S],
+    but any interval that soundly contains [S'] also contains [S], because [4]
+    and [7] are the min and max of [S']. So the hypothesis holds and α is [4,7]
+    on both: the lemma lets you compute α on the easier [S] and carry it back to
+    [S']. *)
+Lemma is_alpha_same_abstraction `{A : abstract_domain C} (a : A) (S S' : ℘ C) :
+  S' ⊆ S -> (forall b : A, S' ⊆ γ[A] b -> S ⊆ γ[A] b) ->
+  IsAlpha a S' <-> IsAlpha a S.
+Proof.
+  move=> Hsub Hbnd; split=> Ha b; split.
+  - move=> HS. apply: (proj1 (Ha b)) => z Hz. exact: HS (Hsub _ Hz).
+  - move=> Hle. apply: Hbnd. exact: (proj2 (Ha b) Hle).
+  - move=> HS'. apply: (proj1 (Ha b)). exact: Hbnd.
+  - move=> Hle z Hz. exact: (proj2 (Ha b) Hle _ (Hsub _ Hz)).
+Qed.
+
 (** ** Relation between relations between an abstract and concrete elements. *)
 
 (** Exactness (γ-completeness) and IsAlpha (α-completeness) are
