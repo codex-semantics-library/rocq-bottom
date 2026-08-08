@@ -6,6 +6,18 @@ Require Import ssreflect ssrbool ssrfun.
 Require Import autoreflect.
 Generalizable All Variables.
 
+(** * Cofinality.
+
+    A subset [S'] of [S] where elements of [S'] dominate those of [S]. They are
+    interested because they preserve the bound, so we can transport proofs on
+    [S] to proofs on [S']. *)
+
+Definition cofinal_below {A} (le : relation A) (S S' : ℘ A) : Prop :=
+  forall z, z ∈ S -> exists z', z' ∈ S' /\ le z' z.
+
+Definition cofinal_above {A} (le : relation A) (S S' : ℘ A) : Prop :=
+  forall z, z ∈ S -> exists z', z' ∈ S' /\ le z z'.
+
 (** * GLB. *)
 
 (** Whenever we have a preorder, we can define an Abstraction where we
@@ -371,7 +383,7 @@ Module GLBUnbounded. Section GLBUnbounded.
       two-witnesses-and-a-bracket entry point that interval proofs use
       throughout.
 
-      [cofinal_below] *transports* an existing [IsAlpha] rather than
+      [cofinal_below_same_alpha] *transports* an existing [IsAlpha] rather than
       establishing one. Think of [S'] as a set of *representative elements* of
       [S] ([S'] ⊆ [S]) that *preserve the bound*: then, we don't need to
       consider all of [S] to prove that the bound is attained, but only the
@@ -388,15 +400,23 @@ Module GLBUnbounded. Section GLBUnbounded.
     exact: is_glb_of_min.
   Qed.
 
-  Lemma cofinal_below (S S' : ℘ A) (bnd : ad) :
-    S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z' ≤ z) ->
-    IsAlpha (A:=ad) bnd S' -> IsAlpha (A:=ad) bnd S.
+  Lemma cofinal_below_same_gamma (S S' : ℘ A) (c : ad) :
+    S' ⊆ S -> cofinal_below le S S' ->
+    S' ⊆ γ[ad] c <-> S ⊆ γ[ad] c.
   Proof using A Hpre le.
-    move=> Hsub Hcof Ha c; split.
-    - move=> HS. apply: (proj1 (Ha c)) => z Hz. exact: HS (Hsub _ Hz).
-    - move=> Hle z Hz.
+    move=> Hsub Hcof; split.
+    - move=> HS' z Hz.
       have [z' [Hz' Hzz']] := Hcof z Hz.
-      exact: gamma_upward (proj2 (Ha c) Hle z' Hz') Hzz'.
+      exact: gamma_upward (HS' _ Hz') Hzz'.
+    - move=> HS z Hz. exact: HS (Hsub _ Hz).
+  Qed.
+
+  Lemma cofinal_below_same_alpha (S S' : ℘ A) (bnd : ad) :
+    S' ⊆ S -> cofinal_below le S S' ->
+    IsAlpha (A:=ad) bnd S' <-> IsAlpha (A:=ad) bnd S.
+  Proof using A Hpre le.
+    move=> Hsub Hcof. apply: is_alpha_same_abstraction => // c.
+    exact: (proj1 (cofinal_below_same_gamma S S' c Hsub Hcof)).
   Qed.
 
   (** GLBUnbounded is also an exact order. This depends on unbounded:
@@ -546,7 +566,7 @@ Module LUBUnbounded. Section LUBUnbounded.
     c1 ∈ γ[ad] b -> c2 ≤ c1 -> c2 ∈ γ[ad] b.
   Proof. destruct b; simpl; [done | exact: LUB.gamma_downward]. Qed.
 
-  (** Duals of [GLBUnbounded.min_is_best] and [GLBUnbounded.cofinal_below];
+  (** Duals of [GLBUnbounded.min_is_best] and [GLBUnbounded.cofinal_below_same_alpha];
       see the commentary there. *)
 
   Lemma max_is_best (h : A) (S : ℘ A) :
@@ -558,15 +578,23 @@ Module LUBUnbounded. Section LUBUnbounded.
     exact: is_lub_of_max.
   Qed.
 
-  Lemma cofinal_above (S S' : ℘ A) (bnd : ad) :
-    S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z ≤ z') ->
-    IsAlpha (A:=ad) bnd S' -> IsAlpha (A:=ad) bnd S.
+  Lemma cofinal_above_same_gamma (S S' : ℘ A) (c : ad) :
+    S' ⊆ S -> cofinal_above le S S' ->
+    S' ⊆ γ[ad] c <-> S ⊆ γ[ad] c.
   Proof using A Hpre le.
-    move=> Hsub Hcof Ha c; split.
-    - move=> HS. apply: (proj1 (Ha c)) => z Hz. exact: HS (Hsub _ Hz).
-    - move=> Hle z Hz.
+    move=> Hsub Hcof; split.
+    - move=> HS' z Hz.
       have [z' [Hz' Hzz']] := Hcof z Hz.
-      exact: gamma_downward (proj2 (Ha c) Hle z' Hz') Hzz'.
+      exact: gamma_downward (HS' _ Hz') Hzz'.
+    - move=> HS z Hz. exact: HS (Hsub _ Hz).
+  Qed.
+
+  Lemma cofinal_above_same_alpha (S S' : ℘ A) (bnd : ad) :
+    S' ⊆ S -> cofinal_above le S S' ->
+    IsAlpha (A:=ad) bnd S' <-> IsAlpha (A:=ad) bnd S.
+  Proof using A Hpre le.
+    move=> Hsub Hcof. apply: is_alpha_same_abstraction => // c.
+    exact: (proj1 (cofinal_above_same_gamma S S' c Hsub Hcof)).
   Qed.
 
   Instance lubunbounded_is_included_exact : ExactOrder ad.
