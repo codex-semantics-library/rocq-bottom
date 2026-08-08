@@ -46,6 +46,27 @@ Definition collecting_rem (S2 S1 : propset Z) : propset Z :=
   collecting_non_zero_r Z.rem S2 S1.
 Hint Unfold collecting_rem: to_set.
 
+(** The same guard, read backwards. [collecting_quot] above is what a *forward*
+    transfer function over-approximates; these three are what the backward ones
+    do, and they carry the identical [is_nonzero] guard — the divisor is still
+    never [0], whichever way the arrow points.
+
+    [_solve_left] is the dividends compatible with a divisor from [S1] and a
+    quotient from [S0], with no incoming constraint on the dividend;
+    [_backward_left] and [_backward_right] are that intersected with an incoming
+    [S2], which is what a refinement step actually returns.  *)
+Definition collecting_quot_solve_left (S1 S0 : propset Z) : propset Z :=
+  collecting_binary_solve_left_partial is_nonzero Z.quot S1 S0.
+Hint Unfold collecting_quot_solve_left: to_set.
+
+Definition collecting_quot_backward_left (S2 S1 S0 : propset Z) : propset Z :=
+  collecting_binary_backward_left_partial is_nonzero Z.quot S2 S1 S0.
+Hint Unfold collecting_quot_backward_left: to_set.
+
+Definition collecting_quot_backward_right (S2 S1 S0 : propset Z) : propset Z :=
+  collecting_binary_backward_right_partial is_nonzero Z.quot S2 S1 S0.
+Hint Unfold collecting_quot_backward_right: to_set.
+
 (** Restricting the divisor to its nonzero elements leaves [collecting_quot]
     unchanged, so a ⊆⊇-equivalence between a divisor set and "divisors of [S1']
     distinct from 0" lifts to [collecting_quot].  Used by the dispatcher to
