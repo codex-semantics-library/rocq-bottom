@@ -54,6 +54,11 @@ Module GLB. Section GLB.
     - move/(_ a1) => H. apply: H. unfold_set. reflexivity.
   Qed.
 
+  (** ⊑ is [le] flipped, so it is antisymmetric exactly when [le] is. *)
+  Global Instance ad_antisymmetric `{Hanti : !Antisymmetric A (=) le} :
+    Antisymmetric A (=) (⊑[ad]).
+  Proof. move=> a1 a2 H1 H2. exact: (Hanti _ _ H2 H1). Qed.
+
   (** We have a Galois connection for the lowerbound abstraction, and
       α(S) is the greatest lower bound of S.
 
@@ -155,6 +160,11 @@ Module LUB. Section LUB.
     have H: ExactOrder glb_flip by apply GLB.glb_is_included_exact.
     exact H.
   Qed.
+
+  (** ⊑ is [le] itself here, so antisymmetry transfers verbatim. *)
+  Global Instance ad_antisymmetric `{Hanti : !Antisymmetric A (=) le} :
+    Antisymmetric A (=) (⊑[ad]).
+  Proof. exact: Hanti. Qed.
 
   Record is_lub (bound : A) (S : propset A) : Prop := {
       lub_is_upperbound: (forall z, z ∈ S -> le z bound);
@@ -412,7 +422,14 @@ Module GLBUnbounded. Section GLBUnbounded.
       unfold ExactOrder in Hg. unfold GLB.ad in Hg; simpl in Hg.
       rewrite Hg. rewrite /( _ ⊑γ _)/( _ ⊑γ _)/γ; simpl. done.
 Qed.
-  
+
+  (** Antisymmetry, unlike exactness, needs no [unbounded]: adding [Top]
+      preserves it ([WithTop.ad_antisymmetric]) and the [GLB] order is [le]
+      flipped. *)
+  Global Instance ad_antisymmetric `{Hanti : !Antisymmetric A (=) le} :
+    Antisymmetric (WithTop.with_top A) (=) (⊑[ad]) :=
+    WithTop.ad_antisymmetric glb (HA := GLB.ad_antisymmetric le).
+
 End GLBUnbounded. End GLBUnbounded.
 
 (** * LUB (or unbounded). *)
@@ -558,6 +575,10 @@ Module LUBUnbounded. Section LUBUnbounded.
     exact H.
   Qed.
 
+  Global Instance ad_antisymmetric `{Hanti : !Antisymmetric A (=) le} :
+    Antisymmetric (WithTop.with_top A) (=) (⊑[ad]) :=
+    WithTop.ad_antisymmetric lub (HA := LUB.ad_antisymmetric le).
+
 End LUBUnbounded. End LUBUnbounded.
   
 
@@ -596,6 +617,14 @@ Module IntervalUnbounded. Section IntervalUnbounded.
   Definition ad : abstract_domain A := Conjunction.ad glbtop lubtop.
 
   Definition interval := prod (WithTop.with_top A) (WithTop.with_top A).
+
+  (** ⊑ on intervals is componentwise on the two bound orders, and each of
+      those is antisymmetric as soon as [le] is — so this holds with no side
+      condition. *)
+  Global Instance ad_antisymmetric `{Hanti : !Antisymmetric A (=) le} :
+    Antisymmetric interval (=) (⊑[ad]) :=
+    Conjunction.ad_antisymmetric glbtop lubtop
+      (HA := GLBUnbounded.ad_antisymmetric le) (HB := LUBUnbounded.ad_antisymmetric le).
 
   Definition non_bottom (i : interval) : Prop :=
     let (l, h) := i in

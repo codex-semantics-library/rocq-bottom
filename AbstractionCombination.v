@@ -99,6 +99,14 @@ Module WithTop.
         + (* a1 = NotTop a1 *) exact: H.
     Qed.
 
+    (** Adding a top element preserves antisymmetry. *)
+    Global Instance ad_antisymmetric `{HA : !Antisymmetric (ad_car A) (=) (⊑[A])} :
+      Antisymmetric (with_top A) (=) (⊑[ad]).
+    Proof.
+      move=> [|a1] [|a2] //= H1 H2.
+      by rewrite (HA a1 a2 H1 H2).
+    Qed.
+
     (** If we can specify when [Top] is an adjunction (i.e., we can say
         when Top is the best approximation for a set, i.e. when no
         element of [A] can be used), then we can lift the galois
@@ -997,6 +1005,16 @@ Module Conjunction.
         
     Definition ad : abstract_domain C :=
       BuildAbstractDomain (γ[abs A B] ) is_included laws.
+
+    (** The product of two antisymmetric orders is antisymmetric. *)
+    Global Instance ad_antisymmetric
+      `{HA : !Antisymmetric (ad_car A) (=) (⊑[A])}
+      `{HB : !Antisymmetric (ad_car B) (=) (⊑[B])} :
+      Antisymmetric (A * B) (=) (⊑[ad]).
+    Proof.
+      move=> [a1 b1] [a2 b2] [HleA HleB] [HgeA HgeB].
+      by f_equal; [apply: HA | apply: HB].
+    Qed.
 
     Global Instance is_includedP is_includedbA is_includedbB a1 a2 b1 b2:
       (AutoReflect(a1 ⊑[A] a2)(is_includedbA a1 a2)) ->

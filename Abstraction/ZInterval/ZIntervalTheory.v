@@ -430,6 +430,23 @@ Proof.
   by constructor => - [].
 Qed.
 
+(** ⊑ is antisymmetric on each bound abstraction, hence on [interval], with no
+    side condition.  Nothing about [Z] is involved beyond [z_le_antisymm].
+
+    Note that typeclass resolution has to go through the [abstract_lattice] →
+    [abstract_domain] coercion and the [al]/[ad] definitions. For this, the
+    idiom is to pass the hypotheses explicitly, as in [antisymmetry H1 H2].  A
+    bare [apply: antisymmetry] on a goal [a = b] leaves the relation an evar,
+    and resolution then searches every [Antisymmetric] instance in scope. *)
+Global Instance glbtop_antisym : Antisymmetric glbtop (=) (⊑[glbtop]) :=
+  GLBUnbounded.ad_antisymmetric Z.le (Hanti := z_le_antisymm).
+
+Global Instance lubtop_antisym : Antisymmetric lubtop (=) (⊑[lubtop]) :=
+  LUBUnbounded.ad_antisymmetric Z.le (Hanti := z_le_antisymm).
+
+Global Instance itv_antisym : Antisymmetric itv (=) (⊑[itv]) :=
+  IntervalUnbounded.ad_antisymmetric Z.le (Hanti := z_le_antisymm).
+
 (** Non-bottom intervals: non_bottom is equivalent to non-empty concretization. *)
 Lemma non_bottom_non_empty:
   forall i:interval, (non_bottom i) <->  exists c, c ∈ γ[itv] i.

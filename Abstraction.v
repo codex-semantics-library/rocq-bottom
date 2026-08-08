@@ -1009,6 +1009,22 @@ Proof.
   - by apply: gamma_alpha_extensive.
 Qed.
 
+(** Best abstractions are equal, not merely equivalent, as soon as the abstract
+    order is antisymmetric. [IsAlpha a S] makes [a] ⊑-least among the
+    over-approximations of [S], so two of them bound each other
+    ([alpha_monotone] both ways) and antisymmetry closes it.
+
+    This entails, in particular, that two best transfer functions are the same
+    function. *)
+Lemma is_alpha_unique `(A : abstract_domain C) `{!Antisymmetric A (=) (⊑[A])}
+  (a1 a2 : A) (S : ℘ C) :
+  IsAlpha a1 S -> IsAlpha a2 S -> a1 = a2.
+Proof.
+  move=> H1 H2. apply: (antisymmetry (R := (⊑[A]))).
+  - exact: (alpha_monotone A a1 S a2 S H2 H1 (reflexivity S)).
+  - exact: (alpha_monotone A a2 S a1 S H1 H2 (reflexivity S)).
+Qed.
+
 (** * Galois insertions and their relation to reduction. *)
 
 (** We have two different notions of Galois insertion,
