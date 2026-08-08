@@ -16,6 +16,8 @@ val equiv : interval -> interval -> bool
 
 val non_bottomb : interval -> bool
 
+val itv_gammab : interval -> Z.t -> bool
+
 val singleton : Z.t -> interval
 
 val is_singleton : interval -> Z.t option

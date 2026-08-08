@@ -100,6 +100,17 @@ let non_bottomb = function
       | WithTop.Top -> true
       | WithTop.NotTop h -> Z.leq l h))
 
+(** val itv_gammab : interval -> Z.t -> bool **)
+
+let itv_gammab i z =
+  let (l, h) = i in
+  (&&) (match l with
+        | WithTop.Top -> true
+        | WithTop.NotTop l' -> Z.leq l' z)
+    (match h with
+     | WithTop.Top -> true
+     | WithTop.NotTop h' -> Z.leq z h')
+
 (** val singleton : Z.t -> interval **)
 
 let singleton k =
