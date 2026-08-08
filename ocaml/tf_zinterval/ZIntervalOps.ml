@@ -8,6 +8,11 @@ let bound_opp = function
 | WithTop.Top -> WithTop.Top
 | WithTop.NotTop z -> WithTop.NotTop (Z.neg z)
 
+(** val interval_opp : interval -> interval **)
+
+let interval_opp = function
+| (l, h) -> ((bound_opp h), (bound_opp l))
+
 (** val interval_add : interval -> interval -> interval **)
 
 let interval_add i2 i1 =

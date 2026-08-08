@@ -4,6 +4,8 @@ open ZInterval
 
 val bound_opp : Z.t WithTop.with_top -> Z.t WithTop.with_top
 
+val interval_opp : interval -> interval
+
 val interval_add : interval -> interval -> interval
 
 val interval_sub : interval -> interval -> interval
