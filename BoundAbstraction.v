@@ -712,6 +712,30 @@ Module IntervalUnbounded. Section IntervalUnbounded.
     - transitivity (WithTop.NotTop b); [exact Hxb | exact Hhi].
   Qed.
 
+  (** [is_alpha_same_abstraction] for an interval: an interval is sound for a
+      set exactly when both of its bounds are, so the hypothesis splits into one
+      obligation per bound, each of the shape "any bound of [S'] bounds [S]
+      too". 
+
+      Both directions are useful: left-to-right narrows the elements that have
+      to be examined to establish an [IsAlpha]; right-to-left moves an [IsAlpha]
+      established on a convenient superset onto the subset actually of interest. *)
+  Lemma same_alpha_same_bounds (S S' : ℘ A) (i : interval) :
+    S' ⊆ S ->
+    (forall b : glbtop, S' ⊆ γ[glbtop] b -> S ⊆ γ[glbtop] b) ->
+    (forall b : lubtop, S' ⊆ γ[lubtop] b -> S ⊆ γ[lubtop] b) ->
+    IsAlpha (A:=ad) i S' <-> IsAlpha (A:=ad) i S.
+  Proof using A Hpre le.
+    move=> Hsub Hlo Hhi.
+    apply: is_alpha_same_abstraction => // [[l h]] HS'.
+    have HS'l : S' ⊆ γ[glbtop] l.
+    { move=> w Hw. move: (HS' _ Hw). rewrite Conjunction.gammaE. by case. }
+    have HS'h : S' ⊆ γ[lubtop] h.
+    { move=> w Hw. move: (HS' _ Hw). rewrite Conjunction.gammaE. by case. }
+    move=> z Hz. rewrite Conjunction.gammaE.
+    split; [exact: (Hlo l HS'l z Hz) | exact: (Hhi h HS'h z Hz)].
+  Qed.
+
 End IntervalUnbounded. End IntervalUnbounded.
 
 (* Definition antitone {A: Type} (le : relation A) (f: A -> A) := *)
