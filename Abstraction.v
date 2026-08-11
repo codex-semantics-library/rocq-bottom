@@ -1641,28 +1641,6 @@ Section Unary.
 
 End Unary.
 
-(** A *sound* transfer function of a concrete *involution* [f] that is itself
-    an *involution* in the abstract is *exact*. Soundness gives
-    [f (γ a) ⊆ γ (fA a)]; applying soundness at [fA a] and the abstract
-    involution give [f x ∈ γ a] for [x ∈ γ (fA a)], whence the concrete
-    involution gives [x ∈ f (γ a)] — the missing inclusion. No monotonicity
-    is needed. *)
-Lemma sound_involutive_exact {C : Type} (A : abstract_domain C)
-  (f : C -> C) (fA : A -> A) :
-  (forall x, f (f x) = x) ->
-  (forall a, fA (fA a) = a) ->
-  unary_overapproximation A A fA (collecting_forward f) ->
-  unary_exact A A fA (collecting_forward f).
-Proof.
-  move=> Hf_inv HfA_inv Hsound a. split.
-  - move=> x Hx. unfold_set.
-    have Hfx : f x ∈ γ[A] a.
-    { have Hfx' : f x ∈ collecting_forward f (γ[A] (fA a)) by unfold_set; exists x.
-      move: (Hsound (fA a) _ Hfx') => H. by rewrite HfA_inv in H. }
-    unfold_set. exists (f x). by rewrite Hf_inv.
-  - exact: Hsound.
-  Qed.
-
 (* best means something only if we have an abstract order. *)
 Definition unary_best
   {C1 : Type} (A1 : abstract_domain C1)
@@ -1712,6 +1690,245 @@ Proof.
   have MR1 : MaximallyReduced (A:=A1) a1
     by apply exact_order_is_all_maximally_reduced.
   exact: (unary_alpha_complete_to_best A1 A0 fA fC a1 (Hac a1)).
+Qed.
+
+
+(** * Transport through a bijection realized in the abstract.
+
+    A concrete operation that is a bijection, realized by a transfer
+    function that is a bijection in the abstract, is exact and
+    α-complete.  [Z.opp] and [Z.lnot] on intervals, the translation
+    [c ↦ c + K], and [Z.opp] on congruences are all that one proof.
+
+    The hypotheses come in two grades, and the split is the content:
+
+    - *exactness* ([bijection_exact]) needs only the two bijections and
+      soundness in each direction — no order at all.  Hence
+      [sound_involutive_exact] below asks for no monotonicity.
+    - *α-completeness* and best-abstraction transport additionally need
+      [fA] to preserve ⊑ both ways: an order isomorphism, not merely a
+      bijection of the carrier.  With [ExactOrder] that is free
+      ([bijection_monotone_of_exact_order]); on raw [itv], which has no
+      such instance, it is proved on the bounds.
+
+    Clients consume the [finv]-preimage form [{[ z | finv z ∈ S ]}] rather
+    than [collecting_forward f S]; the two coincide
+    ([preimage_collecting_forward]), but the preimage composes by
+    rewriting. *)
+Section AbstractBijection.
+
+  Context {C : Type} (A : abstract_domain C).
+  Context (f finv : C -> C) (fA fAinv : A -> A).
+
+  (** The concrete bijection and its inverse. *)
+  Context (Hf : forall x, finv (f x) = x).
+  Context (Hf' : forall x, f (finv x) = x).
+
+  (** Its abstract realization, likewise a bijection. *)
+  Context (HfA : forall a, fAinv (fA a) = a).
+  Context (HfA' : forall a, fA (fAinv a) = a).
+
+  (** [fA] is an order isomorphism. *)
+  Context (Hmono : forall a b : A, a ⊑[A] b -> fA a ⊑[A] fA b).
+  Context (Hmono' : forall a b : A, a ⊑[A] b -> fAinv a ⊑[A] fAinv b).
+
+  (** Each direction is sound for the operation it realizes. *)
+  Context (Hsound : unary_overapproximation A A fA (collecting_forward f)).
+  Context (Hsound' : unary_overapproximation A A fAinv (collecting_forward finv)).
+
+  (** ** Set-level transport.  None of this mentions the abstract domain. *)
+
+  (** [f] is a bijection, so its image and the [finv]-preimage agree. *)
+  Lemma preimage_collecting_forward (S : propset C) :
+    {[ z | finv z ∈ S ]} ⊆⊇ collecting_forward f S.
+  Proof using Hf Hf'.
+    split=> z; unfold_set.
+    - move=> Hz. exists (finv z). by rewrite Hf'.
+    - move=> [x [Hx <-]]. by rewrite Hf.
+  Qed.
+
+  (** Map a set equivalence through the preimage.  True of any function;
+      stated here because this is where its clients are. *)
+  Lemma propset_preimage_equiv (S S' : propset C) :
+    S ⊆⊇ S' -> {[ z | finv z ∈ S ]} ⊆⊇ {[ z | finv z ∈ S' ]}.
+  Proof using.
+    move=> [H H']. split=> z Hz; unfold_set in Hz; unfold_set.
+    - exact: (H _ Hz).
+    - exact: (H' _ Hz).
+  Qed.
+
+  (** Taking the [f]-preimage and then the [finv]-preimage cancels. *)
+  Lemma propset_preimage_cancel (S : propset C) :
+    {[ z | finv z ∈ {[ z' | f z' ∈ S ]} ]} ⊆⊇ S.
+  Proof using Hf'.
+    split=> z; unfold_set => H; by rewrite Hf' in H *.
+  Qed.
+
+  (** Solving an equivalence for the transformed side: an operation that
+      commutes with [f] states its commutation as [f (g S) ⊆⊇ g (f S)], but
+      what the sign-case transports consume is that read the other way
+      round.  Apply the preimage to both sides and cancel — this one
+      propset rule is the whole content of the per-operation
+      [collecting_*_opp_{l,r}_inv] lemmas it replaces, and it composes by
+      [transitivity] like any other rewriting step. *)
+  Lemma propset_preimage_equiv_inv (S S' : propset C) :
+    S ⊆⊇ {[ z | f z ∈ S' ]} -> {[ z | finv z ∈ S ]} ⊆⊇ S'.
+  Proof using Hf'.
+    move=> H. transitivity {[ z | finv z ∈ {[ z' | f z' ∈ S' ]} ]}.
+    - exact: propset_preimage_equiv.
+    - exact: propset_preimage_cancel.
+  Qed.
+
+  (** Non-emptiness transports, for the existence side conditions of the
+      quarter transports. *)
+  Lemma preimage_nonempty (S : propset C) :
+    (exists c, c ∈ S) -> exists c, c ∈ {[ z | finv z ∈ S ]}.
+  Proof using Hf. move=> [c Hc]. exists (f c). by unfold_set; rewrite Hf. Qed.
+
+  (** ** Transport of γ, and exactness. *)
+
+  (** The concretization of [fA a] is the [finv]-preimage of that of [a]:
+      [⊆] is soundness of [fAinv] read at [fA a], [⊇] is soundness of [fA]
+      read at [finv z]. *)
+  Lemma bijection_gamma_pre (a : A) :
+    γ[A] (fA a) ⊆⊇ {[ z | finv z ∈ γ[A] a ]}.
+  Proof using Hf' HfA Hsound Hsound'.
+    split=> z; unfold_set => Hz.
+    - have H : finv z ∈ collecting_forward finv (γ[A] (fA a))
+        by unfold_set; exists z.
+      move: (Hsound' (fA a) _ H). by rewrite HfA.
+    - have H : f (finv z) ∈ collecting_forward f (γ[A] a)
+        by unfold_set; exists (finv z).
+      move: (Hsound a _ H). by rewrite Hf'.
+  Qed.
+
+  (** A sound transfer function of a bijection, itself a bijection in the
+      abstract, is exact.  No monotonicity is needed. *)
+  Lemma bijection_exact : unary_exact A A fA (collecting_forward f).
+  Proof using Hf Hf' HfA Hsound Hsound'.
+    move=> a. rewrite /unary_spec /ExactlyRepresents.
+    transitivity {[ z | finv z ∈ γ[A] a ]}; first exact: bijection_gamma_pre.
+    exact: preimage_collecting_forward.
+  Qed.
+
+  (** ** Transport of the order, and of α.
+
+      These are what make the negated sign cases of [mul] and [quot] cost
+      a transport instead of a second proof. *)
+
+  (* BISECT-START *)
+  (** [fA] reflects the order as well as preserving it. *)
+  Lemma fA_order_iso (a b : A) : fA a ⊑[A] fA b <-> a ⊑[A] b.
+  Proof using HfA Hmono Hmono'.
+    split=> H; last exact: Hmono.
+    by move: (Hmono' _ _ H); rewrite !HfA.
+  Qed.
+
+  (** [fA] and the preimage move a γ-inclusion across intact. *)
+  Lemma bijection_subset_iff (a : A) (S : propset C) :
+    {[ z | finv z ∈ S ]} ⊆ γ[A] (fA a) <-> S ⊆ γ[A] a.
+  Proof using Hf Hf' HfA Hsound Hsound'.
+    have [Hsub Hsup] := bijection_gamma_pre a.
+    split=> H.
+    - move=> x Hx.
+      have Hfx : f x ∈ {[ z | finv z ∈ S ]} by unfold_set; rewrite Hf.
+      move: (Hsub _ (H _ Hfx)). by unfold_set; rewrite Hf.
+    - move=> z Hz; unfold_set in Hz.
+      apply: Hsup. unfold_set. exact: (H _ Hz).
+  Qed.
+
+  (** α transports in both directions.  Proved by applying the two
+      transport lemmas above to [IsAlpha]'s definition, rather than by
+      rewriting under it: reindexing the universally quantified
+      competitor by [b = fA (fAinv b)] turns the γ side into
+      [bijection_subset_iff] and the ⊑ side into [fA_order_iso], so no
+      abstract element is ever taken apart.
+
+      Written with explicit [proj1]/[proj2] applications on purpose.  The
+      same proof by [rewrite bijection_subset_iff fA_order_iso] is a
+      setoid rewrite under [<->], and at this point in the file there are
+      enough morphism instances in scope that it does not terminate. *)
+  Lemma is_alpha_bijection_iff (a : A) (S : propset C) :
+    IsAlpha (A:=A) a S <-> IsAlpha (A:=A) (fA a) {[ z | finv z ∈ S ]}.
+  Proof using Hf Hf' HfA HfA' Hmono Hmono' Hsound Hsound'.
+    split=> Ha b.
+    - have Hb : fA (fAinv b) = b := HfA' b.
+      rewrite -Hb; split.
+      + move/(proj1 (bijection_subset_iff (fAinv b) S)) => Hs.
+        exact: Hmono _ _ (proj1 (Ha (fAinv b)) Hs).
+      + move/(proj1 (fA_order_iso a (fAinv b))) => Hle.
+        exact: (proj2 (bijection_subset_iff (fAinv b) S) (proj2 (Ha (fAinv b)) Hle)).
+    - split.
+      + move/(proj2 (bijection_subset_iff b S)) => Hs.
+        exact: (proj1 (fA_order_iso a b) (proj1 (Ha (fA b)) Hs)).
+      + move=> Hle.
+        exact: (proj1 (bijection_subset_iff b S) (proj2 (Ha (fA b)) (Hmono _ _ Hle))).
+  Qed.
+
+  (** Best abstraction transfers, as the corollary it now is. *)
+  Lemma best_abstraction_bijection (a : A) (S : propset C) :
+    BestAbstraction (A:=A) a S ->
+    BestAbstraction (A:=A) (fA a) {[ z | finv z ∈ S ]}.
+  Proof using Hf Hf' HfA HfA' Hmono Hmono' Hsound Hsound'.
+    move/(proj2 (is_alpha_iff_best_abstraction a S)).
+    move/(proj1 (is_alpha_bijection_iff a S)).
+    exact: (proj1 (is_alpha_iff_best_abstraction _ _)).
+  Qed.
+
+  (** The same, in [collecting_forward] form. *)
+  Lemma bijection_alpha_complete (a : A) (S : propset C) :
+    unary_alpha_complete A A fA (collecting_forward f) a S.
+  Proof using Hf Hf' HfA HfA' Hmono Hmono' Hsound Hsound'.
+    move=> Ha.
+    apply: (is_alpha_set_equiv _ _ _ (preimage_collecting_forward S)).
+    exact: (proj1 (is_alpha_bijection_iff a S) Ha).
+  Qed.
+
+End AbstractBijection.
+
+(** On a domain with [ExactOrder], ⊑ *is* γ-inclusion, so the two
+    monotonicity hypotheses of [Section AbstractBijection] come for free
+    from [bijection_gamma_pre] — which needs neither of them.  An instance
+    on such a domain therefore owes only soundness and the inverse
+    equations.  [cong_ad], [nbitv] and [nbkb] are all such domains.
+
+    Raw [itv] is not: two distinct γ-empty intervals are ⊑-incomparable,
+    so there the order has to be checked on the representation, which is
+    what [interval_opp_monotone] and [interval_lnot_monotone] do. *)
+Lemma bijection_monotone_of_exact_order {C : Type} (A : abstract_domain C)
+  `{!ExactOrder A} (f finv : C -> C) (fA fAinv : A -> A) :
+  (forall x, f (finv x) = x) ->
+  (forall a, fAinv (fA a) = a) ->
+  unary_overapproximation A A fA (collecting_forward f) ->
+  unary_overapproximation A A fAinv (collecting_forward finv) ->
+  forall a b : A, a ⊑[A] b -> fA a ⊑[A] fA b.
+Proof.
+  move=> Hf' HfA Hs Hs' a b Hab.
+  have [Ha _] := bijection_gamma_pre A f finv fA fAinv Hf' HfA Hs Hs' a.
+  have [_ Hb] := bijection_gamma_pre A f finv fA fAinv Hf' HfA Hs Hs' b.
+  apply/exact_order => z Hz.
+  apply: Hb. unfold_set.
+  apply: (proj1 (exact_order a b) Hab).
+  by move: (Ha _ Hz); unfold_set.
+Qed.
+
+(** A *sound* transfer function of a concrete *involution* [f] that is itself
+    an *involution* in the abstract is *exact*. Soundness gives
+    [f (γ a) ⊆ γ (fA a)]; applying soundness at [fA a] and the abstract
+    involution give [f x ∈ γ a] for [x ∈ γ (fA a)], whence the concrete
+    involution gives [x ∈ f (γ a)] — the missing inclusion. No monotonicity
+    is needed.
+
+    This is [bijection_exact] with each bijection its own inverse. *)
+Lemma sound_involutive_exact {C : Type} (A : abstract_domain C)
+  (f : C -> C) (fA : A -> A) :
+  (forall x, f (f x) = x) ->
+  (forall a, fA (fA a) = a) ->
+  unary_overapproximation A A fA (collecting_forward f) ->
+  unary_exact A A fA (collecting_forward f).
+Proof.
+  move=> Hf_inv HfA_inv Hsound.
+  exact: (bijection_exact A f f fA fA Hf_inv Hf_inv HfA_inv Hsound Hsound).
 Qed.
 
 

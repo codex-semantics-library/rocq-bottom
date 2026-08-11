@@ -7,7 +7,9 @@
 
 (* STATUS: add (Z.add): sound + exact + α-complete
      (cong_add_sound / cong_add_exact / cong_add_alpha_complete);
-   opp (Z.opp): exact (cong_opp_sound / cong_opp_exact);
+   opp (Z.opp): exact + α-complete (cong_opp_sound / cong_opp_exact /
+     cong_opp_alpha_complete, with best_abstraction_cong_opp and
+     is_alpha_cong_opp_iff);
    sub (Z.sub): exact (cong_sub_sound / cong_sub_exact). *)
 
 Require Import Abstraction AbstractLattice.
@@ -132,6 +134,57 @@ Proof.
   move=> [r m] c. unfold_set. move=> [k Hk].
   exists (-c). split; [|lia].
   exists (-k). lia.
+Qed.
+
+(** * α-transport through [Z.opp].
+
+    [cong_opp] is a bijection in the abstract realizing a bijection in the
+    concrete, so [Abstraction.v]'s [Section AbstractBijection] gives the
+    whole α layer.  None of it existed for this domain before: [cong_opp]
+    had soundness and exactness only. *)
+
+Lemma cong_opp_involutive (a : cong_ad) : cong_opp (cong_opp a) = a.
+Proof. by case: a => r m; rewrite /cong_opp Z.opp_involutive. Qed.
+
+(** [cong_ad] has [ExactOrder], so monotonicity needs no work on the
+    representation — unlike [interval_opp_monotone], which does. *)
+Lemma cong_opp_monotone (a b : cong_ad) :
+  a ⊑[cong_ad] b -> cong_opp a ⊑[cong_ad] cong_opp b.
+Proof.
+  exact: (bijection_monotone_of_exact_order cong_ad Z.opp Z.opp cong_opp cong_opp
+            Z.opp_involutive cong_opp_involutive cong_opp_sound cong_opp_sound a b).
+Qed.
+
+Lemma best_abstraction_cong_opp (a : cong_ad) (S : ℘ Z) :
+  BestAbstraction (A:=cong_ad) a S ->
+  BestAbstraction (A:=cong_ad) (cong_opp a) {[ z | -z ∈ S ]}.
+Proof.
+  exact: (best_abstraction_bijection cong_ad Z.opp Z.opp cong_opp cong_opp
+            Z.opp_involutive Z.opp_involutive
+            cong_opp_involutive cong_opp_involutive
+            cong_opp_monotone cong_opp_monotone
+            cong_opp_sound cong_opp_sound a S).
+Qed.
+
+Lemma is_alpha_cong_opp_iff (a : cong_ad) (S : ℘ Z) :
+  IsAlpha (A:=cong_ad) a S <->
+  IsAlpha (A:=cong_ad) (cong_opp a) {[ z | -z ∈ S ]}.
+Proof.
+  exact: (is_alpha_bijection_iff cong_ad Z.opp Z.opp cong_opp cong_opp
+            Z.opp_involutive Z.opp_involutive
+            cong_opp_involutive cong_opp_involutive
+            cong_opp_monotone cong_opp_monotone
+            cong_opp_sound cong_opp_sound a S).
+Qed.
+
+Lemma cong_opp_alpha_complete (a : cong_ad) (S : ℘ Z) :
+  unary_alpha_complete cong_ad cong_ad cong_opp (collecting_forward Z.opp) a S.
+Proof.
+  exact: (bijection_alpha_complete cong_ad Z.opp Z.opp cong_opp cong_opp
+            Z.opp_involutive Z.opp_involutive
+            cong_opp_involutive cong_opp_involutive
+            cong_opp_monotone cong_opp_monotone
+            cong_opp_sound cong_opp_sound a S).
 Qed.
 
 Lemma cong_opp_exact:

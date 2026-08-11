@@ -280,29 +280,72 @@ Qed.
     counterpart of [c ↦ c + K], and the engine behind the constant-divisor
     [rem] case below (with [K = -(n*q)]). Modelled on
     [ZIntervalTheory.best_abstraction_opp]. *)
+(** [itv_add_const K] and [itv_add_const (- K)] are mutually inverse: the
+    abstract half of the bijection data. *)
+Lemma itv_add_const_inv (K : Z) (i : interval) :
+  itv_add_const (- K) (itv_add_const K i) = i.
+Proof.
+  rewrite itv_add_const_compose.
+  have -> : K + - K = 0 by lia.
+  exact: itv_add_const_0.
+Qed.
+
+Lemma itv_add_const_inv' (K : Z) (i : interval) :
+  itv_add_const K (itv_add_const (- K) i) = i.
+Proof.
+  rewrite itv_add_const_compose.
+  have -> : - K + K = 0 by lia.
+  exact: itv_add_const_0.
+Qed.
+
+Lemma itv_add_const_monotone (K : Z) (a b : interval) :
+  a ⊑[itv] b -> itv_add_const K a ⊑[itv] itv_add_const K b.
+Proof.
+  rewrite /itv_add_const /add_const_bound.
+  move: a b => [[|la] [|ha]] [[|lb] [|hb]] //=; try lia.
+  all: rewrite /BoundAbstraction.GLB.glb_is_included; lia.
+Qed.
+
+Lemma itv_add_const_sound (K : Z) :
+  unary_overapproximation itv itv (itv_add_const K)
+    (collecting_forward (fun z => z + K)).
+Proof.
+  move=> a z; unfold_set => -[c [Hc <-]].
+  apply/itv_add_const_gamma.
+  have -> : c + K - K = c by lia.
+  exact: Hc.
+Qed.
+
+(** The [(+K)]-image of a set and the [(-K)]-preimage are the same set;
+    the generic transport is stated on the preimage, the client on the
+    image. *)
+Lemma collecting_add_const_preimage (K : Z) (S : ℘ Z) :
+  {[ z | z - K ∈ S ]} ⊆⊇ collecting_binary_forward Z.add S {[ x | x = K ]}.
+Proof.
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> Hz. exists (z - K), K. repeat split=> //. lia.
+  - move=> [c2 [c1 [Hc2 [Hc1 Heq]]]]; subst c1.
+    have -> : z - K = c2 by lia.
+    exact: Hc2.
+Qed.
+
 Lemma itv_add_const_best (K : Z) (i : interval) (S : ℘ Z) :
   BestAbstraction (A:=itv) i S ->
   BestAbstraction (A:=itv) (itv_add_const K i)
     (collecting_binary_forward Z.add S {[ x | x = K ]}).
 Proof.
-  move=> [Hsound Hopt]; apply best_abstraction_iff; split.
-  - (* Soundness: z = c2 + K with c2 ∈ S ⊆ γ i, so z ∈ γ(itv_add_const K i). *)
-    move=> z [c2 [c1 [Hc2 [Hc1 Heq]]]].
-    move/propset_elem_of_iff: Hc1 => ?; subst c1.
-    apply/itv_add_const_gamma.
-    have -> : z - K = c2 by lia.
-    exact: Hsound.
-  - (* Optimality: shift any competitor b back by -K to land below S. *)
-    move=> b Hb.
-    have Hb' : Overapproximates (A:=itv) (itv_add_const (- K) b) S.
-    { move=> s Hs; apply/itv_add_const_gamma.
-      have -> : s - - K = s + K by lia.
-      apply: Hb. exists s, K.
-      split; [exact: Hs | split; [by apply/propset_elem_of_iff | lia]]. }
-    move: (Hopt _ Hb') => {Hsound Hopt Hb Hb'}.
-    rewrite /itv_add_const /add_const_bound.
-    move: i b => [[|li] [|hi]] [[|lb] [|hb]] //=; try lia.
-    all: rewrite /BoundAbstraction.GLB.glb_is_included; lia.
+  move=> Hbest.
+  have Hpre : BestAbstraction (A:=itv) (itv_add_const K i) {[ z | z - K ∈ S ]}.
+  { have Hf : forall x, x + K - K = x by move=> x; lia.
+    have Hf' : forall x, x - K + K = x by move=> x; lia.
+    exact: (best_abstraction_bijection itv
+              (fun z => z + K) (fun z => z - K)
+              (itv_add_const K) (itv_add_const (- K))
+              Hf Hf' (itv_add_const_inv K) (itv_add_const_inv' K)
+              (itv_add_const_monotone K) (itv_add_const_monotone (- K))
+              (itv_add_const_sound K) (itv_add_const_sound (- K))
+              i S Hbest). }
+  exact: (best_abstraction_equiv _ _ _ Hpre (collecting_add_const_preimage K S)).
 Qed.
 
 (** *** Constant-divisor, single-block case — best interval.

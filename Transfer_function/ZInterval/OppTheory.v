@@ -59,44 +59,42 @@ Section Interval_opp.
               Z.opp_involutive interval_opp_involutive interval_opp_sound).
   Qed.
 
+  (** [interval_opp] preserves ⊑.  Raw [itv] has no [ExactOrder], so this
+      has to be checked on the bounds. *)
+  Lemma interval_opp_monotone (a b : interval) :
+    a ⊑[itv] b -> interval_opp a ⊑[itv] interval_opp b.
+  Proof.
+    move: a b => [[|la] [|ha]] [[|lb] [|hb]] //=; try lia.
+    all: rewrite /GLB.glb_is_included; lia.
+  Qed.
+
+  (** The rest of this section is [Section AbstractBijection] instantiated
+      at [Z.opp] / [interval_opp], each its own inverse.  The names and
+      statements are unchanged; only the proofs are now shared with
+      [Z.lnot] and with the translation [c ↦ c + K]. *)
+
   (** Best abstraction transfers through Z.opp:
       if a is best for S, then opp(a) is best for {z | -z ∈ S}. *)
   Lemma best_abstraction_opp (a : interval) (S : propset Z) :
     BestAbstraction (A:=itv) a S ->
     BestAbstraction (A:=itv) (interval_opp a) {[ z | (-z) ∈ S ]}.
   Proof.
-    move=> [Hsound Hopt]; apply best_abstraction_iff; split.
-    - (* Soundness: (-z) ∈ S ⊆ γ(a), so z ∈ γ(opp(a)) *)
-      move=> z; rewrite propset_elem_of_iff => Hz.
-      { apply interval_opp_exact. unfold collecting_forward.
-        unfold_set. exists (-z).
-        split; [by apply Hsound | lia ]. }
-    - (* Optimality: opp(b) overapproximates S, so a ⊑ opp(b) *)
-      move=> b Hb.
-      have Hb': Overapproximates (A:=itv) (interval_opp b) S.
-      { move=> z Hz; apply interval_opp_exact. unfold collecting_forward.
-        to_set in Hb. unfold_set. exists (-z).
-        split.
-        + apply Hb; unfold_set. by replace (- -z) with z by lia.
-        + lia. }
-      move: (Hopt _ Hb') => {Hsound Hopt Hb Hb'}.
-      move: a b => [[|la] [|ha]] [[|lb] [|hb]] //=; try lia.
-      all: rewrite /GLB.glb_is_included; lia.
+    exact: (best_abstraction_bijection itv Z.opp Z.opp interval_opp interval_opp
+              Z.opp_involutive Z.opp_involutive
+              interval_opp_involutive interval_opp_involutive
+              interval_opp_monotone interval_opp_monotone
+              interval_opp_sound interval_opp_sound a S).
   Qed.
 
   Lemma propset_opp_involutive (S : ℘ Z) :
     {[ z | -z ∈ {[ z' | -z' ∈ S ]} ]} ⊆⊇ S.
   Proof.
-    split=> z; unfold_set => H; by replace (- -z) with z in * by lia.
+    exact: (propset_preimage_cancel Z.opp Z.opp Z.opp_involutive S).
   Qed.
 
   (** Map a set equivalence through [Z.opp]. *)
   Lemma propset_opp_equiv (S S' : ℘ Z) : S ⊆⊇ S' -> {[z | -z ∈ S]} ⊆⊇ {[z | -z ∈ S']}.
-  Proof.
-    move=> [H H']. split => z Hz; unfold_set in Hz; unfold_set.
-    - exact: (H _ Hz).
-    - exact: (H' _ Hz).
-  Qed.
+  Proof. exact: (propset_preimage_equiv Z.opp S S'). Qed.
 
   (** Solving an equivalence for the negated side: an operation that commutes
       with negation states its commutation as [f (-S) ⊆⊇ -(f S)], but what the
@@ -107,25 +105,36 @@ Section Interval_opp.
   Lemma propset_opp_equiv_inv (S S' : ℘ Z) :
     S ⊆⊇ {[ z | -z ∈ S' ]} -> {[ z | -z ∈ S ]} ⊆⊇ S'.
   Proof.
-    move=> H. transitivity {[ z | -z ∈ {[ z' | -z' ∈ S' ]} ]}.
-    - exact: propset_opp_equiv.
-    - exact: propset_opp_involutive.
+    exact: (propset_preimage_equiv_inv Z.opp Z.opp Z.opp_involutive S S').
   Qed.
 
   (** Non-emptiness transports through [Z.opp], for the existence hypotheses of
       the quarter transports. *)
   Lemma opp_nonempty (S : ℘ Z) : (exists c, c ∈ S) -> exists c, c ∈ {[ z | -z ∈ S ]}.
-  Proof. move=> [c Hc]. exists (-c). by unfold_set; replace (- - c) with c by lia. Qed.
+  Proof. exact: (preimage_nonempty Z.opp Z.opp Z.opp_involutive S). Qed.
 
   (** IsAlpha transports through interval_opp / Z.opp on both sides, since
       opp is an involutive bijection (concrete and abstract) and exact. *)
   Lemma is_alpha_opp_iff (a : interval) (S : ℘ Z) :
     IsAlpha (A:=itv) a S <-> IsAlpha (A:=itv) (interval_opp a) {[ z | -z ∈ S ]}.
   Proof.
-    rewrite !is_alpha_iff_best_abstraction. split.
-    - exact: best_abstraction_opp.
-    - move/best_abstraction_opp. rewrite interval_opp_involutive => Hba.
-      exact: (best_abstraction_equiv _ _ _ Hba (propset_opp_involutive _)).
+    exact: (is_alpha_bijection_iff itv Z.opp Z.opp interval_opp interval_opp
+              Z.opp_involutive Z.opp_involutive
+              interval_opp_involutive interval_opp_involutive
+              interval_opp_monotone interval_opp_monotone
+              interval_opp_sound interval_opp_sound a S).
+  Qed.
+
+  (** α-completeness in [collecting_forward] form.  [Z.lnot] had this and
+      [Z.opp] did not; the generic section gives both. *)
+  Lemma interval_opp_alpha_complete (a : interval) (S : ℘ Z) :
+    unary_alpha_complete itv itv interval_opp (collecting_forward Z.opp) a S.
+  Proof.
+    exact: (bijection_alpha_complete itv Z.opp Z.opp interval_opp interval_opp
+              Z.opp_involutive Z.opp_involutive
+              interval_opp_involutive interval_opp_involutive
+              interval_opp_monotone interval_opp_monotone
+              interval_opp_sound interval_opp_sound a S).
   Qed.
 
   (** Negating a sign-definite interval flips its type.  Only the proofs need
