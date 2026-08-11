@@ -119,6 +119,17 @@ Definition non_bottomb (i : interval) : bool :=
   | (WithTop.NotTop l, WithTop.NotTop h) => Z.leb l h
   end.
 
+(** Join that tolerates γ-empty operands, by letting them act as identities.
+
+    [join] itself is not a least upper bound once γ-empty intervals are ordered
+    below everything: [(1,0)] is γ-empty, so [(1,0) ⊑ (2,3)], yet
+    [join (1,0) (2,3) = (1,3)] is not. Guarding on [non_bottomb] repairs that,
+    and this is exactly the join of the collapsed-bottom interval domain
+    ([itv_canon_join_eq], [ZIntervalTheory.v]) — which is where it gets
+    [JoinIsLUB], and with it the α-completeness of any sign split built on it. *)
+Definition join_possibly_bottom (a b : interval) : interval :=
+  if non_bottomb a then if non_bottomb b then join a b else a else b.
+
 (** Boolean membership tests: [itv_gammab i z] decides [z ∈ γ i]. The
     bounds are annotated [Z] rather than [glb] / [lub], which are the
     [Z_CL]-derived lattices; the reflection instances are in

@@ -513,19 +513,26 @@ Proof.
   apply propset_equiv_empty_iff. exact: Hn.
 Qed.
 
-(** Decidability of γ-emptiness for intervals. *)
-Definition itv_is_empty_dec (i : itv) :
-  {CollapsedBottom.is_empty itv i} + {~ CollapsedBottom.is_empty itv i}.
+(** γ-emptiness of an interval, in the form [CollapsedBottom] asks. *)
+Lemma itv_is_empty_iff (i : interval) :
+  CollapsedBottom.is_empty itv i <-> non_bottomb i = false.
 Proof.
-  unfold CollapsedBottom.is_empty.
-  case: (non_bottombP i) => [Hnb | Hnb].
-  - right. unfold_set. move=> Hsub.
-    rewrite non_bottom_non_empty in Hnb.
-    move: Hnb => [c Hc].
-    exact: (proj1 Hsub c Hc).
-  - left. apply propset_equiv_empty_iff. move=> [c Hc].
-    apply: Hnb. apply/non_bottom_non_empty. by exists c.
+  rewrite /CollapsedBottom.is_empty propset_equiv_empty_iff -non_bottom_non_empty.
+  split=> [H | E H].
+  - by case: (non_bottombP i) => // Hnb; case: (H Hnb).
+  - by move: H => /non_bottombP; rewrite E.
 Qed.
+
+(** The decision procedure [CollapsedBottom] takes as a parameter. Must be
+    transparent. *)
+Definition itv_is_empty_dec (i : itv) :
+  {CollapsedBottom.is_empty itv i} + {~ CollapsedBottom.is_empty itv i} :=
+  match Sumbool.sumbool_of_bool (non_bottomb i) with
+  | left E => right (fun H => Bool.diff_true_false
+                                (eq_trans (eq_sym E)
+                                   (proj1 (itv_is_empty_iff i) H)))
+  | right E => left (proj2 (itv_is_empty_iff i) E)
+  end.
 
 (** Exact order on non-empty intervals: γ-inclusion implies abstract
     inclusion. Needed for [CollapsedBottom_ExactOrder].
@@ -563,6 +570,48 @@ Proof. apply CollapsedBottom.CollapsedBottom_JoinIsLUB. apply _. Qed.
 
 Global Instance itv_canon_exact_order : ExactOrder itv_canon_ad.
 Proof. apply CollapsedBottom.CollapsedBottom_ExactOrder. exact: itv_is_empty_dec. exact: itv_exact_pos. Qed.
+
+(** [⊔[itv_canon_ajsl]] is built from the [sumbool] [itv_is_empty_dec], whose
+    [Prop] payload has no business in code.  This identifies it with the
+    boolean-guarded [join_possibly_bottom] ([ZInterval.v]), so an operation may
+    be written with the latter and reasoned about with the former — in
+    particular inheriting [itv_canon_join_is_lub]. *)
+Lemma itv_canon_join_eq (a b : interval) :
+  a ⊔[itv_canon_ajsl] b = join_possibly_bottom a b.
+Proof.
+  rewrite /(_ ⊔[itv_canon_ajsl] _) /= /CollapsedBottom.join_lub_compat
+          /itv_is_empty_dec /join_possibly_bottom.
+  by case: (Sumbool.sumbool_of_bool (non_bottomb a)) => -> //;
+     case: (Sumbool.sumbool_of_bool (non_bottomb b)) => ->.
+Qed.
+
+(** Being a best abstraction on [itv_canon_ad] is being a *sound* one that is
+    additionally best on [itv] whenever it is non-bottom. *)
+Lemma is_alpha_itv_canon_iff (a : interval) (S : ℘ Z) :
+  IsAlpha (A:=itv_canon_ad) a S <->
+  S ⊆ γ[itv] a /\ (non_bottomb a = true -> IsAlpha (A:=itv) a S).
+Proof.
+  split.
+  - move=> Hc; split.
+    { apply: (proj2 (Hc a)). reflexivity. }
+    move=> Ea. have Hne : ~ CollapsedBottom.is_empty itv a
+      by move=> /(proj1 (itv_is_empty_iff a)); rewrite Ea.
+    move=> b; split.
+    + move=> HS. by case: (proj1 (Hc b) HS) => [/Hne [] | Hle].
+    + move=> Hle. exact: (proj2 (Hc b) (or_intror Hle)).
+  - move=> [Hsub HT].
+    case Ea : (non_bottomb a); last first.
+    + have Hemp := proj2 (itv_is_empty_iff a) Ea.
+      move=> b; split=> _; last by move=> z /Hsub /(proj1 Hemp) [].
+      by left.
+    + have Ha := HT Ea.
+      have Hne : ~ CollapsedBottom.is_empty itv a
+        by move=> /(proj1 (itv_is_empty_iff a)); rewrite Ea.
+      move=> b; split.
+      * move=> HS. right. exact: (proj1 (Ha b) HS).
+      * case=> [Hemp | Hle]; first by case: (Hne Hemp).
+        exact: (proj2 (Ha b) Hle).
+Qed.
 
 (** Non-bottom intervals are maximally reduced on [itv]. ExactOrder on
     the non-bottom subtype [nbitv] is the source — the only extra step
