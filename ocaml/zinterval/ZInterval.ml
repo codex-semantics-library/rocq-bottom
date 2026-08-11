@@ -100,6 +100,11 @@ let non_bottomb = function
       | WithTop.Top -> true
       | WithTop.NotTop h -> Z.leq l h))
 
+(** val join_possibly_bottom : interval -> interval -> interval **)
+
+let join_possibly_bottom a b =
+  if non_bottomb a then if non_bottomb b then join a b else a else b
+
 (** val itv_gammab : interval -> Z.t -> bool **)
 
 let itv_gammab i z =
