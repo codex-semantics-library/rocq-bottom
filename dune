@@ -4,6 +4,11 @@
 
 (include_subdirs qualified)
 
+(env
+ (timing
+  (coq
+   (flags :standard -time))))
+
 (coq.theory
  (name RocqBottom)
  ; ssreflect / ZArith / Lia / Utf8 live in the installed Stdlib theory.

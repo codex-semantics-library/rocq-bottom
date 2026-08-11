@@ -1,0 +1,6 @@
+(include_subdirs no)
+
+(executable
+ (name parse_time)
+ (modules parse_time)
+ (libraries str))

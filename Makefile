@@ -1,7 +1,7 @@
 # Convenience wrapper around the dune build (see dune-project / dune).
 # dune is the real build system; every target just forwards to it.
 
-.PHONY: all clean doc tags validate artifact
+.PHONY: all clean doc tags validate artifact timing
 
 # No CPU cap by default, as a slow machine could hang on it with a baffling
 # error message. This is useful during development (e.g. firstorder proofs can
@@ -13,6 +13,18 @@ all:
 
 debug-build:
 	dune build --display=verbose -j 1
+
+# Per-file compile-time report. Builds with --profile timing, which adds
+# -time to the coq flags via the (env (timing (coq (flags ...)))) stanza in
+# dune, so rocq prints per-sentence timings. Runs single-threaded and clean
+# (dune clean first) so the per-sentence blocks attribute to files reliably,
+# then pipes through the parse_time OCaml executable for a descending table.
+timing:
+	@set -e; dune clean; \
+	dune build --profile timing -j 1 > /tmp/rocq_timing.log 2>&1; \
+	dune build timing/parse_time.exe; \
+	_build/default/timing/parse_time.exe . < /tmp/rocq_timing.log; \
+	rm -f /tmp/rocq_timing.log
 
 # Whole-theory HTML documentation, generated into doc/.
 #
