@@ -272,54 +272,62 @@ Definition interval_quot_across_neg (i2 : interval) (i1 : neg_interval) : interv
     halves are sign-definite by construction, which is what the two
     obligations say. *)
 
-Program Definition interval_quot_pos_across (i2 : interval) (i1 : across_interval)
-  : interval :=
-  let '(l1, h1) := i1 in
-  ZInterval.join
-    (interval_quot_pos_neg i2 (l1, WithTop.NotTop (-1)))
-    (interval_quot_pos i2 (WithTop.NotTop 1, h1)).
+Definition interval_quot_pos_across (i2 : interval)
+  (n : neg_interval) (p : pos_interval) : interval :=
+  ZInterval.join (interval_quot_pos_neg i2 n) (interval_quot_pos i2 p).
 
-Program Definition interval_quot_neg_across (i2 : interval) (i1 : across_interval)
-  : interval :=
-  let '(l1, h1) := i1 in
-  ZInterval.join
-    (interval_quot_neg_neg i2 (l1, WithTop.NotTop (-1)))
-    (interval_quot_neg_pos i2 (WithTop.NotTop 1, h1)).
+Definition interval_quot_neg_across (i2 : interval)
+  (n : neg_interval) (p : pos_interval) : interval :=
+  ZInterval.join (interval_quot_neg_neg i2 n) (interval_quot_neg_pos i2 p).
 
-(** Optimized across-divisor functions (moved here so across_across can use them). *)
+Definition interval_quot_across_across (i2 : interval)
+  (n : neg_interval) (p : pos_interval) : interval :=
+  ZInterval.join (interval_quot_across_neg i2 n) (interval_quot_across_pos i2 p).
+
+(** Optimized across-divisor functions.  These are ∓1-specific: they answer
+    [[-h2, h2]] without dividing, which is right only when the divisor is known
+    to contain both -1 and 1.  A domain with a sharper snap must not use them —
+    [[0,10] ÷ {-3,1}] is [[-3,10]], not [[-10,10]] — which is why the general
+    forms above take the halves and these keep the [across_interval]. *)
 Definition interval_quot_pos_across_opt (i2 : interval) (i1 : across_interval) : interval :=
   let (_, h2) := i2 in (bound_opp h2, h2).
 
 Definition interval_quot_neg_across_opt (i2 : interval) (i1 : across_interval) : interval :=
   let (l2, _) := i2 in (l2, bound_opp l2).
 
-Definition interval_quot_across_across (i2 : interval) (i1 : across_interval) : interval :=
+Definition interval_quot_across_across_opt (i2 : interval) (i1 : across_interval) : interval :=
   let (l2, h2) := i2 in
   ZInterval.join
     (interval_quot_neg_across_opt (l2, WithTop.NotTop 0) i1)
     (interval_quot_pos_across_opt (WithTop.NotTop 0, h2) i1).
 
-Definition interval_quot_unopt (i2 : interval) (i1 : nb_interval) : interval :=
-  match classify_divisor i1 with
-  | DivZero => ZInterval.bottom
-  | DivPos i1_san =>
+(** The chain, now driven by a [divisor_snap] rather than by [classify_divisor]
+    of an interval.  The body is unchanged — one dispatch on the divisor's sign
+    class, one on the dividend's, one quotient per live half — but the crossing
+    case reads its two halves off the constructor instead of capping the
+    interval at ∓1, so any domain that can produce a [divisor_snap] inherits
+    the whole thing.  [itv_divisor_snap] ([ZIntervalTheory.v]) is the interval's
+    producer; [ZIntervalCongruence] supplies a sharper one. *)
+Definition interval_quot_unopt (i2 : interval) (d : divisor_snap) : interval :=
+  match d with
+  | SnapZero => ZInterval.bottom
+  | SnapPos p =>
       match classify i2 with
-      | Pos    => interval_quot_pos i2 i1_san
-      | Neg    => interval_quot_neg_pos i2 i1_san
-      | Across => interval_quot_across_pos i2 i1_san
+      | Pos    => interval_quot_pos i2 p
+      | Neg    => interval_quot_neg_pos i2 p
+      | Across => interval_quot_across_pos i2 p
       end
-  | DivNeg i1_san =>
+  | SnapNeg n =>
       match classify i2 with
-      | Pos    => interval_quot_pos_neg i2 i1_san
-      | Neg    => interval_quot_neg_neg i2 i1_san
-      | Across => interval_quot_across_neg i2 i1_san
+      | Pos    => interval_quot_pos_neg i2 n
+      | Neg    => interval_quot_neg_neg i2 n
+      | Across => interval_quot_across_neg i2 n
       end
-  | DivAcross Hl Hh =>
-      let i1_san := exist _ (`i1) (conj Hl Hh) : across_interval in
+  | SnapAcross n p =>
       match classify i2 with
-      | Pos    => interval_quot_pos_across i2 i1_san
-      | Neg    => interval_quot_neg_across i2 i1_san
-      | Across => interval_quot_across_across i2 i1_san
+      | Pos    => interval_quot_pos_across i2 n p
+      | Neg    => interval_quot_neg_across i2 n p
+      | Across => interval_quot_across_across i2 n p
       end
   end.
 
@@ -761,29 +769,24 @@ Qed.
     [_abstract] corollary below. *)
 
 Lemma interval_quot_pos_across_split_alpha_complete
-    (l2 : Z) (h2 l1 h1 : WithTop.with_top Z) (m p : Z)
-    (Hm : m < 0) (Hp : 0 < p)
-    (Hnbn : non_bottom (l1, WithTop.NotTop m))
-    (Hnbp : non_bottom (WithTop.NotTop p, h1))
+    (l2 : Z) (h2 : WithTop.with_top Z) (n : neg_interval) (p : pos_interval)
     (S2 S1 : ℘ Z) :
   0 <= l2 ->
   (exists c, c ∈ S2) ->
-  m ∈ S1 -> p ∈ S1 ->
+  (exists c, c ∈ S1 /\ c < 0) -> (exists c, c ∈ S1 /\ 0 < c) ->
   IsAlpha (A:=itv) (WithTop.NotTop l2, h2) S2 ->
-  IsAlpha (A:=itv) (l1, WithTop.NotTop m) {[ z | z ∈ S1 /\ z < 0 ]} ->
-  IsAlpha (A:=itv) (WithTop.NotTop p, h1) {[ z | z ∈ S1 /\ 0 < z ]} ->
+  IsAlpha (A:=itv) (`n) {[ z | z ∈ S1 /\ z < 0 ]} ->
+  IsAlpha (A:=itv) (`p) {[ z | z ∈ S1 /\ 0 < z ]} ->
   IsAlpha (A:=itv)
-    (ZInterval.join
-       (interval_quot_pos_neg (WithTop.NotTop l2, h2) (neg_itv l1 m Hm Hnbn))
-       (interval_quot_pos (WithTop.NotTop l2, h2) (pos_itv p h1 Hp Hnbp)))
+    (interval_quot_pos_across (WithTop.NotTop l2, h2) n p)
     (collecting_quot S2 S1).
 Proof.
-  move=> Hl2 Hex2 HmS HpS Ha2 Han Hap.
+  move=> Hl2 Hex2 [m [HmS Hm]] [q [HqS Hq]] Ha2 Han Hap.
   have Hexn : exists c, c ∈ {[ z | z ∈ S1 /\ z < 0 ]} by exists m; unfold_set; split.
-  have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 < z ]} by exists p; unfold_set; split.
-  have Hn := interval_quot_pos_neg_alpha_complete l2 h2 (neg_itv l1 m Hm Hnbn)
+  have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 < z ]} by exists q; unfold_set; split.
+  have Hn := interval_quot_pos_neg_alpha_complete l2 h2 n
                S2 {[ z | z ∈ S1 /\ z < 0 ]} Hl2 Hex2 Hexn Ha2 Han.
-  have Hp' := interval_quot_pos_alpha_complete l2 h2 (pos_itv p h1 Hp Hnbp)
+  have Hp' := interval_quot_pos_alpha_complete l2 h2 p
                 S2 {[ z | z ∈ S1 /\ 0 < z ]} Hl2 Hex2 Hexp Ha2 Hap.
   apply: (is_alpha_join_split _ _ _ _ _ _ _ Hn Hp').
   exact: (collecting_quot_split_divisor_set S2 S1).
@@ -791,29 +794,24 @@ Qed.
 
 (** Mirror, for a non-positive dividend. *)
 Lemma interval_quot_neg_across_split_alpha_complete
-    (l2 : WithTop.with_top Z) (h2 : Z) (l1 h1 : WithTop.with_top Z) (m p : Z)
-    (Hm : m < 0) (Hp : 0 < p)
-    (Hnbn : non_bottom (l1, WithTop.NotTop m))
-    (Hnbp : non_bottom (WithTop.NotTop p, h1))
+    (l2 : WithTop.with_top Z) (h2 : Z) (n : neg_interval) (p : pos_interval)
     (S2 S1 : ℘ Z) :
   h2 <= 0 ->
   (exists c, c ∈ S2) ->
-  m ∈ S1 -> p ∈ S1 ->
+  (exists c, c ∈ S1 /\ c < 0) -> (exists c, c ∈ S1 /\ 0 < c) ->
   IsAlpha (A:=itv) (l2, WithTop.NotTop h2) S2 ->
-  IsAlpha (A:=itv) (l1, WithTop.NotTop m) {[ z | z ∈ S1 /\ z < 0 ]} ->
-  IsAlpha (A:=itv) (WithTop.NotTop p, h1) {[ z | z ∈ S1 /\ 0 < z ]} ->
+  IsAlpha (A:=itv) (`n) {[ z | z ∈ S1 /\ z < 0 ]} ->
+  IsAlpha (A:=itv) (`p) {[ z | z ∈ S1 /\ 0 < z ]} ->
   IsAlpha (A:=itv)
-    (ZInterval.join
-       (interval_quot_neg_neg (l2, WithTop.NotTop h2) (neg_itv l1 m Hm Hnbn))
-       (interval_quot_neg_pos (l2, WithTop.NotTop h2) (pos_itv p h1 Hp Hnbp)))
+    (interval_quot_neg_across (l2, WithTop.NotTop h2) n p)
     (collecting_quot S2 S1).
 Proof.
-  move=> Hh2 Hex2 HmS HpS Ha2 Han Hap.
+  move=> Hh2 Hex2 [m [HmS Hm]] [q [HqS Hq]] Ha2 Han Hap.
   have Hexn : exists c, c ∈ {[ z | z ∈ S1 /\ z < 0 ]} by exists m; unfold_set; split.
-  have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 < z ]} by exists p; unfold_set; split.
-  have Hn := interval_quot_neg_neg_alpha_complete l2 h2 (neg_itv l1 m Hm Hnbn)
+  have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 < z ]} by exists q; unfold_set; split.
+  have Hn := interval_quot_neg_neg_alpha_complete l2 h2 n
                S2 {[ z | z ∈ S1 /\ z < 0 ]} Hh2 Hex2 Hexn Ha2 Han.
-  have Hp' := interval_quot_neg_pos_alpha_complete l2 h2 (pos_itv p h1 Hp Hnbp)
+  have Hp' := interval_quot_neg_pos_alpha_complete l2 h2 p
                 S2 {[ z | z ∈ S1 /\ 0 < z ]} Hh2 Hex2 Hexp Ha2 Hap.
   apply: (is_alpha_join_split _ _ _ _ _ _ _ Hn Hp').
   exact: (collecting_quot_split_divisor_set S2 S1).
@@ -828,13 +826,15 @@ Lemma interval_quot_pos_across_best
   0 <= l2 -> (exists c, c ∈ S2) ->
   IsAlpha (A:=itv) (WithTop.NotTop l2, h2) S2 ->
   IsAlpha (A:=itv)
-    (interval_quot_pos_across (WithTop.NotTop l2, h2) i1)
+    (interval_quot_pos_across (WithTop.NotTop l2, h2)
+       (across_neg_itv i1) (across_pos_itv i1))
     (collecting_quot S2 (γ[itv] (`i1))).
 Proof.
   move: i1 => [[l1 h1] [Hl1 Hh1]] Hl2 Hex2 Ha2; simpl in Hl1, Hh1.
   have [Hm1 [Hnbn Hnm]] := across_neg_half_alpha l1 h1 Hl1 Hh1.
   have [Hp1 [Hnbp Hpm]] := across_pos_half_alpha l1 h1 Hl1 Hh1.
-  apply: interval_quot_pos_across_split_alpha_complete; first [assumption | lia].
+  apply: interval_quot_pos_across_split_alpha_complete => //;
+    by [ exists (-1) | exists 1 ].
 Qed.
 
 (** Mirror: divisor crossing 0, dividend non-positive. *)
@@ -843,13 +843,15 @@ Lemma interval_quot_neg_across_best
   h2 <= 0 -> (exists c, c ∈ S2) ->
   IsAlpha (A:=itv) (l2, WithTop.NotTop h2) S2 ->
   IsAlpha (A:=itv)
-    (interval_quot_neg_across (l2, WithTop.NotTop h2) i1)
+    (interval_quot_neg_across (l2, WithTop.NotTop h2)
+       (across_neg_itv i1) (across_pos_itv i1))
     (collecting_quot S2 (γ[itv] (`i1))).
 Proof.
   move: i1 => [[l1 h1] [Hl1 Hh1]] Hh2 Hex2 Ha2; simpl in Hl1, Hh1.
   have [Hm1 [Hnbn Hnm]] := across_neg_half_alpha l1 h1 Hl1 Hh1.
   have [Hp1 [Hnbp Hpm]] := across_pos_half_alpha l1 h1 Hl1 Hh1.
-  apply: interval_quot_neg_across_split_alpha_complete; first [assumption | lia].
+  apply: interval_quot_neg_across_split_alpha_complete => //;
+    by [ exists (-1) | exists 1 ].
 Qed.
 
 
@@ -865,11 +867,13 @@ Lemma interval_quot_pos_across_opt_eq
     (l2 : Z) (h2 : WithTop.with_top Z) (i1 : across_interval) :
   0 <= l2 -> non_bottom (WithTop.NotTop l2, h2) ->
   interval_quot_pos_across_opt (WithTop.NotTop l2, h2) i1
-  = interval_quot_pos_across (WithTop.NotTop l2, h2) i1.
+  = interval_quot_pos_across (WithTop.NotTop l2, h2)
+      (across_neg_itv i1) (across_pos_itv i1).
 Proof.
   move: i1 => [[l1 h1] [Hl1 Hh1]]; simpl in Hl1, Hh1.
   move: Hl1 Hh1; case: l1 => [|l1]; case: h1 => [|h1]; case: h2 => [|h2] Hl1 Hh1 Hl2 Hnb;
     rewrite /interval_quot_pos_across_opt /interval_quot_pos_across
+            /across_neg_itv /across_pos_itv /neg_itv /pos_itv
             /interval_quot_pos_neg /interval_quot_pos /=;
     quot_join_compute.
   (* The four finite-[h2] goals: each end of the join is the one the ±1
@@ -884,11 +888,13 @@ Lemma interval_quot_neg_across_opt_eq
     (l2 : WithTop.with_top Z) (h2 : Z) (i1 : across_interval) :
   h2 <= 0 -> non_bottom (l2, WithTop.NotTop h2) ->
   interval_quot_neg_across_opt (l2, WithTop.NotTop h2) i1
-  = interval_quot_neg_across (l2, WithTop.NotTop h2) i1.
+  = interval_quot_neg_across (l2, WithTop.NotTop h2)
+      (across_neg_itv i1) (across_pos_itv i1).
 Proof.
   move: i1 => [[l1 h1] [Hl1 Hh1]]; simpl in Hl1, Hh1.
   move: Hl1 Hh1; case: l1 => [|l1]; case: h1 => [|h1]; case: l2 => [|l2] Hl1 Hh1 Hh2 Hnb;
     rewrite /interval_quot_neg_across_opt /interval_quot_neg_across
+            /across_neg_itv /across_pos_itv /neg_itv /pos_itv
             /interval_quot_neg_neg /interval_quot_neg_pos
             /interval_quot_pos /=;
     quot_join_compute.
@@ -897,29 +903,48 @@ Proof.
   all: quot_signs; lia.
 Qed.
 
-Definition classified_interval {i : interval} (c : divisor_classification i) : interval :=
-  match c with
-  | DivPos p => `p
-  | DivNeg n => `n
-  | DivZero => ZInterval.bottom
-  | DivAcross _ _ => i
-  end.
+(** Both operands crossing 0.  The two ∓1 halves each contribute one end: a
+    divisor of [1] carries the dividend through unchanged, a divisor of [-1]
+    carries its negation, and the join of those is what the flat form returns
+    without dividing. *)
+Lemma interval_quot_across_across_opt_eq
+    (l2 h2 : WithTop.with_top Z) (i1 : across_interval) :
+  0 ∈ γ[glbtop] l2 -> 0 ∈ γ[lubtop] h2 ->
+  interval_quot_across_across_opt (l2, h2) i1
+  = interval_quot_across_across (l2, h2) (across_neg_itv i1) (across_pos_itv i1).
+Proof.
+  move: i1 => [[l1 h1] [Hl1 Hh1]]; simpl in Hl1, Hh1.
+  move: Hl1 Hh1; case: l1 => [|l1]; case: h1 => [|h1];
+    case: l2 => [|l2]; case: h2 => [|h2] Hl1 Hh1 Hl2 Hh2;
+    rewrite /interval_quot_across_across_opt /interval_quot_across_across
+            /interval_quot_neg_across_opt /interval_quot_pos_across_opt
+            /interval_quot_across_neg /interval_quot_across_pos
+            /across_neg_itv /across_pos_itv /neg_itv /pos_itv
+            /interval_quot_neg_neg /interval_quot_pos_neg
+            /interval_quot_neg_pos /interval_quot_pos /=;
+    quot_join_compute.
+  all: unfold_set in *; simpl in *;
+       by repeat (f_equal; try (quot_signs; lia)).
+Qed.
+
 
 Local Ltac zcases :=
   repeat (repeat (case: (Z_lt_dec _ _) => ? || case: (Z.eq_dec _ _) => ?);
           simpl in *; try discriminate; try lia).
 
 Lemma classify_divisor_quot_equiv (i : nb_interval) (S2 : ℘ Z) :
-  collecting_quot S2 (γ[itv] (classified_interval (classify_divisor i)))
+  collecting_quot S2 (γ[itv] (snapped_interval (itv_divisor_snap i)))
   ⊆⊇ collecting_quot S2 (γ[itv] (`i)).
 Proof.
-  move: i => [[[|l] [|h]] Hnb]; rewrite /classify_divisor /classified_interval /=; zcases.
-  (* [DivAcross] returns its argument untouched; every other leaf drops
-     exactly [0], which [collecting_quot] excludes anyway. *)
+  rewrite itv_snapped_interval.
+  move: i => [[[|l] [|h]] Hnb]; rewrite /classify_divisor /=; zcases.
+  (* Every leaf drops exactly [0], which [collecting_quot] excludes anyway —
+     including the crossing one, whose halves hull back to the operand. *)
   all: first [ reflexivity
              | apply: collecting_quot_restrict_equiv;
                unfold_set_equiv => z; unfold_set; simpl in *; intuition lia ].
 Qed.
+
 
 (** α-completeness of the optimized forms is the general one transported
     across the equality. *)
@@ -953,59 +978,107 @@ Proof.
   apply: (interval_quot_neg_across_best l2 h2 i1 S2); assumption.
 Qed.
 
-(** Both operands crossing 0: split the dividend at 0 and let each half meet
-    the whole across divisor through its optimized form. *)
+(** Both operands crossing 0.  Same shape as the two lemmas above — split the
+    *divisor* by sign and join — rather than splitting the dividend as the
+    ∓1-specific optimized form does.  Splitting the divisor is what generalizes:
+    each half is then sign-definite, and [interval_quot_across_{neg,pos}]
+    handles the crossing dividend. *)
+Lemma interval_quot_across_across_split_alpha_complete
+    (l2 h2 : WithTop.with_top Z) (n : neg_interval) (p : pos_interval)
+    (S2 S1 : ℘ Z) :
+  0 ∈ γ[glbtop] l2 -> 0 ∈ γ[lubtop] h2 ->
+  (exists c, c ∈ S2) ->
+  (exists c, c ∈ S1 /\ c < 0) -> (exists c, c ∈ S1 /\ 0 < c) ->
+  IsAlpha (A:=itv) (l2, h2) S2 ->
+  IsAlpha (A:=itv) (`n) {[ z | z ∈ S1 /\ z < 0 ]} ->
+  IsAlpha (A:=itv) (`p) {[ z | z ∈ S1 /\ 0 < z ]} ->
+  IsAlpha (A:=itv)
+    (interval_quot_across_across (l2, h2) n p)
+    (collecting_quot S2 S1).
+Proof.
+  move=> Hl2 Hh2 Hex2 [m [HmS Hm]] [q [HqS Hq]] Ha2 Han Hap.
+  have Hexn : exists c, c ∈ {[ z | z ∈ S1 /\ z < 0 ]} by exists m; unfold_set; split.
+  have Hexp : exists c, c ∈ {[ z | z ∈ S1 /\ 0 < z ]} by exists q; unfold_set; split.
+  have Hn := interval_quot_across_neg_alpha_complete l2 h2 n
+               S2 {[ z | z ∈ S1 /\ z < 0 ]} Hl2 Hh2 Hex2 Hexn Ha2 Han.
+  have Hp' := interval_quot_across_pos_alpha_complete l2 h2 p
+                S2 {[ z | z ∈ S1 /\ 0 < z ]} Hl2 Hh2 Hex2 Hexp Ha2 Hap.
+  apply: (is_alpha_join_split _ _ _ _ _ _ _ Hn Hp').
+  exact: (collecting_quot_split_divisor_set S2 S1).
+Qed.
+
 Lemma interval_quot_across_across_best
     (l2 h2 : WithTop.with_top Z) (i1 : across_interval) (S2 : ℘ Z) :
   0 ∈ γ[glbtop] l2 -> 0 ∈ γ[lubtop] h2 ->
   (exists c, c ∈ S2) ->
   IsAlpha (A:=itv) (l2, h2) S2 ->
   IsAlpha (A:=itv)
-    (interval_quot_across_across (l2, h2) i1)
+    (interval_quot_across_across (l2, h2) (across_neg_itv i1) (across_pos_itv i1))
     (collecting_quot S2 (γ[itv] (`i1))).
 Proof.
-  move=> Hl2 Hh2 Hex2 Ha2.
-  apply: (itv_split_at_zero_alpha l2 h2 S2 Hl2 Hh2 Hex2 Ha2)
-    => m p Hm Hp Han Hap HmS HpS.
-  have Hmemn : m ∈ {[ z | z ∈ S2 /\ z <= 0 ]} by unfold_set; split.
-  have Hmemp : p ∈ {[ z | z ∈ S2 /\ 0 <= z ]} by unfold_set; split.
-  have Hn := interval_quot_neg_across_opt_best l2 m i1
-               {[ z | z ∈ S2 /\ z <= 0 ]} Hm (nonempty_of_mem _ _ Hmemn) Han.
-  have Hp' := interval_quot_pos_across_opt_best p h2 i1
-                {[ z | z ∈ S2 /\ 0 <= z ]} Hp (nonempty_of_mem _ _ Hmemp) Hap.
-  (* No join equality is needed here: the optimized forms read only the *outer*
-     bound of their operand, so neither half's abstract value mentions [m] or
-     [p], and the join is convertible to the transfer function's. *)
-  apply: (is_alpha_join_split _ _ _ _ _ _ _ Hn Hp').
-  exact: (collecting_quot_split_dividend S2 (γ[itv] (`i1))).
+  move: i1 => [[l1 h1] [Hl1 Hh1]] Hl2 Hh2 Hex2 Ha2; simpl in Hl1, Hh1.
+  have [Hm1 [Hnbn Hnm]] := across_neg_half_alpha l1 h1 Hl1 Hh1.
+  have [Hp1 [Hnbp Hpm]] := across_pos_half_alpha l1 h1 Hl1 Hh1.
+  apply: interval_quot_across_across_split_alpha_complete => //;
+    by [ exists (-1) | exists 1 ].
 Qed.
+
+(** The crossing branch is exactly the join of the two sign-definite branches —
+    at every dividend class, since each of the three across-divisor functions was
+    defined as that join.  This is the structural content of the whole
+    [divisor_snap] indirection: a domain that can split its divisor by sign gets
+    the crossing case for free from the two halves. *)
+Lemma interval_quot_unopt_across_split (i2 : interval)
+    (n : neg_interval) (p : pos_interval) :
+  interval_quot_unopt i2 (SnapAcross n p)
+  = ZInterval.join (interval_quot_unopt i2 (SnapNeg n))
+                   (interval_quot_unopt i2 (SnapPos p)).
+Proof. rewrite /interval_quot_unopt; by case: (classify i2). Qed.
 
 (** * The dispatcher.
 
-    [interval_quot_unopt] classifies the divisor, then the dividend, and calls
-    the matching case above.  Each branch is the α-completeness lemma of that
-    case at γ; [classify_divisor_quot_equiv] has already replaced the divisor
-    by its sanitized payload, and the payload's own type supplies the sign.
-    Specializing α-completeness to concretizations is what turns it into
-    [BestAbstraction] ([is_alpha_iff_best_abstraction]). *)
-Lemma interval_quot_unopt_best (i2 : interval) (i1 : nb_interval) :
+    What a domain owes for its [divisor_snap] to drive the chain: each half the
+    snap returns is the *best interval abstraction* of the corresponding part of
+    the divisor's concrete set, and the constructor tells the truth about which
+    parts are inhabited.  Nothing is said about where the halves came from, so
+    a domain that names the extremal non-zero divisors of each sign discharges
+    this with its own numbers and inherits the quotient.
+
+    The sign facts are not listed: they are already carried by the
+    [pos_interval] / [neg_interval] payloads, and [IsAlpha] forces the set
+    inside the corresponding γ. *)
+Definition divisor_snap_alpha (d : divisor_snap) (S1 : ℘ Z) : Prop :=
+  match d with
+  | SnapZero => True
+  | SnapPos p => (exists c, c ∈ S1) /\ IsAlpha (A:=itv) (`p) S1
+  | SnapNeg n => (exists c, c ∈ S1) /\ IsAlpha (A:=itv) (`n) S1
+  | SnapAcross n p =>
+      (exists c, c ∈ S1 /\ c < 0) /\ (exists c, c ∈ S1 /\ 0 < c) /\
+      IsAlpha (A:=itv) (`n) {[ z | z ∈ S1 /\ z < 0 ]} /\
+      IsAlpha (A:=itv) (`p) {[ z | z ∈ S1 /\ 0 < z ]}
+  end.
+
+(** [interval_quot_unopt] dispatches on the snap, then on the dividend, and
+    calls the α-completeness lemma of that case.  The divisor's set [S1] stays
+    universally quantified — this is the statement [ZIntervalCongruence]
+    instantiates.
+
+    [SnapZero] is excluded rather than handled: the quotient set is then empty,
+    and no [interval] is a best abstraction of ∅ because [itv] has no ⊑-least
+    element.  Callers rule it out, exactly as they did for [DivZero]. *)
+Lemma interval_quot_unopt_alpha (i2 : interval) (d : divisor_snap) (S2 S1 : ℘ Z) :
+  d <> SnapZero ->
   non_bottom i2 ->
-  classify_divisor i1 <> DivZero ->
-  BestAbstraction (A:=itv) (interval_quot_unopt i2 i1)
-    (collecting_quot (γ[itv] i2) (γ[itv] (`i1))).
+  (exists c, c ∈ S2) ->
+  IsAlpha (A:=itv) i2 S2 ->
+  divisor_snap_alpha d S1 ->
+  IsAlpha (A:=itv) (interval_quot_unopt i2 d) (collecting_quot S2 S1).
 Proof.
-  move=> Hnb2 HnZ.
-  have /non_bottom_non_empty Hex2 := Hnb2.
-  have Ha2 := non_bottom_is_alpha_gamma _ Hnb2.
-  apply/is_alpha_iff_best_abstraction.
-  apply: (is_alpha_set_equiv _ _ _ (classify_divisor_quot_equiv i1 (γ[itv] i2))).
+  move=> HnZ Hnb2 Hex2 Ha2 Hd.
   rewrite /interval_quot_unopt.
   move: i2 Hnb2 Hex2 Ha2 => [l2 h2] Hnb2 Hex2 Ha2.
-  case Hcd: (classify_divisor i1) => [iP | iN | | Hl Hh].
-  - (* DivPos: the payload is a strictly positive divisor. *)
-    have Hd : non_bottom (`iP) by case: iP {Hcd} => [? [? ?]].
-    have /non_bottom_non_empty Hexd := Hd.
-    have Had := non_bottom_is_alpha_gamma _ Hd.
+  case: d HnZ Hd => [iP | iN | | n p] HnZ Hd.
+  - have [Hexd Had] := Hd.
     case Hc2: (classify (l2, h2)).
     + move: (classify_Pos_inv _ _ Hc2) => [l2' [Heq Hl2']]; subst.
       apply: (interval_quot_pos_alpha_complete l2' h2 iP _ _); assumption.
@@ -1013,10 +1086,7 @@ Proof.
       apply: (interval_quot_neg_pos_alpha_complete l2 h2' iP _ _); assumption.
     + move: (classify_Across_inv _ _ Hnb2 Hc2) => [Hl2z Hh2z].
       apply: (interval_quot_across_pos_alpha_complete l2 h2 iP _ _); assumption.
-  - (* DivNeg: the payload is a strictly negative divisor. *)
-    have Hd : non_bottom (`iN) by case: iN {Hcd} => [? [? ?]].
-    have /non_bottom_non_empty Hexd := Hd.
-    have Had := non_bottom_is_alpha_gamma _ Hd.
+  - have [Hexd Had] := Hd.
     case Hc2: (classify (l2, h2)).
     + move: (classify_Pos_inv _ _ Hc2) => [l2' [Heq Hl2']]; subst.
       apply: (interval_quot_pos_neg_alpha_complete l2' h2 iN _ _); assumption.
@@ -1024,19 +1094,64 @@ Proof.
       apply: (interval_quot_neg_neg_alpha_complete l2 h2' iN _ _); assumption.
     + move: (classify_Across_inv _ _ Hnb2 Hc2) => [Hl2z Hh2z].
       apply: (interval_quot_across_neg_alpha_complete l2 h2 iN _ _); assumption.
-  - (* DivZero: excluded by hypothesis. *)
-    by rewrite Hcd in HnZ.
-  - (* DivAcross: the divisor is its own payload. *)
-    have Hd : non_bottom (`i1) := across_non_bottom _ Hl Hh.
-    have /non_bottom_non_empty Hexd := Hd.
+  - by case: HnZ.
+  - have [Hexn [Hexp [Han Hap]]] := Hd.
     case Hc2: (classify (l2, h2)).
     + move: (classify_Pos_inv _ _ Hc2) => [l2' [Heq Hl2']]; subst.
-      apply: (interval_quot_pos_across_best l2' h2 _ _); assumption.
+      exact: (interval_quot_pos_across_split_alpha_complete l2' h2 n p S2 S1
+                Hl2' Hex2 Hexn Hexp Ha2 Han Hap).
     + move: (classify_Neg_inv _ _ Hc2) => [h2' [Heq Hh2']]; subst.
-      apply: (interval_quot_neg_across_best l2 h2' _ _); assumption.
+      exact: (interval_quot_neg_across_split_alpha_complete l2 h2' n p S2 S1
+                Hh2' Hex2 Hexn Hexp Ha2 Han Hap).
     + move: (classify_Across_inv _ _ Hnb2 Hc2) => [Hl2z Hh2z].
-      apply: (interval_quot_across_across_best l2 h2 _ _); assumption.
+      exact: (interval_quot_across_across_split_alpha_complete l2 h2 n p S2 S1
+                Hl2z Hh2z Hex2 Hexn Hexp Ha2 Han Hap).
 Qed.
+
+(** The interval's own snap discharges it.  [classify_divisor] sanitizes, so
+    the set is γ of the *payload*, not of the operand — the same shift the
+    product's [reduce] makes, and what [classify_divisor_quot_equiv] undoes at
+    the top. *)
+Lemma itv_divisor_snap_alpha (i1 : nb_interval) :
+  divisor_snap_alpha (itv_divisor_snap i1)
+    (γ[itv] (snapped_interval (itv_divisor_snap i1))).
+Proof.
+  rewrite itv_snapped_interval /itv_divisor_snap.
+  case Hcd: (classify_divisor i1) => [iP | iN | | Hl Hh] //=.
+  - have Hd : non_bottom (`iP) by case: iP {Hcd} => [? [? ?]].
+    by split; [exact/non_bottom_non_empty | exact: non_bottom_is_alpha_gamma].
+  - have Hd : non_bottom (`iN) by case: iN {Hcd} => [? [? ?]].
+    by split; [exact/non_bottom_non_empty | exact: non_bottom_is_alpha_gamma].
+  - move: Hl Hh {Hcd}; case: (`i1) => [l1 h1] /= Hl Hh.
+    have [Hm1 [_ Hnm]] := across_neg_half_alpha l1 h1 Hl Hh.
+    have [Hp1 [_ Hpm]] := across_pos_half_alpha l1 h1 Hl Hh.
+    by split; [exists (-1) | split; [exists 1 | ]].
+Qed.
+
+Lemma interval_quot_unopt_best (i2 : interval) (i1 : nb_interval) :
+  non_bottom i2 ->
+  classify_divisor i1 <> DivZero ->
+  BestAbstraction (A:=itv) (interval_quot_unopt i2 (itv_divisor_snap i1))
+    (collecting_quot (γ[itv] i2) (γ[itv] (`i1))).
+Proof.
+  move=> Hnb2 HnZ.
+  have /non_bottom_non_empty Hex2 := Hnb2.
+  have Ha2 := non_bottom_is_alpha_gamma _ Hnb2.
+  apply/is_alpha_iff_best_abstraction.
+  apply: (is_alpha_set_equiv _ _ _ (classify_divisor_quot_equiv i1 (γ[itv] i2))).
+  apply: (interval_quot_unopt_alpha _ _ _ _ _ Hnb2 Hex2 Ha2
+            (itv_divisor_snap_alpha i1)).
+  move: HnZ; rewrite /itv_divisor_snap; by case: (classify_divisor i1).
+Qed.
+
+(** Soundness on the raw carrier: an over-approximation is what
+    [BestAbstraction] gives up front. *)
+Lemma interval_quot_unopt_sound (i2 : interval) (i1 : nb_interval) :
+  non_bottom i2 ->
+  classify_divisor i1 <> DivZero ->
+  Overapproximates (A:=itv) (interval_quot_unopt i2 (itv_divisor_snap i1))
+    (collecting_quot (γ[itv] i2) (γ[itv] (`i1))).
+Proof. by move=> Hnb2 HnZ; have [Hover _] := interval_quot_unopt_best i2 i1 Hnb2 HnZ. Qed.
 
 (** * The extracted form.
 
@@ -1061,10 +1176,10 @@ Local Ltac qb_norm :=
   rewrite !quot_bound_qb ?qb_neg_l ?qb_neg_r ?qb_0_l ?bound_opp_involutive /=.
 
 Lemma interval_quot_unopt_eq (i2 : interval) (i1 : nb_interval) :
-  non_bottom i2 -> interval_quot i2 i1 = interval_quot_unopt i2 i1.
+  non_bottom i2 -> interval_quot i2 i1 = interval_quot_unopt i2 (itv_divisor_snap i1).
 Proof.
   move: i2 => [l2 h2] Hnb2.
-  rewrite /interval_quot /interval_quot_unopt.
+  rewrite /interval_quot /interval_quot_unopt /itv_divisor_snap.
   case: (classify_divisor i1) => [iP | iN | | Hl1 Hh1].
   - case: iP => [[l1 h1] [Hnb1 Hl1]]; simpl in Hnb1, Hl1.
     case Hc: (classify (l2, h2)) => /=.
@@ -1095,8 +1210,8 @@ Proof.
       apply: (interval_quot_pos_across_opt_eq l2' h2 _); assumption.
     + move: (classify_Neg_inv _ _ Hc) => [h2' [Heq Hh2']]; subst.
       apply: (interval_quot_neg_across_opt_eq l2 h2' _); assumption.
-    + by rewrite /interval_quot_across_across
-                 /interval_quot_neg_across_opt /interval_quot_pos_across_opt.
+    + have [Hl2z Hh2z] := classify_Across_inv _ _ Hnb2 Hc.
+      exact: (interval_quot_across_across_opt_eq l2 h2 _ Hl2z Hh2z).
 Qed.
 
 Lemma interval_quot_best (i2 : interval) (i1 : nb_interval) :
@@ -1109,6 +1224,13 @@ Proof.
   exact: interval_quot_unopt_best.
 Qed.
 
+Lemma interval_quot_sound (i2 : interval) (i1 : nb_interval) :
+  non_bottom i2 ->
+  classify_divisor i1 <> DivZero ->
+  Overapproximates (A:=itv) (interval_quot i2 i1)
+    (collecting_quot (γ[itv] i2) (γ[itv] (`i1))).
+Proof. by move=> Hnb2 HnZ; have [Hover _] := interval_quot_best i2 i1 Hnb2 HnZ. Qed.
+
 (** A divisor of exactly [{0}] leaves the quotient's collecting semantics
     empty: every division is by zero, and [collecting_quot] excludes those.
     ([MulBackwardTheory] uses this to rule out [DivZero] from a witness.) *)
@@ -1117,7 +1239,7 @@ Lemma classify_divisor_zero_empty (i : nb_interval) (S2 : ℘ Z) c :
 Proof.
   move=> Hcd Hc.
   have [_ Hback] := classify_divisor_quot_equiv i S2.
-  move: (Hback c Hc); rewrite Hcd /classified_interval.
+  move: (Hback c Hc); rewrite itv_snapped_interval Hcd.
   by move=> [c2 [c1 [_ [Hc1 [_ _]]]]]; move: Hc1; unfold_set; simpl; lia.
 Qed.
 

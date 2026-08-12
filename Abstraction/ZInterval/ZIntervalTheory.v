@@ -1307,6 +1307,58 @@ Lemma across_pos_half_non_bottom (h : WithTop.with_top Z) :
   high_pos h -> non_bottom (WithTop.NotTop 1, h).
 Proof. case: h => [|z] /= Hz //; unfold_set; simpl; lia. Qed.
 
+(** The interval's own [divisor_snap]: [classify_divisor] with the crossing
+    case resolved at ∓1, which is the best a plain interval can do — it knows
+    the divisor straddles zero but not which non-zero values are actually
+    there.  A domain that does know supplies a sharper [divisor_snap] and
+    inherits the whole quotient chain unchanged; that is the point of the
+    indirection. *)
+Definition across_neg_itv (i : across_interval) : neg_interval :=
+  neg_itv (fst (`i)) (-1) ltac:(lia)
+    (across_neg_half_non_bottom _ (proj1 (proj2_sig i))).
+
+Definition across_pos_itv (i : across_interval) : pos_interval :=
+  pos_itv 1 (snd (`i)) ltac:(lia)
+    (across_pos_half_non_bottom _ (proj2 (proj2_sig i))).
+
+(** The ∓1 halves hull back to the interval they came from — which is why
+    [snapped_interval] agrees with the operand in the crossing case, and so why
+    the uniform "hull of the halves" reading costs nothing here. *)
+Lemma across_hull (l h : WithTop.with_top Z) :
+  low_neg l -> high_pos h ->
+  ZInterval.join (l, WithTop.NotTop (-1)) (WithTop.NotTop 1, h) = (l, h).
+Proof. by case: l => [|l']; case: h => [|h'] /= Hl Hh; f_equal; f_equal; lia. Qed.
+
+Definition itv_divisor_snap (i : nb_interval) : divisor_snap :=
+  match classify_divisor i with
+  | DivPos p => SnapPos p
+  | DivNeg n => SnapNeg n
+  | DivZero => SnapZero
+  | DivAcross Hl Hh =>
+      let a : across_interval := exist _ (`i) (conj Hl Hh) in
+      SnapAcross (across_neg_itv a) (across_pos_itv a)
+  end.
+
+(** [snapped_interval] of the interval's own snap is the sanitized payload in
+    the sign-definite cases and the operand itself in the crossing one — the
+    ∓1 halves hull back to it ([across_hull]).  Stating it this way keeps
+    [snapped_interval] index-free while letting the proofs below case on
+    [classify_divisor] as they did before. *)
+Lemma itv_snapped_interval (i : nb_interval) :
+  snapped_interval (itv_divisor_snap i) =
+  match classify_divisor i with
+  | DivPos p => `p
+  | DivNeg n => `n
+  | DivZero => ZInterval.bottom
+  | DivAcross _ _ => `i
+  end.
+Proof.
+  rewrite /itv_divisor_snap.
+  case: (classify_divisor i) => [iP | iN | | Hl Hh] //=.
+  move: Hl Hh; case: (`i) => [l h] /= Hl Hh.
+  exact: across_hull.
+Qed.
+
 Lemma classify_Pos_inv l h : classify (l, h) = Pos ->
   exists l', l = WithTop.NotTop l' /\ 0 <= l'.
 Proof.

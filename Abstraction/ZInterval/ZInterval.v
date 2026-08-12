@@ -214,6 +214,39 @@ Inductive divisor_classification (i : interval) : Type :=
 Arguments DivPos {i}. Arguments DivNeg {i}.
 Arguments DivZero {i}. Arguments DivAcross {i}.
 
+(** The same classification with the crossing case *resolved*: instead of two
+    sign facts about the interval being classified, [SnapAcross] carries the two
+    sign-definite halves themselves.  Dropping the index is what makes it usable
+    by a domain other than [itv] — the halves no longer have to be bounds of the
+    thing classified, so a domain that can name the extremal non-zero divisors
+    on each side may supply those instead of the ∓1 an interval is stuck with.
+
+    Two invariants are carried by the *choice* of constructor rather than by a
+    proof, and every producer owes them: [SnapAcross n p] means both halves are
+    inhabited (a divisor with nothing on one side classifies as [SnapPos] /
+    [SnapNeg]), and [SnapZero] means the divisor is exactly [{0}].  That is what
+    lets the crossing branch join with plain [ZInterval.join] — a hull is the
+    least upper bound only when both sides are inhabited. *)
+Inductive divisor_snap : Type :=
+  | SnapPos : pos_interval -> divisor_snap
+  | SnapNeg : neg_interval -> divisor_snap
+  | SnapZero : divisor_snap
+  | SnapAcross : neg_interval -> pos_interval -> divisor_snap.
+
+(** The interval a classification actually describes: the sanitized payload in
+    the sign-definite cases, and — uniformly — the hull of the two halves in the
+    crossing one.  Index-free, unlike the [divisor_classification] it replaces,
+    because [SnapAcross] carries the halves rather than proofs about the operand
+    it came from.  γ of this is the set the snap abstracts, up to the zero
+    divisors that [collecting_quot] discards anyway. *)
+Definition snapped_interval (d : divisor_snap) : interval :=
+  match d with
+  | SnapPos p => proj1_sig p
+  | SnapNeg n => proj1_sig n
+  | SnapZero => bottom
+  | SnapAcross n p => join (proj1_sig n) (proj1_sig p)
+  end.
+
 (** Classify the divisor, returning a sanitized interval where 0 has been
     removed from the bounds (guaranteeing that the analysis won't do a division
     by zero).
