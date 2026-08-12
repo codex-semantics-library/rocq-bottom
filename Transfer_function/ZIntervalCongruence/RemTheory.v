@@ -42,7 +42,7 @@ Require Import
   AbstractionCombination
   ZInterval ZIntervalTheory ZCongruenceTheory
   ZIntervalCongruence ZIntervalCongruenceTheory
-  PrimitiveTheory
+  ZTheory
   Transfer_function.ZIntervalCongruence.ZIntervalCongruenceOps.
 
 Open Scope Z_scope.

@@ -36,7 +36,7 @@ From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Require Import Stdlib.ZArith.Zquot.
-Require Import PrimitiveTheory.
+Require Import ZTheory.
 Require Import ZCongruenceTheory.
 Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.

@@ -1,4 +1,9 @@
-(* PrimitiveTheory.v - Set-level facts about primitives. *)
+(* ZTheory.v - Abstraction-independent properties of Z. *)
+
+(** Properties of [Z] and of sets of [Z] that are not tied to any particular
+    abstractions, like facts about [Z] and [℘ Z], or methods that work uniformly
+    over abstractions of [Z] (like splitting at zero). *)
+
 Require Import Abstraction.
 Require Import ssreflect ssrbool ssrfun.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
@@ -84,6 +89,27 @@ Proof.
             is_nonzero f S2 S1
             {[ z | z ∈ S1 /\ z < 0 ]} {[ z | z ∈ S1 /\ 0 < z ]}).
   - move=> c2 c1 Hc2 Hc1 Hne.
+    unfold_set.
+    case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //;
+      rewrite /is_nonzero in Hne *; lia.
+  - unfold_set; by move=> c [Hc _].
+  - unfold_set; by move=> c [Hc _].
+Qed.
+
+(** The same cut on the *solve* side, where the divisor is the operand being
+    split: what a backward transfer function needs to recover the dividend of a
+    division by a divisor set that crosses zero. Same covering argument — the
+    partiality has already dropped the zero divisors. *)
+Lemma collecting_non_zero_solve_left_split_zero_strict
+    (f : Z -> Z -> Z) (S1 S0 : propset Z) :
+  collecting_binary_solve_left_partial is_nonzero f S1 S0 ⊆⊇
+  collecting_binary_solve_left_partial is_nonzero f {[ z | z ∈ S1 /\ z < 0 ]} S0 ∪
+  collecting_binary_solve_left_partial is_nonzero f {[ z | z ∈ S1 /\ 0 < z ]} S0.
+Proof.
+  apply: (collecting_binary_solve_left_partial_split
+            is_nonzero f S1
+            {[ z | z ∈ S1 /\ z < 0 ]} {[ z | z ∈ S1 /\ 0 < z ]}).
+  - move=> c2 c1 Hc1 Hne.
     unfold_set.
     case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //;
       rewrite /is_nonzero in Hne *; lia.

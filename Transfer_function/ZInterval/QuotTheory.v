@@ -45,7 +45,7 @@ Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Zquot.
 Require Import ZInterval.
 Require Import ZIntervalTheory.
-Require Import PrimitiveTheory.
+Require Import ZTheory.
 Require Import Transfer_function.ZInterval.ZIntervalOps.
 Require Import Transfer_function.ZInterval.OppTheory.
 Open Scope Z_scope.
@@ -58,7 +58,7 @@ Section Interval_quot.
     [Z.quot] is partial (the divisor is non-zero), so the forward collecting
     semantics excludes division by zero; the result is empty when every divisor
     is zero.  [collecting_quot] and the set-level facts that are not specific
-    to this transfer function live in [PrimitiveTheory.v], beside the
+    to this transfer function live in [ZTheory.v], beside the
     [Primitives.quot_non_zero] they collect.  What follows here is only what
     the sign splits and the α-completeness proofs need. *)
 

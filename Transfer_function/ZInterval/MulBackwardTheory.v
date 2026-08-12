@@ -29,7 +29,7 @@ From Stdlib Require Import Lia.
 Require Import Stdlib.ZArith.ZArith.
 Require Import ZInterval.
 Require Import ZIntervalTheory.
-Require Import PrimitiveTheory.
+Require Import ZTheory.
 Require Import Transfer_function.ZInterval.ZIntervalOps.
 Require Import Transfer_function.ZInterval.ZIntervalBackwardOps.
 Require Import Transfer_function.ZInterval.QuotTheory.
