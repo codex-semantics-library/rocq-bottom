@@ -88,6 +88,15 @@ Extract Inductive Z => "Z.t"
 (* Extract Inductive N => "Z.t"
  [ "Z.zero" "" ]
  "(fun f0 fp n -> if Z.sign n <= 0 then f0 () else fp n)". *)
+
+(** Unreached, like [N]: commented per rule 3. When KnownBits arrives [nat]
+    appears only as a bit index, which is how zarith types it too
+    ([Z.testbit : t -> int -> bool]), hence [int] and not [Z.t]. The cost is
+    that it is no longer unbounded, so it must stay out of any *value*
+    position: none of these operations detects overflow. *)
+(* Extract Inductive nat => "int" [ "0" "succ" ]
+ "(fun f0 fS n -> if n = 0 then f0 () else fS (n - 1))". *)
+
 (** * [Z] operations
 
     Zarith raises where Rocq's [Z] is total ([_ / 0 = 0], [_ mod 0] is the
@@ -137,13 +146,67 @@ Extract Inlined Constant quot_non_zero => "Z.div".
 (* Extract Inlined Constant Z.quot => "(fun x y -> if Z.equal y Z.zero then Z.zero else Z.div x y)". *)
 (* Extract Inlined Constant Z.rem => "(fun x y -> if Z.equal y Z.zero then x else Z.rem x y)". *)
 (* Extract Inlined Constant Z.quotrem => "(fun x y -> if Z.equal y Z.zero then (Z.zero, x) else Z.div_rem x y)". *)
+
+(** Floor: [Z.fdiv] rounds toward minus infinity like Rocq's [Z.div], and
+    the matching modulo takes the *divisor*'s sign, neither zarith's [Z.rem]
+    (dividend's) nor [Z.erem] (non-negative), hence the explicit
+    [x - y * fdiv x y]. For [ZIntervalCongruence]'s [snap_low_z], which
+    needs the result in [[0, m)] for positive [m]. *)
+(* Extract Inlined Constant Z.div => "(fun x y -> if Z.equal y Z.zero then Z.zero else Z.fdiv x y)". *)
+(* Extract Inlined Constant Z.modulo => "(fun x y -> if Z.equal y Z.zero then x else Z.sub x (Z.mul y (Z.fdiv x y)))". *)
+(* Extract Inlined Constant Z.div_eucl => "(fun x y -> if Z.equal y Z.zero then (Z.zero, x) else let q = Z.fdiv x y in (q, Z.sub x (Z.mul y q)))". *)
+
+(** ** Bits
+
+    Rocq's [Z] and zarith agree on two's complement with infinite sign
+    extension, so these map directly; KnownBits is written entirely in them.
+    A bit index is a [Z] in Rocq and an [int] in zarith, and Rocq answers a
+    negative index as if the bit were absent, so each guards the sign before
+    [Z.to_int]. *)
+(* Extract Inlined Constant Z.land => "Z.logand". *)
+(* Extract Inlined Constant Z.lor => "Z.logor". *)
+(* Extract Inlined Constant Z.lxor => "Z.logxor". *)
+(* Extract Inlined Constant Z.lnot => "Z.lognot". *)
+(* Extract Inlined Constant Z.ldiff => "(fun a b -> Z.logand a (Z.lognot b))". *)
+(* Extract Inlined Constant Z.testbit => "(fun x n -> if Z.sign n < 0 then false else Z.testbit x (Z.to_int n))". *)
+(* Extract Inlined Constant Z.setbit => "(fun x n -> if Z.sign n < 0 then x else Z.logor x (Z.shift_left Z.one (Z.to_int n)))". *)
+(* Extract Inlined Constant Z.clearbit => "(fun x n -> if Z.sign n < 0 then x else Z.logand x (Z.lognot (Z.shift_left Z.one (Z.to_int n))))". *)
+(* Extract Inlined Constant Z.shiftl => "(fun x y -> let y = Z.to_int y in if y < 0 then Z.shift_right x (-y) else Z.shift_left x y)". *)
+(* Extract Inlined Constant Z.shiftr => "(fun x y -> let y = Z.to_int y in if y < 0 then Z.shift_left x (-y) else Z.shift_right x y)". *)
+(** [Z.div2] is the arithmetic shift, i.e. floor: [div2 (-1) = -1]. *)
+(* Extract Inlined Constant Z.div2 => "(fun x -> Z.shift_right x 1)". *)
+(** Rocq's [log2] is 0 below 1; zarith's raises there. *)
+(* Extract Inlined Constant Z.log2 => "(fun x -> if Z.sign x <= 0 then Z.zero else Z.of_int (Z.log2 x))". *)
+(** On the closure of [setbit]/[clearbit], through their [2^n]. Rocq's
+    [pow] is 0 for a negative exponent. *)
+(* Extract Inlined Constant Z.pow => "(fun b e -> if Z.sign e < 0 then Z.zero else Z.pow b (Z.to_int e))". *)
+(* Extract Inlined Constant Z.pow_pos => "(fun b e -> Z.pow b (Z.to_int e))". *)
+
+(** On the closure of [Z.compare]; same caveat about unqualified
+    [Eq]/[Lt]/[Gt] as there. *)
+(* Extract Inlined Constant CompOpp =>
+ "(function Eq -> Eq | Lt -> Gt | Gt -> Lt)". *)
+
+
+(** ** Conversions
+
+    No [Z.to_nat] guard is needed for [nat = int]: Rocq's [Z.to_nat] is 0 on
+    negatives, and [Z.to_int] raising above [max_int] is the honest answer
+    for a [nat] that could not be built. No silent truncation. *)
+(* Extract Inlined Constant Z.of_N => "(fun p -> p)". *)
+(* Extract Inlined Constant Z.to_N => "(fun p -> if Z.sign p < 0 then Z.zero else p)". *)
+(* Extract Inlined Constant Z.abs_N => "Z.abs". *)
+(* Extract Inlined Constant Z.of_nat => "Z.of_int". *)
+(* Extract Inlined Constant Z.to_nat => "(fun x -> if Z.sign x <= 0 then 0 else Z.to_int x)". *)
+(* Extract Inlined Constant Z.abs_nat => "(fun x -> Z.to_int (Z.abs x))". *)
+
 (** * Booleans. Without these, [negb]/[andb]/[orb] stay Rocq definitions
     rather than OCaml's native ones. The laziness of [&&]/[||] is
     unobservable here: extracted code is pure and total. *)
 Extract Inlined Constant negb => "not".
 Extract Inlined Constant andb => "(&&)".
-(* Extract Inlined Constant orb => "(||)". *)
-(* Extract Inlined Constant xorb => "(<>)". *)
+Extract Inlined Constant orb => "(||)".
+Extract Inlined Constant xorb => "(<>)".
 
 
 (** * Pairs and other data types *)
