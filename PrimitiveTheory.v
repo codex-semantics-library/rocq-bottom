@@ -1,17 +1,8 @@
 (* PrimitiveTheory.v - Set-level facts about primitives. *)
-Require Import Abstraction AbstractLattice.
+Require Import Abstraction.
 Require Import ssreflect ssrbool ssrfun.
-Require Import BoundAbstraction.
-Require Import AbstractionCombination.
-Require Import BoundLattice.
-Require Import autoreflect.
-Require Import Tactics.
-Require Import Stdlib.Bool.Bool.
-Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
-Require Import ZInterval.
-Require Import ZIntervalTheory.
 Open Scope Z_scope.
 Generalizable All Variables.
 
