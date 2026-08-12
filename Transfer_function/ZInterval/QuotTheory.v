@@ -197,7 +197,7 @@ Lemma collecting_quot_split_divisor_set (S2 S1 : propset Z) :
   collecting_quot S2 {[ z | z ∈ S1 /\ z < 0 ]} ∪
   collecting_quot S2 {[ z | z ∈ S1 /\ 0 < z ]}.
 Proof.
-  exact: (collecting_non_zero_split_zero_strict_r Z.quot S2 S1).
+  exact: (collecting_non_zero_split_sign_r Z.quot S2 S1).
 Qed.
 
 (** * The arithmetic core: positive dividend / strictly positive divisor.

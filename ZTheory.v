@@ -11,6 +11,36 @@ Require Import Stdlib.ZArith.ZArith.
 Open Scope Z_scope.
 Generalizable All Variables.
 
+(** * Sign parts of a set of integers.
+
+    The four ways a set of integers is cut at zero.  The [strictly_] pair
+    partitions a set of *non-zero* integers; the [_or_zero] pair overlaps at
+    [0], which is what a total operation gets.
+
+    We prefert the explicit "strictly" and "or_zero" to ease understanding,
+    instead of the standard english nonpositive which can be confusing (as
+    whether this includes zero, plus double negation).
+
+    Written as an intersection rather than as the comprehension [{[ z | z ∈ S /\
+    z < 0 ]}], because [∩] is a morphism for both [⊆⊇] and [⊆]
+    ([propset_intersection_proper] / [propset_intersection_mono] in [base.v]).
+    So [strictly_negative_part S] can be [rewrite]n in [S].  The comprehension
+    could be rewriten if we had morphisms on [PropSet] and [propset_elem_of]
+    themselves, but this would put every set comprehension in the development on
+    [setoid_rewrite]'s search path.
+
+    TODO: only this file's own lemmas use these so far.  The rest of the
+    development still writes the comprehension form. Converting them is worth it
+    for the same reason: it is what lets a sign half be rewritten instead of
+    re-proved. *)
+
+Definition strictly_negative_part (S : ℘ Z) : ℘ Z := S ∩ {[ z : Z | z < 0 ]}.
+Definition strictly_positive_part (S : ℘ Z) : ℘ Z := S ∩ {[ z : Z | 0 < z ]}.
+Definition negative_or_zero_part  (S : ℘ Z) : ℘ Z := S ∩ {[ z : Z | z <= 0 ]}.
+Definition positive_or_zero_part  (S : ℘ Z) : ℘ Z := S ∩ {[ z : Z | 0 <= z ]}.
+Hint Unfold strictly_negative_part strictly_positive_part
+  negative_or_zero_part positive_or_zero_part : to_set.
+
 (** * Collecting semantics.
 
     The primitives in [Primitives.v] are partial: each requires a non-zero
@@ -78,16 +108,21 @@ Proof.
 Qed.
 
 (** Splitting the right (divisor) operand at [< 0] / [0 <]: a strict cut that
-    excludes [0]. *)
-Lemma collecting_non_zero_split_zero_strict_r (f : Z -> Z -> Z) (S2 S1 : propset Z) :
+    excludes [0].
+
+    Hence [_split_sign] rather than [_split_zero]: the two halves partition,
+    which is legitimate only under the [is_nonzero] guard. The [_split_zero_l]
+    lemmas below cut at [<= 0] / [0 <=] instead, and their halves overlap at
+    [0] — that is what a total operation needs. *)
+Lemma collecting_non_zero_split_sign_r (f : Z -> Z -> Z) (S2 S1 : propset Z) :
   collecting_non_zero_r f S2 S1 ⊆⊇
-  collecting_non_zero_r f S2 {[ z | z ∈ S1 /\ z < 0 ]} ∪
-  collecting_non_zero_r f S2 {[ z | z ∈ S1 /\ 0 < z ]}.
+  collecting_non_zero_r f S2 (strictly_negative_part S1) ∪
+  collecting_non_zero_r f S2 (strictly_positive_part S1).
 Proof.
   unfold collecting_non_zero_r.
   apply: (collecting_binary_forward_partial_split_r
             is_nonzero f S2 S1
-            {[ z | z ∈ S1 /\ z < 0 ]} {[ z | z ∈ S1 /\ 0 < z ]}).
+            (strictly_negative_part S1) (strictly_positive_part S1)).
   - move=> c2 c1 Hc2 Hc1 Hne.
     unfold_set.
     case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //;
@@ -100,15 +135,17 @@ Qed.
     split: what a backward transfer function needs to recover the dividend of a
     division by a divisor set that crosses zero. Same covering argument — the
     partiality has already dropped the zero divisors. *)
-Lemma collecting_non_zero_solve_left_split_zero_strict
+Lemma collecting_non_zero_solve_left_split_sign
     (f : Z -> Z -> Z) (S1 S0 : propset Z) :
   collecting_binary_solve_left_partial is_nonzero f S1 S0 ⊆⊇
-  collecting_binary_solve_left_partial is_nonzero f {[ z | z ∈ S1 /\ z < 0 ]} S0 ∪
-  collecting_binary_solve_left_partial is_nonzero f {[ z | z ∈ S1 /\ 0 < z ]} S0.
+  collecting_binary_solve_left_partial is_nonzero f
+    (strictly_negative_part S1) S0 ∪
+  collecting_binary_solve_left_partial is_nonzero f
+    (strictly_positive_part S1) S0.
 Proof.
   apply: (collecting_binary_solve_left_partial_split
             is_nonzero f S1
-            {[ z | z ∈ S1 /\ z < 0 ]} {[ z | z ∈ S1 /\ 0 < z ]}).
+            (strictly_negative_part S1) (strictly_positive_part S1)).
   - move=> c2 c1 Hc1 Hne.
     unfold_set.
     case: (Z.le_gt_cases c1 0) => Hc1z; [left | right]; split=> //;
@@ -129,11 +166,11 @@ Qed.
 Lemma collecting_binary_forward_partial_split_zero_l
   (P : Z -> Z -> Prop) (f : Z -> Z -> Z) (S2 S1 : propset Z) :
   collecting_binary_forward_partial P f S2 S1 ⊆⊇
-  collecting_binary_forward_partial P f {[ z | z ∈ S2 /\ z <= 0 ]} S1 ∪
-  collecting_binary_forward_partial P f {[ z | z ∈ S2 /\ 0 <= z ]} S1.
+  collecting_binary_forward_partial P f (negative_or_zero_part S2) S1 ∪
+  collecting_binary_forward_partial P f (positive_or_zero_part S2) S1.
 Proof.
   apply: (collecting_binary_forward_partial_split_l P f S2
-            {[ z | z ∈ S2 /\ z <= 0 ]} {[ z | z ∈ S2 /\ 0 <= z ]} S1).
+            (negative_or_zero_part S2) (positive_or_zero_part S2) S1).
   - move=> c2 c1 Hc2 _ _; unfold_set.
     case: (Z.le_ge_cases c2 0) => Hc2z; [left | right]; split=> //; simpl; lia.
   - unfold_set; by move=> c [Hc _].
@@ -145,8 +182,8 @@ Qed.
 Lemma collecting_binary_forward_split_zero_l
   (f : Z -> Z -> Z) (S2 S1 : propset Z) :
   collecting_binary_forward f S2 S1 ⊆⊇
-  collecting_binary_forward f {[ z | z ∈ S2 /\ z <= 0 ]} S1 ∪
-  collecting_binary_forward f {[ z | z ∈ S2 /\ 0 <= z ]} S1.
+  collecting_binary_forward f (negative_or_zero_part S2) S1 ∪
+  collecting_binary_forward f (positive_or_zero_part S2) S1.
 Proof.
   unfold_set_equiv => z; unfold_set; split.
   - move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
