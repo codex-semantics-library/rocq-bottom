@@ -20,6 +20,8 @@ Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
+Require Import Stdlib.ZArith.Zquot.
+Require Import PrimitiveTheory.
 Require Import ZCongruenceTheory.
 Require Import Transfer_function.ZCongruence.ZCongruenceOps.
 Open Scope Z_scope.
@@ -515,23 +517,6 @@ Proof.
     exists (-k); lia.
 Qed.
 
-(** Transport of [collecting_binary_forward_partial] along γ-equivalence
-    in the dividend set, for any fixed divisor set. *)
-Local Lemma collecting_quot_gamma_cong_l r1 m1 m1' (S1 : propset Z) :
-  γ[cong_ad] (r1, m1) ⊆⊇ γ[cong_ad] (r1, m1') ->
-  collecting_quot
-    (γ[cong_ad] (r1, m1)) S1
-  ⊆⊇
-  collecting_quot
-    (γ[cong_ad] (r1, m1')) S1.
-Proof.
-  move=> [Hsub1 Hsub2]. split.
-  - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]]. exists c2, c1.
-    split; [exact: Hsub1 | split; done].
-  - move=> c [c2 [c1 [Ha [Hb [Hne Hd]]]]]. exists c2, c1.
-    split; [exact: Hsub2 | split; done].
-Qed.
-
 (** Full positive-divisor case: any m1 ≠ 0. Reduces [m1 < 0] to [m1 > 0]
     via γ(r1, m1) = γ(r1, -m1). *)
 Lemma cong_quot_best_const_pos r1 m1 r2 :
@@ -549,7 +534,7 @@ Proof.
     have Hnd' : ~(r2 | -m1).
     { move=> [k Hk]. apply: Hnd. by exists (-k); lia. }
     apply: best_abstraction_equiv;
-      last (symmetry; apply: collecting_quot_gamma_cong_l; exact: cong_gamma_sym_m).
+      last (setoid_rewrite (cong_gamma_sym_m r1 m1) at 1; reflexivity).
     exact: cong_quot_best_const_pos_m1_pos _ _ _ Hr2 Hmm1 Hnd'.
 Qed.
 
@@ -685,7 +670,7 @@ Proof.
   - have Hmm1 : 0 < -m1 by lia.
     have Hdiv' : (r2 | -m1) by case: Hdiv => [q ->]; exists (-q); lia.
     apply: best_abstraction_equiv;
-      last (symmetry; apply: collecting_quot_gamma_cong_l; exact: cong_gamma_sym_m).
+      last (setoid_rewrite (cong_gamma_sym_m r1 m1) at 1; reflexivity).
     exact: cong_quot_best_const_divides_ndr1_m1_pos _ _ _ Hr2 Hmm1 Hdiv' Hnd.
 Qed.
 
@@ -832,7 +817,7 @@ Proof.
   - exact: cong_quot_best_nonconstant_divisor_m1_pos.
   - have Hmm1 : 0 < -m1 by lia.
     apply: best_abstraction_equiv;
-      last (symmetry; apply: collecting_quot_gamma_cong_l; exact: cong_gamma_sym_m).
+      last (setoid_rewrite (cong_gamma_sym_m r1 m1) at 1; reflexivity).
     exact: cong_quot_best_nonconstant_divisor_m1_pos _ _ _ _ Hm2 Hmm1.
 Qed.
 

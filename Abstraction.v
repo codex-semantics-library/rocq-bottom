@@ -1171,6 +1171,35 @@ Global Hint Unfold
   collecting_binary_backward_left
   collecting_binary_backward_right : to_set.
 
+(** ** Congruence of the collecting semantics under [⊆⊇].
+
+Declaring these as [Proper] instances lets [setoid_rewrite] lift a [⊆⊇] fact
+into a collecting-set expression directly, without naming a wrapper lemma. *)
+
+Global Instance collecting_binary_forward_proper
+    {C2 C1 C0: Type} (f: C2 -> C1 -> C0) :
+  Proper ((⊆⊇) ==> (⊆⊇) ==> (⊆⊇)) (collecting_binary_forward f).
+Proof.
+  move=> S2 S2' [HS2 HS2'] S1 S1' [HS1 HS1'].
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
+    exists c2, c1; repeat split=> //; [exact: HS2 _ Hc2 | exact: HS1 _ Hc1].
+  - move=> [c2 [c1 [Hc2 [Hc1 Heq]]]].
+    exists c2, c1; repeat split=> //; [exact: HS2' _ Hc2 | exact: HS1' _ Hc1].
+Qed.
+
+Global Instance collecting_binary_forward_partial_proper
+    {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0) :
+  Proper ((⊆⊇) ==> (⊆⊇) ==> (⊆⊇)) (collecting_binary_forward_partial P f).
+Proof.
+  move=> S2 S2' [HS2 HS2'] S1 S1' [HS1 HS1'].
+  unfold_set_equiv => z; unfold_set; split.
+  - move=> [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]].
+    exists c2, c1; repeat split=> //; [exact: HS2 _ Hc2 | exact: HS1 _ Hc1].
+  - move=> [c2 [c1 [Hc2 [Hc1 [HP Heq]]]]].
+    exists c2, c1; repeat split=> //; [exact: HS2' _ Hc2 | exact: HS1' _ Hc1].
+Qed.
+
 (** [collecting_binary_forward] distributes over [∪] in either argument.
     Used to discharge the [fC] distributivity hypothesis of
     [binary_alpha_complete_split_{l,r}] at split call sites. *)
