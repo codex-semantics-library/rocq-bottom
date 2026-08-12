@@ -6,7 +6,22 @@
 
 (* STATUS: quot (Z.quot): sound + best (cong_quot_sound / cong_quot_best).
    Not γ-exact in general: the concrete quotient set of a progression is
-   not itself a progression. *)
+   not itself a progression.
+
+   Also here, and *not* usable by [cong_quot] itself:
+   [cong_quot_const_sign_alpha_complete] — a constant divisor dividing the
+   modulus, over a dividend set of definite sign, maps the progression to
+   a progression again. γ of a congruence always crosses zero, where
+   truncation collapses the quotient's modulus to 1, so this domain can
+   never satisfy the sign hypothesis; the interval × congruence product
+   can, and does. Stated α-complete (operand set arbitrary) because that
+   product's dividend set is an interval ∩ congruence, not a γ.
+
+   Supporting: [cong_alpha_affine_pullback] (α transports along an affine
+   change of variable — the reusable half), [Z_quot_shift_sign] (the
+   arithmetic core, and the only place the sign is spent), and
+   [cong_alpha_shift_rep] (residues are not normalised, so the result's
+   residue must be read at a *member* of the set). *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -999,4 +1014,179 @@ Proof.
     + move/Z.eqb_eq: Hm1 => ->. exact: cong_quot_best_m1_zero.
     + move/Z.eqb_neq: Hm1 => Hm1.
       exact: cong_quot_best_nonconstant_divisor_m1_nz.
+Qed.
+
+(** * Constant divisor on a dividend set of definite sign.
+
+    [cong_quot]'s constant-divisor rule ([const_divides]) fires only when
+    [d] divides *both* the modulus and the residue, and that second
+    condition cannot be dropped in this domain: γ of a congruence is a
+    two-sided infinite progression, so it always crosses zero, and
+    truncation toward zero then puts two quotients at distance 1 across
+    the origin — γ(1,4) ÷ 2 = [{…,-3,-1,0,2,4,…}], whose best abstraction
+    really is ⊤. [cong_quot_best] proves exactly that; there is nothing
+    to sharpen here.
+
+    A caller that *knows* the dividend has a definite sign is in a
+    different position, and this section is for it: [d | m] alone then
+    makes the quotient set a progression again, of modulus [m ÷ d]. The
+    interval × congruence product is such a caller — its dividend set is
+    an interval ∩ congruence, and the interval decides the sign.
+
+    Two things make the statement usable there. The operand set [S2] is
+    arbitrary, tied to the abstract value only by [IsAlpha]: the
+    product's dividend set is truncated by an interval, so it is not γ of
+    any congruence. And the residue is read at a *member* [b] of [S2],
+    not at the stored representative — residues are not normalised in
+    this representation, so γ(-3,4) and γ(1,4) are the same set while
+    [Z.quot (-3) 2 = -1] is odd and [Z.quot 1 2 = 0] is even.
+    [cong_alpha_shift_rep] moves the representative onto a member. *)
+
+(** Any member of the set may serve as the residue: two congruences with
+    the same modulus and mutually congruent residues have the same γ. *)
+Lemma cong_alpha_shift_rep (r m b : Z) (S : ℘ Z) :
+  IsAlpha (A:=cong_ad) (r, m) S -> b ∈ S ->
+  IsAlpha (A:=cong_ad) (b, m) S.
+Proof.
+  move=> Ha Hb a'.
+  have Hmb : (m | b - r) := is_alpha_overapproximates _ _ Ha b Hb.
+  rewrite (Ha a'); case: a' => [r' m'] /=; split;
+    move=> [Hdiv Hres]; (split; first exact: Hdiv).
+  - by have [k Hk] := Hmb; have [j Hj] := Hres;
+      have [i Hi] := Hdiv; exists (k * i + j); lia.
+  - by have [k Hk] := Hmb; have [j Hj] := Hres;
+      have [i Hi] := Hdiv; exists (j - k * i); lia.
+Qed.
+
+
+
+(** Truncating division by [d] is linear on a sign-definite set: if [b] and [b +
+    d*k] lie on the same side of zero then [quot (b + d*k) d = quot b d + k]. In
+    other words, shifting the dividend by a multiple [d*k] of the divisor [d]
+    shifts the quotient by exactly the cofactor [k]. This fails once [b] and [b
+    + d*k] cross zero, because [Z.quot] truncates toward zero: [quot (-1) 2 = 0]
+    but [quot (-1 + 2) 2 = 0], not [0 + 1]. Crossing zero is exactly what the
+    sign hypothesis rules out, and it is the only place the sign is actually
+    used in [cong_quot_const_sign_alpha_complete]. *)
+Lemma Z_quot_shift_nonneg (b k d : Z) :
+  0 < d -> 0 <= b -> 0 <= b + d * k ->
+  Z.quot (b + d * k) d = Z.quot b d + k.
+Proof.
+  move=> Hd Hb Hx.
+  rewrite (Z.quot_div_nonneg _ _ Hx Hd) (Z.quot_div_nonneg _ _ Hb Hd).
+  by rewrite Z.mul_comm Z.div_add //; lia.
+Qed.
+
+Lemma Z_quot_shift_dpos (b k d : Z) :
+  0 < d ->
+  (0 <= b /\ 0 <= b + d * k) \/ (b <= 0 /\ b + d * k <= 0) ->
+  Z.quot (b + d * k) d = Z.quot b d + k.
+Proof.
+  move=> Hd [[Hb Hx]|[Hb Hx]]; first exact: Z_quot_shift_nonneg.
+  have H := Z_quot_shift_nonneg (- b) (- k) d Hd ltac:(lia) ltac:(lia).
+  have E : - b + d * - k = - (b + d * k) by lia.
+  by rewrite E !Zquot_opp_l in H; lia.
+Qed.
+
+Lemma Z_quot_shift_sign (b k d : Z) :
+  d <> 0 ->
+  (0 <= b /\ 0 <= b + d * k) \/ (b <= 0 /\ b + d * k <= 0) ->
+  Z.quot (b + d * k) d = Z.quot b d + k.
+Proof.
+  move=> Hd Hsign.
+  case: (Z.lt_total 0 d) => [Hd0|[Hd0|Hd0]]; first exact: Z_quot_shift_dpos.
+  - by rewrite -Hd0 in Hd.
+  - have E : b + - d * - k = b + d * k by lia.
+    have H := Z_quot_shift_dpos b (- k) (- d) ltac:(lia) ltac:(rewrite E; exact: Hsign).
+    by rewrite E !Zquot_opp_r in H; lia.
+Qed.
+
+(** ** α transports along an affine change of variable.
+
+    If [S] is the image of [T] under [y ↦ k·y + a] with [k ≠ 0], then the best
+    congruence of [T] obtained by that of [S] by dividing modulus and residue by
+    [k]. Everything below is calculation with this one lemma.
+
+    Stated in the pullback direction ([S] known, [T] wanted), which is the one
+    that needs no gcd: a congruence bounding [T] multiplies by [k] into one
+    bounding [S], and optimality transports back by cancelling [k]. The forward
+    direction would have to divide [k] into an arbitrary bound and needs
+    [Z.gauss]. *)
+Lemma cong_alpha_affine_pullback (k a r m : Z) (S T : ℘ Z) :
+  k <> 0 ->
+  (forall x, x ∈ S <-> exists y, y ∈ T /\ x = k * y + a) ->
+  IsAlpha (A:=cong_ad) (k * r + a, k * m) S ->
+  IsAlpha (A:=cong_ad) (r, m) T.
+Proof.
+  move=> Hk HST Ha.
+  apply/is_alpha_iff_best_abstraction; apply/best_abstraction_iff; split.
+  - (* over-approximation: push [y] over to [S] and cancel [k] *)
+    move=> y Hy.
+    have HxS : k * y + a ∈ S by apply/HST; exists y.
+    have [j Hj] := is_alpha_overapproximates _ _ Ha _ HxS.
+    by exists j; apply: (Z.mul_reg_l _ _ k Hk); lia.
+  - (* optimality: multiply a bound on [T] into a bound on [S] *)
+    move=> [r' m'] Hover'.
+    have Hpull : S ⊆ γ[cong_ad] (k * r' + a, k * m').
+    { move=> x /HST [y [Hy ->]].
+      by have [j Hj] := Hover' y Hy; exists j; lia. }
+    have [[s Hs] [t Ht]] := proj1 (Ha _) Hpull.
+    by split; [exists s | exists t]; apply: (Z.mul_reg_l _ _ k Hk); lia.
+Qed.
+
+(** The rule itself: a constant divisor [d] whose value divides the
+    modulus, over a dividend set of definite sign. On such a set
+    [x ↦ x ÷ d] *is* an affine change of variable — that is exactly what
+    [Z_quot_shift_sign] says — so the quotient set is again a
+    progression, of modulus [m ÷ d], with the quotient of any member as
+    residue.
+
+    Compare [cong_quot]'s [const_divides], which additionally needs
+    [d | r]: that guard buys exact divisibility of every element, which
+    is how it survives the sign change γ of a congruence always contains.
+    Here the sign hypothesis does that job instead, and [d | r] is not
+    needed. *)
+Lemma cong_quot_const_sign_alpha_complete (b m d : Z) (S2 S1 : ℘ Z) :
+  d <> 0 -> (d | m) ->
+  b ∈ S2 ->
+  (forall z, z ∈ S2 -> 0 <= z) \/ (forall z, z ∈ S2 -> z <= 0) ->
+  IsAlpha (A:=cong_ad) (b, m) S2 ->
+  (forall z, z ∈ S1 <-> z = d) ->
+  IsAlpha (A:=cong_ad) (Z.quot b d, Z.quot m d)
+    (collecting_quot S2 S1).
+Proof.
+  move=> Hd Hdm Hb Hsign Ha HS1.
+  have [q Hq] := Hdm.
+  have Hqd : Z.quot m d = q by rewrite Hq Z.quot_mul.
+  set c := Z.quot b d.
+  set T := collecting_quot S2 S1.
+  (* The dividend is recovered from its quotient: on a sign-definite set
+     the quotient map is the affine map [y ↦ d·y + (b - d·c)]. This is the
+     only step that touches arithmetic, and the only use of the sign. *)
+  have Hshift : forall x, x ∈ S2 -> x = d * Z.quot x d + (b - d * c).
+  { move=> x Hx.
+    have [t Ht] := is_alpha_overapproximates _ _ Ha x Hx.
+    have Hxeq : b + d * (t * q) = x by rewrite Hq in Ht; lia.
+    have Hsg : (0 <= b /\ 0 <= b + d * (t * q))
+            \/ (b <= 0 /\ b + d * (t * q) <= 0).
+    { rewrite Hxeq; case: Hsign => Hs; [left|right];
+        split; [exact: Hs b Hb | exact: Hs x Hx | exact: Hs b Hb | exact: Hs x Hx]. }
+    have Hq' : Z.quot x d = c + t * q
+      by rewrite -Hxeq (Z_quot_shift_sign b (t * q) d Hd Hsg).
+    by rewrite Hq' -Hxeq; lia. }
+  have Hbij : forall x, x ∈ S2 <-> exists y, y ∈ T /\ x = d * y + (b - d * c).
+  { move=> x; split.
+    - move=> Hx; exists (Z.quot x d); split; last exact: (Hshift x Hx).
+      exists x, d; split; first exact: Hx.
+      split; first exact: (proj2 (HS1 d) (erefl d)).
+      by split; first exact: Hd.
+    - move=> [y [[x' [d' [Hx' [Hd' [_ Heq]]]]] ->]].
+      have Hd'd : d' = d := proj1 (HS1 d') Hd'.
+      have Hinv := Hshift x' Hx'.
+      by rewrite -Heq Hd'd -Hinv. }
+  rewrite Hqd -/c.
+  apply: (cong_alpha_affine_pullback d (b - d * c) c q S2 T Hd Hbij).
+  have -> : d * c + (b - d * c) = b by lia.
+  have -> : d * q = m by lia.
+  exact: Ha.
 Qed.
