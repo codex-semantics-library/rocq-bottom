@@ -729,6 +729,26 @@ Lemma lubtop_cofinal (S S' : ℘ Z) (h : lubtop) :
   IsAlpha (A:=lubtop) h S' -> IsAlpha (A:=lubtop) h S.
 Proof. move=> Hsub Hcof. exact: (proj1 (BoundAbstraction.LUBUnbounded.cofinal_above_same_alpha Z.le S S' h Hsub Hcof)). Qed.
 
+(** Both bounds at once, and in both directions. Right-to-left is the one the
+    bound-at-a-time lemmas above cannot express: it carries an [IsAlpha] proved
+    on a superset [S] down to a subset [S'] with the same bounds, which is how a
+    transfer function assembled from α-complete pieces (whose collecting set is
+    a relaxation, like a Minkowski sum, say) is shown α-complete for the set it
+    is really about.
+
+    The second and third hypotheses say that any bound of [S'] bounds [S]
+    too. Combined with [S' ⊆ S] this makes [S] and [S'] share the same
+    bounds. The point of stating it this way (rather than the witness form [forall z
+    ∈ S, exists z' ∈ S', z' <= z] used by [glbtop_cofinal] above) is that a bound may
+    be [Top]: then the obligation [S ⊆ γ Top] is trivial, while no concrete
+    element could witness a bound that does not exist. *)
+Lemma itv_same_alpha_same_bounds (S S' : ℘ Z) (i : interval) :
+  S' ⊆ S ->
+  (forall b : glbtop, S' ⊆ γ[glbtop] b -> S ⊆ γ[glbtop] b) ->
+  (forall b : lubtop, S' ⊆ γ[lubtop] b -> S ⊆ γ[lubtop] b) ->
+  IsAlpha (A:=itv) i S' <-> IsAlpha (A:=itv) i S.
+Proof. exact: (BoundAbstraction.IntervalUnbounded.same_alpha_same_bounds Z.le S S' i). Qed.
+
 (** The best abstraction of a set pinned between two of its own elements: both
     bounds are attained, so each is the glb (lub) of the set. *)
 Lemma is_alpha_itv_attained (l h : Z) (S : ℘ Z) :
