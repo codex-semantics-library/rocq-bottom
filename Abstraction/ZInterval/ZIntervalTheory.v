@@ -496,6 +496,47 @@ Proof.
   by split=> -[H1 H2]; split=> //; move: H2; unfold_set; simpl; lia.
 Qed.
 
+(** ** Absorbing a sign clamp into a meet.
+
+     Clamping one operand of a meet changes nothing when the *other* operand
+     is already clamped at least as tightly: [meet_lb] is a [Z.max], so a [1]
+     already present on one side makes a [1] on the other side invisible.
+
+     This is what makes the ∓1 clamp on the incoming divisor redundant in
+     [interval_quot_solve_right_split] ([ZIntervalBackwardOps.v]) — the solve
+     half it is met with is itself clamped off zero. It stops being redundant
+     the moment the half carries a *better* bound than ∓1, which is what the
+     congruence product's snapped divisor halves supply. *)
+Lemma meet_lb_clamp_lower_absorb (k v : Z) (a : WithTop.with_top Z) :
+  k <= v ->
+  ZInterval.meet_lb (ZInterval.clamp_lower_bound k a) (WithTop.NotTop v)
+  = ZInterval.meet_lb a (WithTop.NotTop v).
+Proof. by case: a => [|z] /= H; f_equal; lia. Qed.
+
+Lemma meet_ub_clamp_upper_absorb (k v : Z) (a : WithTop.with_top Z) :
+  v <= k ->
+  ZInterval.meet_ub (ZInterval.clamp_upper_bound k a) (WithTop.NotTop v)
+  = ZInterval.meet_ub a (WithTop.NotTop v).
+Proof. by case: a => [|z] /= H; f_equal; lia. Qed.
+
+Lemma itv_meet_strictly_positive_part_absorb (i x : interval) (v : Z) :
+  fst x = WithTop.NotTop v -> 1 <= v ->
+  ZInterval.meet (ZInterval.itv_strictly_positive_part i) x = ZInterval.meet i x.
+Proof.
+  move: i x => [l h] [lx hx] /= -> Hv.
+  by rewrite /ZInterval.meet /ZInterval.itv_strictly_positive_part /=
+             (meet_lb_clamp_lower_absorb 1 v l Hv).
+Qed.
+
+Lemma itv_meet_strictly_negative_part_absorb (i x : interval) (v : Z) :
+  snd x = WithTop.NotTop v -> v <= -1 ->
+  ZInterval.meet (ZInterval.itv_strictly_negative_part i) x = ZInterval.meet i x.
+Proof.
+  move: i x => [l h] [lx hx] /= -> Hv.
+  by rewrite /ZInterval.meet /ZInterval.itv_strictly_negative_part /=
+             (meet_ub_clamp_upper_absorb (-1) v h Hv).
+Qed.
+
 (** ** Structural equality of intervals. *)
 
 Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (ZInterval.bound_equal a b).
