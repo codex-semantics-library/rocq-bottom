@@ -64,6 +64,23 @@ let meet i1 i2 =
       | WithTop.Top -> h1
       | WithTop.NotTop y -> WithTop.NotTop (Z.min x y))))
 
+(** val itv_strictly_negative_part : interval -> interval **)
+
+let itv_strictly_negative_part = function
+| (l, h) ->
+  (l,
+    (match h with
+     | WithTop.Top -> WithTop.NotTop (Z.neg Z.one)
+     | WithTop.NotTop z -> WithTop.NotTop (Z.min z (Z.neg Z.one))))
+
+(** val itv_strictly_positive_part : interval -> interval **)
+
+let itv_strictly_positive_part = function
+| (l, h) ->
+  ((match l with
+    | WithTop.Top -> WithTop.NotTop Z.one
+    | WithTop.NotTop z -> WithTop.NotTop (Z.max z Z.one)), h)
+
 (** val equiv : interval -> interval -> bool **)
 
 let equiv i1 i2 =

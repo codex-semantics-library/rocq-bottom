@@ -12,6 +12,10 @@ val join : interval -> interval -> interval
 
 val meet : interval -> interval -> interval
 
+val itv_strictly_negative_part : interval -> interval
+
+val itv_strictly_positive_part : interval -> interval
+
 val equiv : interval -> interval -> bool
 
 val non_bottomb : interval -> bool
