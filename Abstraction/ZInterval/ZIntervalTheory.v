@@ -412,6 +412,21 @@ Proof.
     unfold_set_equiv => c; unfold_set; simpl; lia.
 Qed.
 
+(** The same fact pointwise, as a view.  [itv_meet_exact] is the statement a
+    calculational derivation wants; this is the one a proof *about a member*
+    wants, and going through the set-level form costs a [proj1]/[proj2] and an
+    [unfold_set] to take the [∩] apart again at every use.  With this, a
+    hypothesis is taken apart by [move=> /itv_meetE [H1 H2]] and a goal is built
+    by [apply/itv_meetE; split].
+
+    TODO: this shape is under-used in the development and there are probably
+    more of them worth naming. *)
+Lemma itv_meetE (i1 i2 : interval) (c : Z) :
+  c ∈ γ[itv] (ZInterval.meet i1 i2) <-> c ∈ γ[itv] i1 /\ c ∈ γ[itv] i2.
+Proof.
+  move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]]; split; unfold_set; simpl; lia.
+Qed.
+
 (** The meet is a lower bound in the abstract order. *)
 Lemma itv_meet_lower_bound_l (i1 i2 : interval) : ZInterval.meet i1 i2 ⊑[itv] i1.
 Proof.
