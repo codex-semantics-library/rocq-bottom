@@ -399,6 +399,12 @@ Global Instance itv_join_is_lub : JoinIsLUB itv :=
 Lemma itv_meet_eq_al_meet (i1 i2 : interval) : ZInterval.meet i1 i2 = i1 ⊓[itv] i2.
 Proof. by move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]]. Qed.
 
+(** The join counterpart, so that the computational [ZInterval.join] can be
+    handed to any lemma stated on the lattice's ⊔ — [join_sound],
+    [join_lub], [is_alpha_join_split]. *)
+Lemma itv_join_eq_al_join (i1 i2 : interval) : ZInterval.join i1 i2 = i1 ⊔[itv] i2.
+Proof. by move: i1 i2 => [[|l1] [|h1]] [[|l2] [|h2]]. Qed.
+
 Lemma itv_meet_exact (i1 i2 : interval) :
   γ[itv] (ZInterval.meet i1 i2) ⊆⊇ γ[itv] i1 ∩ γ[itv] i2.
 Proof.
