@@ -89,56 +89,12 @@ Qed.
     (r1+m1,r2), (r1,r2+m2), (r1+m1,r2+m2) — their differences showing
     that m' divides each of r1·m2, m1·r2, m1·m2, hence their gcd.
     Corners are what an arbitrary S2 does not have: r1 + m1 need not
-    belong to it. [cong_alpha_modulus_divide] below replaces them,
-    recovering a divisibility of the *modulus* from one satisfied by
-    every difference of elements — which is exactly what optimality of
-    (r1,m1) says. *)
-
-(** [m] divides [a·t] exactly when [m/gcd(m,t)] divides [a]: dividing out
-    the common part leaves a factor coprime to [t/gcd(m,t)], which [Gauss]
-    cancels. Both directions are needed below — the forward one turns a
-    divisibility about products into a congruence bounding an operand set,
-    the backward one turns the modulus divisibility that optimality hands
-    back into a product one again. This is the gcd bookkeeping that
-    [cong_alpha_affine_pullback] (QuotTheory.v) is stated so as to avoid;
-    here there is no direction that avoids it. *)
-Lemma Z_divide_mul_iff_div_gcd (m t a : Z) :
-  t <> 0 -> ((m | a * t) <-> (m / Z.gcd m t | a)).
-Proof.
-  move=> Ht.
-  have Hg : 0 < Z.gcd m t.
-  { have Hnn := Z.gcd_nonneg m t.
-    case: (Z.eq_dec (Z.gcd m t) 0) => [H0|Hne]; last lia.
-    by move: (Z.gcd_eq_0_r _ _ H0). }
-  have Hrp : rel_prime (m / Z.gcd m t) (t / Z.gcd m t)
-    by apply/Zgcd_1_rel_prime; apply: Z.gcd_div_gcd; [lia | reflexivity].
-  have Hm := Zdivide_Zdiv_eq _ _ Hg (Z.gcd_divide_l m t).
-  have Htg := Zdivide_Zdiv_eq _ _ Hg (Z.gcd_divide_r m t).
-  move: Hg Hrp Hm Htg. set g := Z.gcd m t. set m' := m / g. set t' := t / g.
-  move=> Hg Hrp Hm Htg. rewrite Hm Htg. split.
-  - move=> [k Hk]. apply: (Gauss _ t'); last exact: Hrp.
-    exists k. by apply: (Z.mul_reg_l _ _ g); lia.
-  - move=> [k Hk]. exists (k * t'). rewrite Hk. ring.
-Qed.
-
-(** From a divisibility satisfied by every difference [x - s] of elements
-    of [S] scaled by [t], to the same divisibility on the modulus of the
-    best congruence of [S]. The hypothesis says [S] sits inside the
-    congruence of modulus [m/gcd(m,t)] around [s], and optimality of
-    [(r,mm)] turns that into [m/gcd(m,t) | mm]. *)
-Lemma cong_alpha_modulus_divide (r mm s t m : Z) (S : ℘ Z) :
-  IsAlpha (A:=cong_ad) (r, mm) S -> s ∈ S ->
-  (forall x, x ∈ S -> (m | (x - s) * t)) ->
-  (m | mm * t).
-Proof.
-  move=> Ha Hs Hdiv.
-  case: (Z.eq_dec t 0) => [->|Ht]; first by rewrite Z.mul_0_r; apply Z.divide_0_r.
-  have HS : S ⊆ γ[cong_ad] (s, m / Z.gcd m t).
-  { move=> x Hx. unfold_set.
-    by apply/(Z_divide_mul_iff_div_gcd m t _ Ht); apply: Hdiv. }
-  move: (proj1 (Ha (s, m / Z.gcd m t)) HS). rewrite /order => -[Hmod _].
-  by apply/(Z_divide_mul_iff_div_gcd m t _ Ht).
-Qed.
+    belong to it. What survives is optimality: (r1,m1) being the
+    *smallest* congruence containing S2, every congruence that contains
+    S2 has a modulus dividing m1. [cong_alpha_modulus_divide]
+    (ZCongruenceTheory.v) is that observation in usable form — it turns a
+    divisibility satisfied by every difference of elements of S2 into one
+    satisfied by m1, which is what the corner differences used to give. *)
 
 (** α-completeness proper. As in [cong_add_alpha_complete], no
     non-emptiness hypothesis on S2, S1 is needed: the goal [order ...] is
@@ -173,15 +129,22 @@ Proof.
       replace ((x - s2) * (y - s1))
         with (((x * y - r) - (x * s1 - r)) - ((s2 * y - r) - (s2 * s1 - r))) by ring.
       apply: Z.divide_sub_r; apply: Z.divide_sub_r; by apply: Hprod. }
-    (* Optimality of (r1,m1) and (r2,m2) turns those into facts on the moduli. *)
-    have Hm1s1 : (m | m1 * s1) by apply: (cong_alpha_modulus_divide _ _ _ _ _ _ Ha2 Hs2).
-    have Hm2s2 : (m | m2 * s2) by apply: (cong_alpha_modulus_divide _ _ _ _ _ _ Ha1 Hs1).
+    (* Optimality of (r1,m1) and (r2,m2) turns those into facts on the
+       moduli, one difference fact each: [Hm1s1] consumes [Hd2] and
+       [Hm2s2] consumes [Hd1], while [Hm2m1] consumes [Hd21] twice over,
+       once per operand — the inner application produces the very
+       hypothesis the outer one needs. *)
+    have Hm1s1 : (m | m1 * s1) by apply/(cong_alpha_modulus_divide _ _ _ _ _ _ Ha2 Hs2).
+    have Hm2s2 : (m | m2 * s2) by apply/(cong_alpha_modulus_divide _ _ _ _ _ _ Ha1 Hs1).
     have Hm2m1 : (m | m2 * m1).
-    { apply: (cong_alpha_modulus_divide _ _ _ _ _ _ Ha1 Hs1) => y Hy.
+    { apply/(cong_alpha_modulus_divide _ _ _ _ _ _ Ha1 Hs1) => y Hy.
       rewrite Z.mul_comm.
-      by apply: (cong_alpha_modulus_divide _ _ _ _ _ _ Ha2 Hs2) => x Hx;
+      by apply/(cong_alpha_modulus_divide _ _ _ _ _ _ Ha2 Hs2) => x Hx;
          apply: Hd21. }
-    (* Each witness is congruent to its residue, which moves s2, s1 to r1, r2. *)
+    (* Each witness is congruent to its residue: s2 = r1 + k2·m1 and
+       s1 = r2 + k1·m2. That substitution is what the [nia] identities
+       below perform — it replaces the arbitrary witnesses by the
+       residues, at the cost of one m1·m2 (resp. m2·s2, m1·s1) term. *)
     have [k2 Hk2] : (m1 | s2 - r1) by apply: (is_alpha_overapproximates _ _ Ha2).
     have [k1 Hk1] : (m2 | s1 - r2) by apply: (is_alpha_overapproximates _ _ Ha1).
     have Hr1m2 : (m | r1 * m2).

@@ -2,7 +2,9 @@
    order : exact (ExactOrder)          join : least upper bound (cong_ajsl, cong_join_is_lub)
 
    All transfer functions now live in Transfer_function/Congruence/; what is
-   left here is the abstraction itself plus the shared γ / carry helpers.
+   left here is the abstraction itself plus the shared γ / carry / α helpers
+   ([cong_alpha_shift_rep], [cong_alpha_modulus_iff],
+   [cong_alpha_modulus_divide]).
    add  (Z.add)  : sound + exact + α-complete  AddTheory.v
    opp  (Z.opp)  : exact                       AddTheory.v
    sub  (Z.sub)  : exact                       AddTheory.v
@@ -24,6 +26,7 @@ Require Import Quadrivalent.
 (* From Hammer Require Import Hammer. *)
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import ZCongruence.
+Require Import ZTheory.
 Require Import Stdlib.ZArith.ZArith.
 Require Import Stdlib.ZArith.Znumtheory.
 Open Scope Z_scope.             (* Arithmetic operations are all on Z; avoids %Z everywhere. *)
@@ -222,6 +225,66 @@ Proof.
   move=> Ha Hf. apply: stable => Hng.
   apply: (alpha_non_empty a S Ha) => z Hz.
   by apply/Hng/Hf; exists z.
+Qed.
+
+(** * α of a congruence: the modulus is the gcd of the differences.
+
+    [IsAlpha (r,m) S] pins [m] down as the gcd of the differences between
+    members of [S]. The three lemmas below are the usable forms of that
+    fact, and they are what stands in for the corner points [r], [r + m]
+    of a γ once the abstracted set is an arbitrary [S]. *)
+
+(** Any member of the set may serve as the residue: two congruences with
+    the same modulus and mutually congruent residues have the same γ. *)
+Lemma cong_alpha_shift_rep (r m b : Z) (S : ℘ Z) :
+  IsAlpha (A:=cong_ad) (r, m) S -> b ∈ S ->
+  IsAlpha (A:=cong_ad) (b, m) S.
+Proof.
+  move=> Ha Hb a'.
+  have Hmb : (m | b - r) := is_alpha_overapproximates _ _ Ha b Hb.
+  rewrite (Ha a'); case: a' => [r' m'] /=; split;
+    move=> [Hdiv Hres]; (split; first exact: Hdiv).
+  - by have [k Hk] := Hmb; have [j Hj] := Hres;
+      have [i Hi] := Hdiv; exists (k * i + j); lia.
+  - by have [k Hk] := Hmb; have [j Hj] := Hres;
+      have [i Hi] := Hdiv; exists (j - k * i); lia.
+Qed.
+
+(** With the representative moved onto a member [s], over-approximating [S] is
+    pure divisibility of moduli:the residue conjunct of [order] becomes
+    trivial. This is the "[mm] is the gcd of the differences" statement in the
+    form the callers want. *)
+Lemma cong_alpha_modulus_iff (r mm s M : Z) (S : ℘ Z) :
+  IsAlpha (A:=cong_ad) (r, mm) S -> s ∈ S ->
+  ((S ⊆ γ[cong_ad] (s, M)) <-> (M | mm)).
+Proof.
+  move=> Ha Hs.
+  rewrite (cong_alpha_shift_rep r mm s S Ha Hs (s, M)) /order.
+  split; first by move=> [H _].
+  by move=> H; split; [exact: H | exists 0; lia].
+Qed.
+
+(** The same with both sides scaled by an arbitrary [t]: [mm] being the
+    gcd of the differences, one may still replace "every [x - s]" by
+    "[mm]" under a common factor [t].
+
+    Scaling is what costs. [∀ x ∈ S, m | (x-s)·t] does confine [S] to a
+    congruence around [s], but one of modulus [m/gcd(m,t)] rather than
+    [m] — so the hypothesis has to have [t] divided out of [m] before
+    [cong_alpha_modulus_iff] applies, and the conclusion has to have it
+    put back. [Z_divide_mul_iff_div_gcd] is both of those steps. *)
+Lemma cong_alpha_modulus_divide (r mm s t m : Z) (S : ℘ Z) :
+  IsAlpha (A:=cong_ad) (r, mm) S -> s ∈ S ->
+  ((forall x, x ∈ S -> (m | (x - s) * t)) <-> (m | mm * t)).
+Proof.
+  move=> Ha Hs.
+  case: (Z.eq_dec t 0) => [->|Ht].
+  { by split=> [_|_ x _]; rewrite Z.mul_0_r; apply Z.divide_0_r. }
+  rewrite (Z_divide_mul_iff_div_gcd m t mm Ht)
+          -(cong_alpha_modulus_iff r mm s (m / Z.gcd m t) S Ha Hs).
+  split=> H x Hx.
+  - unfold_set. by apply/(Z_divide_mul_iff_div_gcd m t _ Ht); apply: H.
+  - apply/(Z_divide_mul_iff_div_gcd m t _ Ht). by move: (H x Hx); unfold_set.
 Qed.
 
 (** * LUB layer (proof machinery). *)

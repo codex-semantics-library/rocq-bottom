@@ -17,11 +17,12 @@
    can, and does. Stated α-complete (operand set arbitrary) because that
    product's dividend set is an interval ∩ congruence, not a γ.
 
-   Supporting: [cong_alpha_affine_pullback] (α transports along an affine
-   change of variable — the reusable half), [Z_quot_shift_sign] (the
-   arithmetic core, and the only place the sign is spent), and
-   [cong_alpha_shift_rep] (residues are not normalised, so the result's
-   residue must be read at a *member* of the set). *)
+   Supporting: [cong_alpha_affine_iff] (α transports along an affine
+   change of variable — only its pullback half is used here), and
+   [Z_quot_shift_sign] (the arithmetic core, and the only place the sign
+   is spent). The α-machinery of the domain itself — [cong_alpha_shift_rep],
+   needed because residues are not normalised, so the result's residue must
+   be read at a *member* of the set — lives in [ZCongruenceTheory.v]. *)
 
 Require Import Abstraction AbstractLattice.
 Require Import ssreflect ssrbool ssrfun.
@@ -1040,25 +1041,8 @@ Qed.
     not at the stored representative — residues are not normalised in
     this representation, so γ(-3,4) and γ(1,4) are the same set while
     [Z.quot (-3) 2 = -1] is odd and [Z.quot 1 2 = 0] is even.
-    [cong_alpha_shift_rep] moves the representative onto a member. *)
-
-(** Any member of the set may serve as the residue: two congruences with
-    the same modulus and mutually congruent residues have the same γ. *)
-Lemma cong_alpha_shift_rep (r m b : Z) (S : ℘ Z) :
-  IsAlpha (A:=cong_ad) (r, m) S -> b ∈ S ->
-  IsAlpha (A:=cong_ad) (b, m) S.
-Proof.
-  move=> Ha Hb a'.
-  have Hmb : (m | b - r) := is_alpha_overapproximates _ _ Ha b Hb.
-  rewrite (Ha a'); case: a' => [r' m'] /=; split;
-    move=> [Hdiv Hres]; (split; first exact: Hdiv).
-  - by have [k Hk] := Hmb; have [j Hj] := Hres;
-      have [i Hi] := Hdiv; exists (k * i + j); lia.
-  - by have [k Hk] := Hmb; have [j Hj] := Hres;
-      have [i Hi] := Hdiv; exists (j - k * i); lia.
-Qed.
-
-
+    [cong_alpha_shift_rep] (ZCongruenceTheory.v) moves the representative
+    onto a member. *)
 
 (** Truncating division by [d] is linear on a sign-definite set: if [b] and [b +
     d*k] lie on the same side of zero then [quot (b + d*k) d = quot b d + k]. In
@@ -1107,31 +1091,61 @@ Qed.
     congruence of [T] obtained by that of [S] by dividing modulus and residue by
     [k]. Everything below is calculation with this one lemma.
 
-    Stated in the pullback direction ([S] known, [T] wanted), which is the one
-    that needs no gcd: a congruence bounding [T] multiplies by [k] into one
-    bounding [S], and optimality transports back by cancelling [k]. The forward
-    direction would have to divide [k] into an arbitrary bound and needs
-    [Z.gauss]. *)
-Lemma cong_alpha_affine_pullback (k a r m : Z) (S T : ℘ Z) :
+    The two directions do not cost the same. Pullback ([S] known, [T] wanted)
+    needs no gcd: a congruence bounding [T] multiplies by [k] into one bounding
+    [S], and optimality transports back by cancelling [k]. The forward direction
+    has to divide [k] into an arbitrary bound, which is what
+    [cong_alpha_modulus_divide] (ZCongruenceTheory.v) does, and through it
+    [Z.gauss]. Only the pullback half has a caller today. *)
+Lemma cong_alpha_affine_iff (k a r m : Z) (S T : ℘ Z) :
   k <> 0 ->
   (forall x, x ∈ S <-> exists y, y ∈ T /\ x = k * y + a) ->
-  IsAlpha (A:=cong_ad) (k * r + a, k * m) S ->
-  IsAlpha (A:=cong_ad) (r, m) T.
+  (IsAlpha (A:=cong_ad) (k * r + a, k * m) S <-> IsAlpha (A:=cong_ad) (r, m) T).
 Proof.
-  move=> Hk HST Ha.
-  apply/is_alpha_iff_best_abstraction; apply/best_abstraction_iff; split.
-  - (* over-approximation: push [y] over to [S] and cancel [k] *)
-    move=> y Hy.
-    have HxS : k * y + a ∈ S by apply/HST; exists y.
-    have [j Hj] := is_alpha_overapproximates _ _ Ha _ HxS.
-    by exists j; apply: (Z.mul_reg_l _ _ k Hk); lia.
-  - (* optimality: multiply a bound on [T] into a bound on [S] *)
-    move=> [r' m'] Hover'.
-    have Hpull : S ⊆ γ[cong_ad] (k * r' + a, k * m').
-    { move=> x /HST [y [Hy ->]].
-      by have [j Hj] := Hover' y Hy; exists j; lia. }
-    have [[s Hs] [t Ht]] := proj1 (Ha _) Hpull.
-    by split; [exists s | exists t]; apply: (Z.mul_reg_l _ _ k Hk); lia.
+  move=> Hk HST. split.
+  - (* pullback *)
+    move=> Ha.
+    apply/is_alpha_iff_best_abstraction; apply/best_abstraction_iff; split.
+    + (* over-approximation: push [y] over to [S] and cancel [k] *)
+      move=> y Hy.
+      have HxS : k * y + a ∈ S by apply/HST; exists y.
+      have [j Hj] := is_alpha_overapproximates _ _ Ha _ HxS.
+      by exists j; apply: (Z.mul_reg_l _ _ k Hk); lia.
+    + (* optimality: multiply a bound on [T] into a bound on [S] *)
+      move=> [r' m'] Hover'.
+      have Hpull : S ⊆ γ[cong_ad] (k * r' + a, k * m').
+      { move=> x /HST [y [Hy ->]].
+        by have [j Hj] := Hover' y Hy; exists j; lia. }
+      have [[s Hs] [t Ht]] := proj1 (Ha _) Hpull.
+      by split; [exists s | exists t]; apply: (Z.mul_reg_l _ _ k Hk); lia.
+  - (* forward *)
+    move=> Ha [r' m']. rewrite /order. split; last first.
+    + (* over-approximation: shift a bound on [S] back through the map *)
+      move=> [Hmod Hres] x /HST [y [Hy ->]].
+      have [i Hi] := is_alpha_overapproximates _ _ Ha y Hy.  (* y - r = i·m *)
+      have [j Hj] := Hmod.                                   (* k·m = j·m' *)
+      have [l Hl] := Hres.                                   (* k·r + a - r' = l·m' *)
+      exists (i * j + l).
+      have Hik : k * (y - r) = k * (i * m) by rewrite Hi.
+      have Hij : i * (k * m) = i * (j * m') by rewrite Hj.
+      lia.
+    + (* optimality: divide [k] into the arbitrary bound (r', m') *)
+      move=> Hsub.
+      apply: (alpha_non_empty_witness (r, m) T Ha) => -[b Hb].
+      have HbS : k * b + a ∈ S by apply/HST; exists b.
+      have [i Hi] : (m' | k * b + a - r') by move: (Hsub _ HbS).
+      have Hmk : (m' | m * k).
+      { apply/(cong_alpha_modulus_divide r m b k m' T Ha Hb) => y Hy.
+        have HyS : k * y + a ∈ S by apply/HST; exists y.
+        have [j Hj] : (m' | k * y + a - r') by move: (Hsub _ HyS).
+        by exists (j - i); lia. }
+      have [t Ht] := is_alpha_overapproximates _ _ Ha b Hb.   (* b - r = t·m *)
+      have [l Hl] := Hmk.                                     (* m·k = l·m' *)
+      split; first by rewrite Z.mul_comm.
+      exists (i - t * l).
+      have Htk : k * (b - r) = k * (t * m) by rewrite Ht.
+      have Htl : t * (m * k) = t * (l * m') by rewrite Hl.
+      lia.
 Qed.
 
 (** The rule itself: a constant divisor [d] whose value divides the
@@ -1185,7 +1199,7 @@ Proof.
       have Hinv := Hshift x' Hx'.
       by rewrite -Heq Hd'd -Hinv. }
   rewrite Hqd -/c.
-  apply: (cong_alpha_affine_pullback d (b - d * c) c q S2 T Hd Hbij).
+  apply/(cong_alpha_affine_iff d (b - d * c) c q S2 T Hd Hbij).
   have -> : d * c + (b - d * c) = b by lia.
   have -> : d * q = m by lia.
   exact: Ha.

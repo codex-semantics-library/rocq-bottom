@@ -8,8 +8,37 @@ Require Import Abstraction.
 Require Import ssreflect ssrbool ssrfun.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
+Require Import Stdlib.ZArith.Znumtheory. (* Gauss, rel_prime *)
 Open Scope Z_scope.
 Generalizable All Variables.
+
+(** * Divisibility and gcd. *)
+
+(** Cancelling a known factor against an unknown modulus: [m] divides
+    [a·t] exactly when [m/gcd(m,t)] — the part of [m] that [t] does not
+    already account for — divides [a].
+
+    With [g = gcd(m,t)], [m = g·m'] and [t = g·t'], the cofactors [m']
+    and [t'] are coprime, so [m' | a·t'] forces [m' | a]: that is
+    [Gauss]. The other direction is immediate.  *)
+Lemma Z_divide_mul_iff_div_gcd (m t a : Z) :
+  t <> 0 -> ((m | a * t) <-> (m / Z.gcd m t | a)).
+Proof.
+  move=> Ht.
+  have Hg : 0 < Z.gcd m t.
+  { have Hnn := Z.gcd_nonneg m t.
+    case: (Z.eq_dec (Z.gcd m t) 0) => [H0|Hne]; last lia.
+    by move: (Z.gcd_eq_0_r _ _ H0). }
+  have Hrp : rel_prime (m / Z.gcd m t) (t / Z.gcd m t)
+    by apply/Zgcd_1_rel_prime; apply: Z.gcd_div_gcd; [lia | reflexivity].
+  have Hm := Zdivide_Zdiv_eq _ _ Hg (Z.gcd_divide_l m t).
+  have Htg := Zdivide_Zdiv_eq _ _ Hg (Z.gcd_divide_r m t).
+  move: Hg Hrp Hm Htg. set g := Z.gcd m t. set m' := m / g. set t' := t / g.
+  move=> Hg Hrp Hm Htg. rewrite Hm Htg. split.
+  - move=> [k Hk]. apply: (Gauss _ t'); last exact: Hrp.
+    exists k. by apply: (Z.mul_reg_l _ _ g); lia.
+  - move=> [k Hk]. exists (k * t'). rewrite Hk. ring.
+Qed.
 
 (** * Sign parts of a set of integers.
 
