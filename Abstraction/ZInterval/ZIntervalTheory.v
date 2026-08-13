@@ -435,6 +435,67 @@ Proof.
     repeat (apply/andP; split=> //); apply/Z.leb_spec0; lia.
 Qed.
 
+(** ** Bound-level meet identities and clamps.
+
+     Meeting an abstract bound with [Top] is the identity, but the or-pattern
+     in [meet_lb]/[meet_ub] compiles to a match on the *first* argument, so it
+     does not reduce on a variable bound.  These two lemmas make that
+     reduction explicit.  [QuotBackwardTheory.v] used to carry them; they are
+     carrier facts and belong here. *)
+Lemma meet_lb_top_r (a : WithTop.with_top Z) : ZInterval.meet_lb a WithTop.Top = a.
+Proof. by case: a. Qed.
+
+Lemma meet_ub_top_r (a : WithTop.with_top Z) : ZInterval.meet_ub a WithTop.Top = a.
+Proof. by case: a. Qed.
+
+(** The specialised [clamp_*_bound] is exactly the generic [meet_lb] /
+    [meet_ub] with a known concrete second argument.  This is the bridge
+     from the efficient form to any lemma stated on [meet]. *)
+Lemma clamp_lower_bound_meetE (k : Z) (b : WithTop.with_top Z) :
+  ZInterval.clamp_lower_bound k b = ZInterval.meet_lb b (WithTop.NotTop k).
+Proof. by case: b. Qed.
+
+Lemma clamp_upper_bound_meetE (k : Z) (b : WithTop.with_top Z) :
+  ZInterval.clamp_upper_bound k b = ZInterval.meet_ub b (WithTop.NotTop k).
+Proof. by case: b. Qed.
+
+(** ** Sign halves: the interval-level [strictly_negative_part] /
+     [strictly_positive_part].
+
+     The efficient form clamps only the relevant bound; the bridge back to
+     the generic [meet] form is one rewrite.  The pointwise [γ] view is the
+     one the backward quotient proofs use most. *)
+
+Lemma itv_strictly_negative_part_meetE (i : interval) :
+  ZInterval.itv_strictly_negative_part i =
+  ZInterval.meet i (WithTop.Top, WithTop.NotTop (-1)).
+Proof.
+  move: i => [l h]. rewrite /ZInterval.itv_strictly_negative_part
+    /ZInterval.meet /= meet_lb_top_r clamp_upper_bound_meetE. by case: h.
+Qed.
+
+Lemma itv_strictly_positive_part_meetE (i : interval) :
+  ZInterval.itv_strictly_positive_part i =
+  ZInterval.meet i (WithTop.NotTop 1, WithTop.Top).
+Proof.
+  move: i => [l h]. rewrite /ZInterval.itv_strictly_positive_part
+    /ZInterval.meet /= meet_ub_top_r clamp_lower_bound_meetE. by case: l.
+Qed.
+
+Lemma itv_strictly_negative_partE (i : interval) (c : Z) :
+  c ∈ γ[itv] (ZInterval.itv_strictly_negative_part i) <-> c ∈ γ[itv] i /\ c <= -1.
+Proof.
+  rewrite itv_strictly_negative_part_meetE itv_meetE.
+  by split=> -[H1 H2]; split=> //; move: H2; unfold_set; simpl; lia.
+Qed.
+
+Lemma itv_strictly_positive_partE (i : interval) (c : Z) :
+  c ∈ γ[itv] (ZInterval.itv_strictly_positive_part i) <-> c ∈ γ[itv] i /\ 1 <= c.
+Proof.
+  rewrite itv_strictly_positive_part_meetE itv_meetE.
+  by split=> -[H1 H2]; split=> //; move: H2; unfold_set; simpl; lia.
+Qed.
+
 (** ** Structural equality of intervals. *)
 
 Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (ZInterval.bound_equal a b).

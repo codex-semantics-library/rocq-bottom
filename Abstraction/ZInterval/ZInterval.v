@@ -95,6 +95,31 @@ Definition meet (i1 i2 : interval) : interval :=
   let (l2, h2) := i2 in
   (meet_lb l1 l2, meet_ub h1 h2).
 
+(** Clamping an abstract bound to a known concrete value.  These are [meet_lb b
+    (NotTop k)] / [meet_ub b (NotTop k)] specialised to a known second
+    argument. *)
+Definition clamp_lower_bound (k : Z) (b : WithTop.with_top Z) : WithTop.with_top Z :=
+  match b with
+  | WithTop.Top => WithTop.NotTop k
+  | WithTop.NotTop z => WithTop.NotTop (Z.max z k)
+  end.
+
+Definition clamp_upper_bound (k : Z) (b : WithTop.with_top Z) : WithTop.with_top Z :=
+  match b with
+  | WithTop.Top => WithTop.NotTop k
+  | WithTop.NotTop z => WithTop.NotTop (Z.min z k)
+  end.
+
+(* TODO: There are more opportunitie to factor the code using these functions. *)
+(** The sign halves of an interval, clamped to ∓1.  These are the
+    interval-level analogues of [strictly_negative_part] /
+    [strictly_positive_part] ([ZTheory.v]). *)
+Definition itv_strictly_negative_part (i : interval) : interval :=
+  let (l, h) := i in (l, clamp_upper_bound (-1) h).
+
+Definition itv_strictly_positive_part (i : interval) : interval :=
+  let (l, h) := i in (clamp_lower_bound 1 l, h).
+
 (** Structural equality of intervals. Used by the backward transfer
     functions to report "nothing learned" ([None]) in the low-level
     [option]-based refinement interface; it is not a γ-level test (two
