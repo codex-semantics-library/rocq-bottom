@@ -722,12 +722,12 @@ Qed.
 Lemma glbtop_cofinal (S S' : ℘ Z) (l : glbtop) :
   S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z' <= z) ->
   IsAlpha (A:=glbtop) l S' -> IsAlpha (A:=glbtop) l S.
-Proof. exact: (BoundAbstraction.GLBUnbounded.cofinal_below Z.le S S' l). Qed.
+Proof. move=> Hsub Hcof. exact: (proj1 (BoundAbstraction.GLBUnbounded.cofinal_below_same_alpha Z.le S S' l Hsub Hcof)). Qed.
 
 Lemma lubtop_cofinal (S S' : ℘ Z) (h : lubtop) :
   S' ⊆ S -> (forall z, z ∈ S -> exists z', z' ∈ S' /\ z <= z') ->
   IsAlpha (A:=lubtop) h S' -> IsAlpha (A:=lubtop) h S.
-Proof. exact: (BoundAbstraction.LUBUnbounded.cofinal_above Z.le S S' h). Qed.
+Proof. move=> Hsub Hcof. exact: (proj1 (BoundAbstraction.LUBUnbounded.cofinal_above_same_alpha Z.le S S' h Hsub Hcof)). Qed.
 
 (** The best abstraction of a set pinned between two of its own elements: both
     bounds are attained, so each is the glb (lub) of the set. *)
