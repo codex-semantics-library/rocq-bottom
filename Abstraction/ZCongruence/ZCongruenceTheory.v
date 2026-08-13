@@ -6,7 +6,7 @@
    add  (Z.add)  : sound + exact + α-complete  AddTheory.v
    opp  (Z.opp)  : exact                       AddTheory.v
    sub  (Z.sub)  : exact                       AddTheory.v
-   mul  (Z.mul)  : sound + best, NOT γ-exact  MulTheory.v
+   mul  (Z.mul)  : sound + α-complete + best, NOT γ-exact  MulTheory.v
    div  (Z.div)  : best, exact in A/B/D1  DivTheory.v
    quot (Z.quot) : best                 QuotTheory.v
    le   (Z.leb)  : exact + best         LeTheory.v
