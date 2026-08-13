@@ -17,6 +17,7 @@ Require Import Stdlib.Bool.Bool.
 Require Import Quadrivalent.
 From Stdlib Require Import Lia. (* lia/nia; avoid Psatz which loads Reals axioms *)
 Require Import Stdlib.ZArith.ZArith.
+Require Import ZTheory.
 Require Import ZInterval.
 Require Import ZIntervalTheory.
 Require Import Transfer_function.ZInterval.ZIntervalOps.
@@ -874,6 +875,37 @@ Section Interval_mul.
     exact: (binary_alpha_complete_to_best itv itv itv interval_mul
               _ _ _
               (interval_mul_alpha_complete i2 i1 _ _ Hnb1 Hnb2 Hex2 Hex1)).
+  Qed.
+
+  (** Negating both operands leaves the abstract product alone, exactly as it
+      leaves the concrete one alone ([collecting_mul_opp_both]).  Both sides are
+      the best abstraction of that one set, and best abstractions of a set are
+      unique, so we don't even need to inspect the content of the transfer
+      functions. Note that this is only true for non-bottom domains. *)
+  Lemma interval_mul_opp_opp (i2 i1 : interval) :
+    non_bottom i1 -> non_bottom i2 ->
+    interval_mul (interval_opp i2) (interval_opp i1) = interval_mul i2 i1.
+  Proof.
+    move=> Hnb1 Hnb2.
+    have Hnb1' := interval_opp_preserves_non_bottom _ Hnb1.
+    have Hnb2' := interval_opp_preserves_non_bottom _ Hnb2.
+    have /non_bottom_non_empty Hex1 := Hnb1.
+    have /non_bottom_non_empty Hex2 := Hnb2.
+    apply: (is_alpha_unique itv _ _
+              (collecting_binary_forward Z.mul (γ[itv] i2) (γ[itv] i1))).
+    - (* γ of a negated interval is the negated γ, so the negated operands
+         abstract the negated sets; [collecting_mul_opp_both] puts the product
+         back. *)
+      apply: (is_alpha_set_equiv _ _ _
+                (collecting_mul_opp_both (γ[itv] i2) (γ[itv] i1))).
+      apply: (interval_mul_alpha_complete (interval_opp i2) (interval_opp i1)
+                {[ z | -z ∈ γ[itv] i2 ]} {[ z | -z ∈ γ[itv] i1 ]}
+                Hnb1' Hnb2' (opp_nonempty _ Hex2) (opp_nonempty _ Hex1)).
+      + exact: ((is_alpha_opp_iff i2 (γ[itv] i2)).1
+                  (non_bottom_is_alpha_gamma _ Hnb2)).
+      + exact: ((is_alpha_opp_iff i1 (γ[itv] i1)).1
+                  (non_bottom_is_alpha_gamma _ Hnb1)).
+    - apply/is_alpha_iff_best_abstraction. exact: (interval_mul_best i2 i1 Hnb1 Hnb2).
   Qed.
 
   (** Soundness on the raw carrier, unconditionally. [interval_mul_best]
