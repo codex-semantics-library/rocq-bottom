@@ -92,12 +92,11 @@ End AD.
    otherwise, the extraction is messy. *)
 Definition itv : abstract_lattice Z := IntervalUnbounded.al Z_CL.
 
-(** Intervals are convex: [γ[itv] (l,h)] contains every point lying between
+(** Intervals are convex: [γ[itv] i] contains every point lying between
     two of its members. Specialisation of [IntervalUnbounded.convex]. *)
-Lemma itv_convex (l h : WithTop.with_top Z) (a b x : Z) :
-  a ∈ γ[itv] (l, h) -> b ∈ γ[itv] (l, h) -> a <= x -> x <= b ->
-  x ∈ γ[itv] (l, h).
-Proof. exact: IntervalUnbounded.convex. Qed.
+Lemma itv_convex (i : interval) (a b c : Z) :
+  a ∈ γ[itv] i -> b ∈ γ[itv] i -> a <= c <= b -> c ∈ γ[itv] i.
+Proof. case: i => [[|l] [|h]]; unfold_set; simpl; lia. Qed.
 
 Definition nbitv : abstract_domain Z := NonEmpty.ad itv non_bottom.
 

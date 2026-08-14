@@ -244,7 +244,7 @@ Proof.
     have e : Z.gcd 3 8 = 1 by []. by rewrite e in Hg. }
   split.
   - (* interval covers 1, by convexity between 0 and 11 *)
-    apply: (itv_convex l h 0 11 1 H0i H11i); lia.
+    apply: (itv_convex (l, h) 0 11 1 H0i H11i); lia.
   - (* congruence: m | 1 - r, from m | 1 and m | 0 - r *)
     have Hadd := Z.divide_add_r m 1 (0 - r) Hm1 H0c'.
     have Hdiv : (m | 1 - r) by replace (1 - r) with (1 + (0 - r)) by lia.
