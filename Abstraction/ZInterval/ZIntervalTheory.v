@@ -1261,6 +1261,85 @@ Qed.
 (** [Z.le] is decidable, hence stable — needed to aim the two witnesses above
     at an arithmetic goal. *)
 Global Instance stable_Zle (a b : Z) : Stable (a <= b) := dec_stable (Z_le_dec a b).
+
+(** * Meeting an interval with a covered set.
+
+    A sufficient condition for [α (A ∩ S)] to equal [A ⊓ α S] is that [S] is a
+    union of intervals, each of which has a non-empty intersection with [A].
+
+    If this hypothesis does not hold, e.g. A = [0,10], and S = [0,5] ∪ [12,13],
+    then the set can differ: [A ⊓ α S = A ⊓ [0,13] = [0,10]] while [α (A ∩ S) =
+    α (A ∩ [0,5]) = [0,5]]. The disjoint piece, [12,13], has pushed the extreme
+    of [α S] without contributing to [A ∩ S], making the result too wide.
+
+    Here, we index the intervals by a set of integers [K], and name intervals by
+    a function [W] from [K] to intervals. *)
+Lemma itv_meet_is_alpha_covered (A b : interval) (S K : ℘ Z) (W : Z -> interval) :
+  IsAlpha (A:=itv) b S ->
+  S ⊆⊇ {[ c | exists k, k ∈ K /\ c ∈ γ[itv] (W k) ]} ->
+  (forall k, k ∈ K -> exists c, c ∈ γ[itv] A /\ c ∈ γ[itv] (W k)) ->
+  (exists c, c ∈ γ[itv] A /\ c ∈ S) ->
+  IsAlpha (A:=itv) (ZInterval.meet A b) {[ c | c ∈ γ[itv] A /\ c ∈ S ]}.
+Proof.
+  move: b => [lb hb] Hb Hcov Hmeets Hne.
+  have HSb : S ⊆ γ[itv] (lb, hb) by apply: (proj2 (Hb _)); reflexivity.
+  move: (Hb) => /Conjunction.is_alpha_pair_iff [Hgl Hlu].
+  set S' : ℘ Z := {[ c | c ∈ γ[itv] A /\ c ∈ S ]}.
+  have HS' : forall c, c ∈ S' <-> (c ∈ γ[itv] A /\ c ∈ S)
+    by move=> c; rewrite /S'; unfold_set.
+  have Hsub : S' ⊆ γ[itv] (ZInterval.meet A (lb, hb)).
+  { move=> c /HS' [HA HS]. apply/itv_meetE; split=> //. exact: HSb. }
+  (* The content: a member of [S] on one side of [c0 ∈ γ A] yields a member of
+     [S'] no further from [c0] — either the witness that its own piece meets
+     [A], or [c0] itself, which that piece then contains by convexity. *)
+  have Hpiece : forall s, s ∈ S ->
+      exists k, k ∈ K /\ s ∈ γ[itv] (W k) /\
+                (forall c, c ∈ γ[itv] (W k) -> c ∈ S) /\
+                (exists a, a ∈ γ[itv] A /\ a ∈ γ[itv] (W k)).
+  { move=> s HsS.
+    have [k [HkK HsW]] : exists k, k ∈ K /\ s ∈ γ[itv] (W k)
+      by move: (proj1 Hcov s HsS); unfold_set.
+    exists k. do 2 (split=> //). split.
+    - move=> c Hc. apply: (proj2 Hcov). unfold_set. by exists k.
+    - exact: Hmeets k HkK. }
+  have Hlow : forall c0 s, c0 ∈ γ[itv] A -> s ∈ S -> s <= c0 ->
+              exists c, c ∈ S' /\ c <= c0.
+  { move=> c0 s HA0 HsS Hs.
+    have [k [_ [HsW [HinS [a [HaA HaW]]]]]] := Hpiece s HsS.
+    case: (Z.le_gt_cases a c0) => Hac.
+    - exists a. split; last exact: Hac.
+      apply/HS'. split=> //. exact: (HinS a HaW).
+    - exists c0. split; last lia.
+      apply/HS'. split=> //. apply: (HinS c0).
+      exact: (itv_convex (W k) s a c0 HsW HaW ltac:(lia)). }
+  have Hhigh : forall c0 s, c0 ∈ γ[itv] A -> s ∈ S -> c0 <= s ->
+               exists c, c ∈ S' /\ c0 <= c.
+  { move=> c0 s HA0 HsS Hs.
+    have [k [_ [HsW [HinS [a [HaA HaW]]]]]] := Hpiece s HsS.
+    case: (Z.le_gt_cases c0 a) => Hac.
+    - exists a. split; last exact: Hac.
+      apply/HS'. split=> //. exact: (HinS a HaW).
+    - exists c0. split; last lia.
+      apply/HS'. split=> //. apply: (HinS c0).
+      exact: (itv_convex (W k) a s c0 HaW HsW ltac:(lia)). }
+  apply/(itv_same_alpha_same_bounds (γ[itv] (ZInterval.meet A (lb, hb))) S' _ Hsub).
+  - move=> [|m] Hbnd c0 Hc0 //=.
+    move: (Hc0) => /itv_meetE [HA0 [Hlb _]].
+    unfold_set; simpl.
+    apply: (glbtop_below_witness lb S c0 Hlb Hgl) => -[s [HsS Hs]].
+    have [c [HcS' Hc]] := Hlow c0 s HA0 HsS Hs.
+    have := Hbnd c HcS'. unfold_set. simpl. lia.
+  - move=> [|m] Hbnd c0 Hc0 //=.
+    move: (Hc0) => /itv_meetE [HA0 [_ Hhb]].
+    unfold_set; simpl.
+    apply: (lubtop_above_witness hb S c0 Hhb Hlu) => -[s [HsS Hs]].
+    have [c [HcS' Hc]] := Hhigh c0 s HA0 HsS Hs.
+    have := Hbnd c HcS'. unfold_set. simpl. lia.
+  - apply: non_bottom_is_alpha_gamma.
+    move: Hne => [c [HA HS]].
+    apply/non_bottom_non_empty. exists c. by apply: Hsub; apply/HS'.
+Qed.
+
 (** Split the abstraction of an across-zero abstract set into its two
     sign halves: the non-positive part keeps the low bound [l2] and gets
     a fresh finite high bound [m ≤ 0] (its lub); the non-negative part
