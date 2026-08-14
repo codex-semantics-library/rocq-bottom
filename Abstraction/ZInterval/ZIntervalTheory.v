@@ -1258,6 +1258,9 @@ Proof.
     apply: Hk. by exists a.
 Qed.
 
+(** [Z.le] is decidable, hence stable — needed to aim the two witnesses above
+    at an arithmetic goal. *)
+Global Instance stable_Zle (a b : Z) : Stable (a <= b) := dec_stable (Z_le_dec a b).
 (** Split the abstraction of an across-zero abstract set into its two
     sign halves: the non-positive part keeps the low bound [l2] and gets
     a fresh finite high bound [m ≤ 0] (its lub); the non-negative part
