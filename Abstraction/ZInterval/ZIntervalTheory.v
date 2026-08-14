@@ -1229,33 +1229,33 @@ Proof. by move=> G HSt l S; exact: Z_is_glb_attained_witness. Qed.
 Global Instance Z_lubs_are_maxs : LubsAreMaxs Z.le.
 Proof. by move=> G HSt h S; exact: Z_is_lub_attained_witness. Qed.
 
-(** From an across abstraction, a non-positive element of [S2] is
-    delivered through a [Stable] continuation: the attained min when the
-    low bound is finite, an element below [1] when it is [Top]. *)
-Lemma across_le0_witness {G : Prop} `{Stable G}
-  (l2 : WithTop.with_top Z) (S2 : ℘ Z) :
-  0 ∈ γ[glbtop] l2 -> IsAlpha (A:=glbtop) l2 S2 ->
-  ((exists c, c ∈ S2 /\ c <= 0) -> G) -> G.
+(** Read at [t ∈ γ l]: if the abstracted set's lower bound does not exclude
+    [t], then the set really does have an element at or below [t] — attained
+    when the bound is finite, and somewhere below when it is [Top]. We deliver
+    this element when the goal is [Stable]. *)
+Lemma glbtop_below_witness {G : Prop} `{Stable G}
+  (l : WithTop.with_top Z) (S : ℘ Z) (t : Z) :
+  t ∈ γ[glbtop] l -> IsAlpha (A:=glbtop) l S ->
+  ((exists c, c ∈ S /\ c <= t) -> G) -> G.
 Proof.
-  case: l2 => [|a] /= Hl0 Ha Hk.
-  - apply: (is_alpha_glbtop_top_witness S2 1 Ha) => -[c [Hc Hlt]].
+  case: l => [|a] /= Ht Ha Hk.
+  - apply: (is_alpha_glbtop_top_witness S (t + 1) Ha) => -[c [Hc Hlt]].
     apply: Hk. exists c; split=> //; lia.
-  - move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S2 Ha) => Hglb.
-    apply: (Z_is_glb_attained_witness a S2 Hglb) => Hain.
+  - move: (IsAlpha_glbtop_NotTop_is_glb Z.le a S Ha) => Hglb.
+    apply: (Z_is_glb_attained_witness a S Hglb) => Hain.
     apply: Hk. by exists a.
 Qed.
 
-(** Mirror: a non-negative element of [S2]. *)
-Lemma across_ge0_witness {G : Prop} `{Stable G}
-  (h2 : WithTop.with_top Z) (S2 : ℘ Z) :
-  0 ∈ γ[lubtop] h2 -> IsAlpha (A:=lubtop) h2 S2 ->
-  ((exists c, c ∈ S2 /\ 0 <= c) -> G) -> G.
+Lemma lubtop_above_witness {G : Prop} `{Stable G}
+  (h : WithTop.with_top Z) (S : ℘ Z) (t : Z) :
+  t ∈ γ[lubtop] h -> IsAlpha (A:=lubtop) h S ->
+  ((exists c, c ∈ S /\ t <= c) -> G) -> G.
 Proof.
-  case: h2 => [|a] /= Hh0 Ha Hk.
-  - apply: (is_alpha_lubtop_top_witness S2 (-1) Ha) => -[c [Hc Hgt]].
+  case: h => [|a] /= Ht Ha Hk.
+  - apply: (is_alpha_lubtop_top_witness S (t - 1) Ha) => -[c [Hc Hgt]].
     apply: Hk. exists c; split=> //; lia.
-  - move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S2 Ha) => Hlub.
-    apply: (Z_is_lub_attained_witness a S2 Hlub) => Hain.
+  - move: (IsAlpha_lubtop_NotTop_is_lub Z.le a S Ha) => Hlub.
+    apply: (Z_is_lub_attained_witness a S Hlub) => Hain.
     apply: Hk. by exists a.
 Qed.
 
@@ -1283,8 +1283,8 @@ Proof.
   apply: (itv_attained_high_witness l2 h2 S2 Ha Hex) => Hath.
   have Hglb' := glbtop_le0_restrict l2 S2 Hl0 Hatl Hglb.
   have Hlub' := lubtop_ge0_restrict h2 S2 Hh0 Hath Hlub.
-  apply: (across_le0_witness l2 S2 Hl0 Hglb) => Hne_neg.
-  apply: (across_ge0_witness h2 S2 Hh0 Hlub) => Hne_pos.
+  apply: (glbtop_below_witness l2 S2 0 Hl0 Hglb) => Hne_neg.  
+  apply: (lubtop_above_witness h2 S2 0 Hh0 Hlub) => Hne_pos.
   have Hb_neg : forall c, c ∈ {[ z | z ∈ S2 /\ z <= 0 ]} -> c <= 0
     by move=> c Hc; unfold_set in Hc; tauto.
   have Hb_pos : forall c, c ∈ {[ z | z ∈ S2 /\ 0 <= z ]} -> 0 <= c
