@@ -536,6 +536,29 @@ Proof.
              (meet_ub_clamp_upper_absorb (-1) v h Hv).
 Qed.
 
+(** ** Carrying a concrete bound through a meet.
+
+     A meet only tightens: if one operand's low bound is a concrete [v], the
+     meet's is concrete and no smaller.  This is what transports the divisor
+     solver's ∓1 clamp through the meet with the incoming divisor
+     ([QuotBackwardTheory.v]), where the clamped bound is what makes the
+     unsplit dividend solver the right one to call. *)
+Lemma itv_meet_low_ge (i x : interval) (v : Z) :
+  fst x = WithTop.NotTop v ->
+  exists w, v <= w /\ fst (ZInterval.meet i x) = WithTop.NotTop w.
+Proof.
+  move: i x => [l h] [lx hx] /= ->.
+  by case: l => [|a] /=; [exists v | exists (Z.max a v)]; split=> //; lia.
+Qed.
+
+Lemma itv_meet_high_le (i x : interval) (v : Z) :
+  snd x = WithTop.NotTop v ->
+  exists w, w <= v /\ snd (ZInterval.meet i x) = WithTop.NotTop w.
+Proof.
+  move: i x => [l h] [lx hx] /= ->.
+  by case: h => [|a] /=; [exists v | exists (Z.min a v)]; split=> //; lia.
+Qed.
+
 (** ** Structural equality of intervals. *)
 
 Lemma bound_equalP (a b : WithTop.with_top Z) : reflect (a = b) (ZInterval.bound_equal a b).
