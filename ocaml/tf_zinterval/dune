@@ -1,0 +1,26 @@
+; Transfer_function/ZInterval — the forward transfer functions over the
+; interval abstraction, plus API, the GOAL-facing export layer.
+;
+; Kept apart from ../zinterval because a transfer-function library is
+; indexed by the *set* of abstractions it relates, not by one: the
+; interval/congruence product will have a library over both. Splitting the
+; abstraction from its transfer functions is what lets that happen without
+; duplicating either.
+
+(include_subdirs no)
+
+(library
+ (name rocqbottom_tf_zinterval)
+ (libraries zarith rocqbottom_abstractioncombination
+            rocqbottom_quadrivalent rocqbottom_zinterval)
+ (modules ZIntervalOps ZIntervalBackwardOps API)
+ (flags (:standard -w -a
+         -open Rocqbottom_abstractioncombination
+         -open Rocqbottom_quadrivalent
+         -open Rocqbottom_zinterval)))
+
+; Extraction writes into _build; this copies our modules into the source
+; tree on every build. (mode promote) means `dune build` overwrites them,
+; so a hand-edit does not survive and a proof change shows up as a plain
+; `git diff` — git is the record of what the OCaml is supposed to be.
+(copy_files (mode promote) (files ../extraction/driver/{API,ZIntervalOps,ZIntervalBackwardOps}.ml*))
