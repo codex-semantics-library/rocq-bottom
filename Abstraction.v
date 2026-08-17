@@ -1171,6 +1171,31 @@ Global Hint Unfold
   collecting_binary_backward_left
   collecting_binary_backward_right : to_set.
 
+(** ** The two backward projections are empty together.
+
+    A backward step constrains a single relation
+    [R = {(c2,c1) | c2 ∈ S2, c1 ∈ S1, f c2 c1 ∈ S0}]; the left refinement is
+    its projection onto [c2] and the right one its projection onto [c1]. A
+    projection of [R] is empty exactly when [R] itself is, so the two are
+    empty *together*.
+
+    This is what makes it sound for a packaged backward transfer function to
+    report ⊥ for *both* operands as soon as *one* side comes out empty — see
+    [backward_binary_spec] in [AbstractionCombination.v]. Only the empty
+    reports of an over-approximating side are reliable, which is exactly the
+    direction used here. *)
+Lemma collecting_binary_backward_empty_iff
+  {C2 C1 C0: Type} (f: C2 -> C1 -> C0) (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_left  f S2 S1 S0 ⊆⊇ ∅ <->
+  collecting_binary_backward_right f S2 S1 S0 ⊆⊇ ∅.
+Proof.
+  rewrite !propset_equiv_empty_iff.
+  split=> H [c Hc]; unfold_set in Hc; apply: H;
+    move: Hc => [c' [c0 [H2 [H1 [H0 Hf]]]]].
+  - exists c'. unfold_set. by exists c, c0.
+  - exists c'. unfold_set. by exists c, c0.
+Qed.
+
 (** ** Congruence of the collecting semantics under [⊆⊇].
 
 Declaring these as [Proper] instances lets [setoid_rewrite] lift a [⊆⊇] fact
@@ -1542,6 +1567,22 @@ Definition collecting_binary_solve_right_partial
 Global Hint Unfold
   collecting_binary_backward_left_partial collecting_binary_backward_right_partial
   collecting_binary_solve_left_partial collecting_binary_solve_right_partial : to_set.
+
+(** [collecting_binary_backward_empty_iff] with the guard threaded through:
+    the argument never looks at [f], only at the existence of an admitted
+    pair, so restricting the pairs to those satisfying [P] changes nothing. *)
+Lemma collecting_binary_backward_partial_empty_iff
+  {C2 C1 C0: Type} (P: C2 -> C1 -> Prop) (f: C2 -> C1 -> C0)
+  (S2: ℘ C2) (S1: ℘ C1) (S0: ℘ C0) :
+  collecting_binary_backward_left_partial  P f S2 S1 S0 ⊆⊇ ∅ <->
+  collecting_binary_backward_right_partial P f S2 S1 S0 ⊆⊇ ∅.
+Proof.
+  rewrite !propset_equiv_empty_iff.
+  split=> H [c Hc]; unfold_set in Hc; apply: H;
+    move: Hc => [c' [c0 [H2 [H1 [H0 [HP Hf]]]]]].
+  - exists c'. unfold_set. by exists c, c0.
+  - exists c'. unfold_set. by exists c, c0.
+Qed.
 
 (** Restricting an operand to a subset the partiality already forces is a
     no-op: the collecting set never looked at the elements dropped. The
@@ -2066,65 +2107,6 @@ Global Hint Unfold
   (* binary_spec *) binary_overapproximation binary_most_precise binary_best binary_underapproximation binary_exact binary_alpha_complete
   ternary_spec ternary_overapproximation ternary_best ternary_underapproximation ternary_exact
   : to_set.
-
-(** * Low-level interface of transfer functions *)
-
-(** Our current interface for single-value abstraction: return None if
-    no improvement, or Some a1' if we improved it.
-
-    An operand and its refinement do not have to live in the same
-    domain. A backward step is applied to the elements the analyzer
-    holds, which are typically known non-empty — a [NonEmpty.ad] subset
-    carrier — while its result must be able to say that the refinement
-    is empty, which that carrier by construction cannot hold. So the
-    operand type is a parameter of its own and [emb] embeds it into the
-    domain [R] its refinement lives in: [proj1_sig] for a [Subset] /
-    [NonEmpty] carrier, [id] when the two coincide. It is the same split
-    the γ-level specs already have, where the result domain is a
-    separate argument ([binary_exact nbitv nbitv qv],
-    [ternary_exact nbitv nbitv nbitv itv]). *)
-Definition backward_unary_function_correct
-  `{R1:abstract_domain C1} `{A0:abstraction C0} `{Equiv R1} {A1: Type}
-  (emb1: A1 -> R1) f' (f: A1 -> A0 -> R1) :=
-  forall a1 a0, match f' a1 a0 with
-           | None => f a1 a0 ≡ emb1 a1
-           | Some a1' => f a1 a0 = a1' ∧ a1' ⊑[R1] emb1 a1 /\ a1' ≢ emb1 a1
-           end.
-
-Definition backward_binary_function_correct
-  `{R2: abstract_domain C2} `{R1: abstract_domain C1} `{A0: abstraction C0} `{Equiv R2} `{Equiv R1}
-  {A2 A1: Type} (emb2: A2 -> R2) (emb1: A1 -> R1)
-  f' (fleft: A2 -> A1 -> A0 -> R2) (fright: A2 -> A1 -> A0 -> R1) :=
-  forall a2 a1 a0,
-    let '(r2,r1) := f' a2 a1 a0 in
-    (match r2 with
-     | None => fleft a2 a1 a0 ≡ emb2 a2
-     | Some a2' => fleft a2 a1 a0 = a2' ∧ a2' ⊑[R2]  emb2 a2 /\ a2' ≢ emb2 a2
-     end) /\
-      (match r1 with
-       | None => fright a2 a1 a0 ≡ emb1 a1
-       | Some a1' => fright a2 a1 a0 = a1' ∧ a1' ⊑[R1]  emb1 a1 /\ a1' ≢ emb1 a1
-       end).
-
-(** TODO: improve this interface. [option] has two cases, so the one
-    thing a refinement cannot report is that it is empty — which is why
-    the refined value has to leave the operand's domain, and why [emb]
-    exists at all. An inductive with the three cases the answer actually
-    has,
-
-<<
-      Unchanged | Bottom | Refined (a' : A)
->>
-
-    says it directly: [Bottom] is the empty refinement, [Refined] carries
-    a value of the operand's own domain, and [emb] disappears along with
-    the distinction between operand and result domains.
-
-    The per-operation left and right backward transfer functions, and
-    their soundness, are the primary results; packaging the two into a
-    single call is secondary and expected to change with the above. *)
-
-
 
 (** * AbstractionSetoid: Abstraction with an equality relation.  *)
 
