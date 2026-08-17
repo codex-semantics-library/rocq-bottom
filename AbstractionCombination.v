@@ -569,6 +569,42 @@ Module Subset.
         do satisfy P remain best abstractions. *)
   End AD.
 
+  (** *** Transporting a precision claim onto the subset carrier.
+
+      The operands of a packaged backward function are a [Subset] carrier over
+      the wide domain the raw functions return, so [γ] and [⊑] agree on the
+      nose and each of these is a [case] on the operand and nothing more. They
+      are stated rather than inlined because [Subset.gamma] is a destructuring
+      [let]: it only reduces on an explicit pair. *)
+  Module Transport.
+    Section Transport.
+      Context {C : Type} `{R : abstract_domain C} (P : R -> Prop).
+      Local Notation A := (ad R P).
+
+      Lemma le (b a : A) : `b ⊑[R] `a -> b ⊑[A] a.
+      Proof. by case: b => b Hb; case: a => a Ha. Qed.
+
+      Lemma over (b : A) S :
+        Overapproximates (A:=R) (`b) S -> Overapproximates (A:=A) b S.
+      Proof. by case: b. Qed.
+
+      Lemma exact (b : A) S :
+        ExactlyRepresents (A:=R) (`b) S -> ExactlyRepresents (A:=A) b S.
+      Proof. by case: b. Qed.
+
+      (** The one that is not the same statement read twice: optimality gets
+          *easier* on the subset, because [UpperBoundInPrecision] quantifies over
+          the competitors and there are fewer of them. Instantiate the
+          wide-domain bound at the projection. *)
+      Lemma most_precise (b : A) S :
+        MostPrecise (A:=R) (`b) S -> MostPrecise (A:=A) b S.
+      Proof.
+        case: b => b Hb [Hover Hub]; split; first exact: Hover.
+        by move=> [a Ha] Hov; exact: (Hub a Hov).
+      Qed.
+    End Transport.
+  End Transport.
+
   (** *** Abstract join semilattice on a subset.
 
       Given an [abstract_join_semilattice A] and a predicate [P] that
