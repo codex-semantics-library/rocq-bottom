@@ -143,6 +143,10 @@ Extract Inlined Constant Z.geb => "Z.geq".
     proof erases, so it needs no guard, with nothing left to get wrong in the
     string. We explicitly do not provide a translation for Z.quot/rem/quotrem *)
 Extract Inlined Constant quot_non_zero => "Z.div".
+(** The floor and ceiling of the same division, with the divisor's
+    non-zeroness a hypothesis rather than a guard, exactly as above. *)
+Extract Inlined Constant fdiv_non_zero => "Z.fdiv".
+Extract Inlined Constant cdiv_non_zero => "Z.cdiv".
 (* Extract Inlined Constant Z.quot => "(fun x y -> if Z.equal y Z.zero then Z.zero else Z.div x y)". *)
 (* Extract Inlined Constant Z.rem => "(fun x y -> if Z.equal y Z.zero then x else Z.rem x y)". *)
 (* Extract Inlined Constant Z.quotrem => "(fun x y -> if Z.equal y Z.zero then (Z.zero, x) else Z.div_rem x y)". *)
